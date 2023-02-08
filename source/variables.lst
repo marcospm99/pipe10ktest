@@ -1,0 +1,1585 @@
+Page 1           Source Listing                                                                
+2023-01-27 11:38                                 /tmp/ifortYJEaMq.i90
+
+./program/variables.f90(111): remark #7712: This variable has not been used.   [FLAG
+   subroutine var_null(flag)
+-----------------------^
+
+Page 2           Source Listing                  VAR_PRECOMPUTE
+2023-01-27 11:38                                 /tmp/ifortYJEaMq.i90
+
+      1 # 1 "./program/variables.f90"
+      2 !*************************************************************************
+      3 !  Variables in spectral,collocated and physical space.
+      4 !  Simple functions on variables.
+      5 !
+      6 !     r_n    n in [1,N]
+      7 !     th_m   m in [0,Th)
+      8 !     z_k    k in [0,Z)
+      9 !
+     10 !  harmonics ordered s.t. usual loop:
+     11 !     nh = -1
+     12 !     do m = 0, M-1             nh  harmonic index
+     13 !        m_ = m*Mp              m   m index
+     14 !        do k = -(K-1), K-1     m_  actual m mode
+     15 !           if(m==0 .and. k<0)  cycle
+     16 !           nh = nh + 1         k   k mode
+     17 !           ...
+     18 !
+     19 !*************************************************************************
+     20 # 1 "./program/../parallel.h" 1 
+     21 
+     22 
+     23 
+     24  
+     25 
+     26 
+     27 
+     28  
+     29 
+     30  
+     31 
+     32 # 14
+     33 
+     34 
+     35 
+     36 
+     37 
+     38 
+     39  
+     40 # 23
+     41 
+     42 
+     43  
+     44 # 44
+     45 
+     46  
+     47 
+     48 
+     49 
+     50 # 54
+     51 
+     52          
+     53 
+     54 
+     55  
+     56 
+     57  
+
+Page 3           Source Listing                  VAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/../parallel.h
+
+     58 
+     59 
+     60 # 20 "./program/variables.f90" 2 
+     61  module variables
+     62 !*************************************************************************
+     63    use mpif
+     64    use parameters
+     65    use meshs
+     66    implicit none
+     67    save
+     68 
+     69    type harm
+     70       integer              :: pH0,pH1, pH0_(0:(1*1)-1),pH1_(0:(1*1)-1)
+     71    end type harm
+     72 
+     73    type spec
+     74       double precision     :: Re(0:((2*i_K-1)*(i_M/1)-1), i_pN)
+     75       double precision     :: Im(0:((2*i_K-1)*(i_M/1)-1), i_pN)
+     76    end type spec
+     77 
+     78 !   integer,          parameter :: i_pH1 = (1+((2*i_K-1)*(i_M/1)-1))/1-1
+     79    type coll
+     80       double precision     :: Re(i_N, 0:i_pH1)
+     81       double precision     :: Im(i_N, 0:i_pH1)
+     82    end type coll
+     83 
+     84    type phys
+     85       double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
+     86    end type phys
+     87    
+     88 
+     89    type (harm)               :: var_H
+     90    type (coll),      private :: c1,c2,c3
+     91    double precision, private :: ad_k2a2(-i_K1:i_K1)
+     92    double precision, private :: ad_k1a1(-i_K1:i_K1)
+     93    double precision, private :: ad_m1r1(i_N,0:i_M1)
+     94    double precision, private :: ad_m2r2(i_N,0:i_M1)
+     95 
+     96  contains
+     97 
+     98 
+     99 !------------------------------------------------------------------------
+    100 !  Initialise stuff for variables
+    101 !------------------------------------------------------------------------
+    102    subroutine var_precompute()
+    103       integer :: n,r, ms,H1
+    104 ! distribute modes accross processors
+    105       var_H%pH1_ = -1
+    106       do ms = 0, 1-1
+    107          H1 = ((2*i_K-1)*(i_M/1)-1)
+    108          if(ms==0) H1 = H1-i_K1
+    109          do n = 0, H1
+    110             r = 1 - modulo(n,1) - 1 + ms*1
+    111             var_H%pH1_(r) = var_H%pH1_(r) + 1
+    112          end do
+    113       end do
+    114       var_H%pH0_(0) = 0
+
+Page 4           Source Listing                  VAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/variables.f90
+
+    115       do r = 1, (1*1)-1
+    116          var_H%pH0_(r) = var_H%pH0_(r-1) + var_H%pH1_(r-1) + 1
+    117       end do
+    118       var_H%pH0 = var_H%pH0_(mpi_rnk)
+    119       var_H%pH1 = var_H%pH1_(mpi_rnk)
+    120       
+    121       do n = 0, i_M1
+    122          ad_m1r1(:,n) = mes_D%r(:,-1) * i_Mp*n
+    123          ad_m2r2(:,n) = mes_D%r(:,-2) * i_Mp*n * i_Mp*n
+    124       end do
+    125       do n = -i_K1, i_K1
+    126          ad_k2a2(n) = d_alpha*n * d_alpha*n
+    127          ad_k1a1(n) = d_alpha*n
+    128       end do
+    129 
+    130    end subroutine var_precompute
+
+
+ENTRY POINTS
+
+  Name                                    
+                                          
+ variables_mp_var_precompute_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ AD_K1A1                    Local  127      R(8)            8     1     1023     PRIV,SAVE        92,127,320,321,326,327,357,358,376
+                                                                                                  ,379                              
+ AD_K2A2                    Local  126      R(8)            8     1     1023     PRIV,SAVE        91,126                            
+ AD_M1R1                    Local  122      R(8)            8     2     98304    PRIV,SAVE        93,122,320,321,333,335,353,354,376
+                                                                                                  ,379                              
+ AD_M2R2                    Local  123      R(8)            8     2     98304    PRIV,SAVE        94,123                            
+ D_ALPHA                    Local  126      R(8)            8           scalar   SAVE             126,127,404,405,526,531,560,621,62
+                                                                                                  2                                 
+ H1                         Local  103      I(4)            4           scalar                    107,108,109                       
+ I_K                        Param  107      I(4)            4           scalar                    74,75,107                         
+ I_K1                       Param  108      I(4)            4           scalar                    91,92,108,125,139,281,319,325,331,
+                                                                                                  352,356,373,393,394,403,408,423,44
+                                                                                                  9,482,493,613,623                 
+ I_M                        Param  107      I(4)            4           scalar                    74,75,107,140                     
+ I_M1                       Param  121      I(4)            4           scalar                    93,94,121,281,319,325,331,352,356,
+                                                                                                  373,393,394,408,418,423,448,482,49
+                                                                                                  3,613,623                         
+ I_MP                       Param  122      I(4)            4           scalar                    122,123,284,419,420,525,559       
+ MES_D                      Local  122      RDOM            83272       scalar   SAVE             122,123,324,330,332,334,351,372,37
+                                                                                                  5,378,524,558,626                 
+ MODULO                     Func   110                                  scalar                    110                               
+ MPI_RNK                    Local  118      I(4)            4           scalar   SAVE             118,119,457,471,504               
+ MS                         Local  103      I(4)            4           scalar                    106,108,110                       
+ N                          Local  103      I(4)            4           scalar                    109,110,121,122,123,125,126,127   
+ R                          Local  103      I(4)            4           scalar                    110,111,115,116                   
+ VAR_H                      Local  105      HARM            16          scalar   SAVE             105,111,114,116,118,119,141,142,17
+                                                                                                  3,174,184,185,195,196,206,207,217,
+                                                                                                  218                               
+
+Page 5           Source Listing                  VAR_PRECOMPUTE
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ VAR_PRECOMPUTE             Subr   102                                                                                              
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ HARM.PH0                   I(4)            4     0              scalar                    118                                
+ HARM.PH0_                  I(4)            4     8        1     1                         114,116,118,141,142                
+ HARM.PH1                   I(4)            4     4              scalar                    119,173,174,184,185,195,196,206,20 
+                                                                                           7,217,218                          
+ HARM.PH1_                  I(4)            4     12       1     1                         105,111,116,119,141                
+ RDOM.R                     R(8)            8     24       2     1344                      122,123,332,334,375,378,524,558    
+
+Page 6           Source Listing                  VAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/variables.f90
+
+    131 
+    132 
+    133 !-------------------------------------------------------------------------
+    134 !  get nh and mpi_rank for given k,m
+    135 !-------------------------------------------------------------------------
+    136    subroutine var_harmonic(k,m, nh,p)
+    137       integer, intent(in)  :: k,m
+    138       integer, intent(out) :: nh,p
+    139       nh = m*(2*i_K1+1) + k
+    140       do p = (m/(i_M/1))*1, mpi_sze-1
+    141          if(nh>=var_H%pH0_(p) .and. nh<=var_H%pH0_(p)+var_H%pH1_(p)) then
+    142             nh = nh-var_H%pH0_(p)
+    143             return
+    144          end if
+    145       end do
+    146    end subroutine var_harmonic
+
+
+ENTRY POINTS
+
+  Name                                  
+                                        
+ variables_mp_var_harmonic_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ K                          Dummy  136      I(4)            4           scalar   ARG,IN           139                               
+ M                          Dummy  136      I(4)            4           scalar   ARG,IN           139,140                           
+ MPI_SZE                    Local  140      I(4)            4           scalar   SAVE             140                               
+ NH                         Dummy  136      I(4)            4           scalar   ARG,OUT          139,141,142                       
+ P                          Dummy  136      I(4)            4           scalar   ARG,OUT          140,141,142                       
+ VAR_HARMONIC               Subr   136                                                            452,453                           
+
+Page 7           Source Listing                  VAR_HARMONIC
+2023-01-27 11:38                                 ./program/variables.f90
+
+    147 
+    148 
+    149 !-------------------------------------------------------------------------
+    150 !  null function
+    151 !-------------------------------------------------------------------------
+    152    subroutine var_null(flag)
+	.......................1     
+(1) This variable has not been used.   [FLAG]
+
+    153       integer, intent(in), optional :: flag
+    154    end subroutine var_null
+
+
+ENTRY POINTS
+
+  Name                              
+                                    
+ variables_mp_var_null_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ FLAG                       Dummy  152      I(4)            4           scalar   ARG,IN                                             
+ VAR_NULL                   Subr   152                                                                                              
+
+Page 8           Source Listing                  VAR_NULL
+2023-01-27 11:38                                 ./program/variables.f90
+
+    155 
+    156 
+    157 !-------------------------------------------------------------------------
+    158 !  initialise collocated variable
+    159 !-------------------------------------------------------------------------
+    160    subroutine var_coll_init(a)
+    161       type (coll), intent(out) :: a
+    162       a%Re = 0d0
+    163       a%Im = 0d0
+    164    end subroutine var_coll_init
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_coll_init_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  160      COLL            16090       scalar   ARG,OUT          162,163                           
+                                                            39872                                                                   
+ COLL                       Type   161                      16090       scalar                    82,90,161,171,172,182,183,193,194,
+                                                            39872                                 205,215,216,227,229,250,252,274,27
+                                                                                                  5,311,312,345,346,368,369,391,392,
+                                                                                                  442,612                           
+ VAR_COLL_INIT              Subr   160                                                                                              
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ COLL.IM                    R(8)            8     80451993 2     10056499                  163,174,185,196,207,218,232,235,23 
+                                                  6              2                         8,254,257,260,283,289,301,320,321, 
+                                                                                           326,327,333,334,353,354,357,358,37 
+                                                                                           6,377,378,410,411,425,426,463,465, 
+                                                                                           467,473,475,477,484,486,488,496,49 
+                                                                                           8,500,506,507,508,625              
+ COLL.RE                    R(8)            8     0        2     10056499                  162,173,184,195,206,217,231,234,23 
+                                                                 2                         7,253,256,259,282,288,300,320,321, 
+                                                                                           326,327,332,335,353,354,357,358,37 
+                                                                                           4,375,379,409,410,424,425,462,464, 
+                                                                                           466,472,474,476,483,485,487,495,49 
+                                                                                           7,499,505,624                      
+
+Page 9           Source Listing                  VAR_COLL_INIT
+2023-01-27 11:38                                 ./program/variables.f90
+
+    165 
+    166 
+    167 !-------------------------------------------------------------------------
+    168 !  Copy a collocated variable
+    169 !-------------------------------------------------------------------------
+    170    subroutine var_coll_copy(in, out)
+    171       type (coll), intent(in)  :: in
+    172       type (coll), intent(out) :: out
+    173       out%Re(:,0:var_H%pH1) = in%Re(:,0:var_H%pH1)
+    174       out%Im(:,0:var_H%pH1) = in%Im(:,0:var_H%pH1)
+    175    end subroutine var_coll_copy
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_coll_copy_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ IN                         Dummy  170      COLL            16090       scalar   ARG,IN           173,174                           
+                                                            39872                                                                   
+ OUT                        Dummy  170      COLL            16090       scalar   ARG,OUT          173,174                           
+                                                            39872                                                                   
+ VAR_COLL_COPY              Subr   170                                                            315,316,317,349,381,398           
+
+Page 10          Source Listing                  VAR_COLL_COPY
+2023-01-27 11:38                                 ./program/variables.f90
+
+    176 
+    177 
+    178 !------------------------------------------------------------------------
+    179 !     out := out + in
+    180 !------------------------------------------------------------------------
+    181    subroutine var_coll_add(ac, a)
+    182       type (coll), intent(in)    :: ac
+    183       type (coll), intent(inout) :: a
+    184       a%Re(:,0:var_H%pH1) = a%Re(:,0:var_H%pH1) + ac%Re(:,0:var_H%pH1)
+    185       a%Im(:,0:var_H%pH1) = a%Im(:,0:var_H%pH1) + ac%Im(:,0:var_H%pH1)
+    186    end subroutine var_coll_add
+
+
+ENTRY POINTS
+
+  Name                                  
+                                        
+ variables_mp_var_coll_add_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  181      COLL            16090       scalar   ARG,INOUT        184,185                           
+                                                            39872                                                                   
+ AC                         Dummy  181      COLL            16090       scalar   ARG,IN           184,185                           
+                                                            39872                                                                   
+ VAR_COLL_ADD               Subr   181                                                                                              
+
+Page 11          Source Listing                  VAR_COLL_ADD
+2023-01-27 11:38                                 ./program/variables.f90
+
+    187 
+    188 
+    189 !------------------------------------------------------------------------
+    190 !     out := out - in
+    191 !------------------------------------------------------------------------
+    192    subroutine var_coll_sub(ac, a)
+    193       type (coll), intent(in)    :: ac
+    194       type (coll), intent(inout) :: a
+    195       a%Re(:,0:var_H%pH1) = a%Re(:,0:var_H%pH1) - ac%Re(:,0:var_H%pH1)
+    196       a%Im(:,0:var_H%pH1) = a%Im(:,0:var_H%pH1) - ac%Im(:,0:var_H%pH1)
+    197    end subroutine var_coll_sub
+
+
+ENTRY POINTS
+
+  Name                                  
+                                        
+ variables_mp_var_coll_sub_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  192      COLL            16090       scalar   ARG,INOUT        195,196                           
+                                                            39872                                                                   
+ AC                         Dummy  192      COLL            16090       scalar   ARG,IN           195,196                           
+                                                            39872                                                                   
+ VAR_COLL_SUB               Subr   192                                                                                              
+
+Page 12          Source Listing                  VAR_COLL_SUB
+2023-01-27 11:38                                 ./program/variables.f90
+
+    198 
+    199 
+    200 !------------------------------------------------------------------------
+    201 !     out := d * in
+    202 !------------------------------------------------------------------------
+    203    subroutine var_coll_dmult(d, a)
+    204       double precision, intent(in) :: d
+    205       type (coll),   intent(inout) :: a
+    206       a%Re(:,0:var_H%pH1) = a%Re(:,0:var_H%pH1) * d
+    207       a%Im(:,0:var_H%pH1) = a%Im(:,0:var_H%pH1) * d
+    208    end subroutine var_coll_dmult
+
+
+ENTRY POINTS
+
+  Name                                    
+                                          
+ variables_mp_var_coll_dmult_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  203      COLL            16090       scalar   ARG,INOUT        206,207                           
+                                                            39872                                                                   
+ D                          Dummy  203      R(8)            8           scalar   ARG,IN           206,207                           
+ VAR_COLL_DMULT             Subr   203                                                                                              
+
+Page 13          Source Listing                  VAR_COLL_DMULT
+2023-01-27 11:38                                 ./program/variables.f90
+
+    209 
+    210 
+    211 !------------------------------------------------------------------------
+    212 !     out := - in
+    213 !------------------------------------------------------------------------
+    214    subroutine var_coll_neg(ac, a)
+    215       type (coll), intent(in)    :: ac
+    216       type (coll), intent(inout) :: a
+    217       a%Re(:,0:var_H%pH1) = - ac%Re(:,0:var_H%pH1)
+    218       a%Im(:,0:var_H%pH1) = - ac%Im(:,0:var_H%pH1)
+    219    end subroutine var_coll_neg
+
+
+ENTRY POINTS
+
+  Name                                  
+                                        
+ variables_mp_var_coll_neg_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  214      COLL            16090       scalar   ARG,INOUT        217,218                           
+                                                            39872                                                                   
+ AC                         Dummy  214      COLL            16090       scalar   ARG,IN           217,218                           
+                                                            39872                                                                   
+ VAR_COLL_NEG               Subr   214                                                                                              
+
+Page 14          Source Listing                  VAR_COLL_NEG
+2023-01-27 11:38                                 ./program/variables.f90
+
+    220 
+    221 
+    222 !-------------------------------------------------------------------------
+    223 !  convert collocated -> spectral
+    224 !-------------------------------------------------------------------------
+    225 
+    226    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
+    227       type (coll), intent(in)  :: c
+    228       type (spec), intent(out) :: s
+    229       type (coll), intent(in),  optional :: c2,c3
+    230       type (spec), intent(out), optional :: s2,s3
+    231       s%Re = transpose(c%Re)
+    232       s%Im = transpose(c%Im)
+    233       if(.not. present(c2)) return
+    234       s2%Re = transpose(c2%Re)
+    235       s2%Im = transpose(c2%Im)
+    236       if(.not. present(c3)) return
+    237       s3%Re = transpose(c3%Re)
+    238       s3%Im = transpose(c3%Im)
+    239    end subroutine var_coll2spec
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_coll2spec_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ C                          Dummy  226      COLL            16090       scalar   ARG,IN           231,232                           
+                                                            39872                                                                   
+ C2                         Dummy  226      COLL            16090       scalar   ARG,IN           233,234,235                       
+                                                            39872                                                                   
+ C3                         Dummy  226      COLL            16090       scalar   ARG,IN           236,237,238                       
+                                                            39872                                                                   
+ PRESENT                    Func   233                                  scalar                    233,236                           
+ S                          Dummy  226      SPEC            16090       scalar   ARG,OUT          231,232                           
+                                                            39872                                                                   
+ S2                         Dummy  226      SPEC            16090       scalar   ARG,OUT          234,235                           
+                                                            39872                                                                   
+ S3                         Dummy  226      SPEC            16090       scalar   ARG,OUT          237,238                           
+                                                            39872                                                                   
+ SPEC                       Type   228                      16090       scalar                    76,228,230,249,251                
+                                                            39872                                                                   
+ TRANSPOSE                  Func   231                                  scalar                    231,232,234,235,237,238           
+ VAR_COLL2SPEC              Subr   226                                                                                              
+
+
+
+Page 15          Source Listing                  VAR_COLL2SPEC
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ SPEC.IM                    R(8)            8     80451993 2     10056499                  232,235,238,254,257,260            
+                                                  6              2                                                            
+ SPEC.RE                    R(8)            8     0        2     10056499                  231,234,237,253,256,259            
+                                                                 2                                                            
+
+Page 16          Source Listing                  VAR_COLL2SPEC
+2023-01-27 11:38                                 ./program/variables.f90
+
+    240 
+    241 # 276
+    242 
+    243    
+    244 !-------------------------------------------------------------------------
+    245 !  convert spectral -> collocated
+    246 !-------------------------------------------------------------------------
+    247 
+    248    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
+    249       type (spec), intent(in)  :: s
+    250       type (coll), intent(out) :: c
+    251       type (spec), intent(in),  optional :: s2,s3
+    252       type (coll), intent(out), optional :: c2,c3
+    253       c%Re = transpose(s%Re)
+    254       c%Im = transpose(s%Im)
+    255       if(.not. present(s2)) return
+    256       c2%Re = transpose(s2%Re)
+    257       c2%Im = transpose(s2%Im)
+    258       if(.not. present(s3)) return
+    259       c3%Re = transpose(s3%Re)
+    260       c3%Im = transpose(s3%Im)
+    261    end subroutine var_spec2coll
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_spec2coll_             
+
+Page 17          Source Listing                  VAR_SPEC2COLL
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ C                          Dummy  248      COLL            16090       scalar   ARG,OUT          253,254                           
+                                                            39872                                                                   
+ C2                         Dummy  248      COLL            16090       scalar   ARG,OUT          256,257                           
+                                                            39872                                                                   
+ C3                         Dummy  248      COLL            16090       scalar   ARG,OUT          259,260                           
+                                                            39872                                                                   
+ PRESENT                    Func   255                                  scalar                    255,258                           
+ S                          Dummy  248      SPEC            16090       scalar   ARG,IN           253,254                           
+                                                            39872                                                                   
+ S2                         Dummy  248      SPEC            16090       scalar   ARG,IN           255,256,257                       
+                                                            39872                                                                   
+ S3                         Dummy  248      SPEC            16090       scalar   ARG,IN           258,259,260                       
+                                                            39872                                                                   
+ TRANSPOSE                  Func   253                                  scalar                    253,254,256,257,259,260           
+ VAR_SPEC2COLL              Subr   248                                                                                              
+
+Page 18          Source Listing                  VAR_SPEC2COLL
+2023-01-27 11:38                                 ./program/variables.f90
+
+    262 
+    263 # 372
+    264 
+    265 
+    266 
+    267 !------------------------------------------------------------------------
+    268 !  Multiply a collocated variable by a mesh-type
+    269 !     out = A.in
+    270 !------------------------------------------------------------------------
+    271    subroutine var_coll_meshmult(S,A,in, out)
+    272       integer,     intent(in)  :: S
+    273       type (mesh), intent(in)  :: A
+    274       type (coll), intent(in)  :: in
+    275       type (coll), intent(out) :: out
+    276       double precision :: inRe(1-i_KL:i_N), inIm(1-i_KL:i_N)
+    277       double precision :: re(i_N), im(i_N)
+    278       integer :: n,j,l,r
+    279       integer :: nh,k,m
+    280 
+    281       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    282          inRe(:0) = in%Re(i_KL:1:-1,nh)
+    283          inIm(:0) = in%Im(i_KL:1:-1,nh)
+    284          if(modulo(m*i_Mp+S,2)==1) then
+    285             inRe(:0) = - inRe(:0)
+    286             inIm(:0) = - inIm(:0)
+    287          end if
+    288          inRe(1:) = in%Re(:,nh)
+    289          inIm(1:) = in%Im(:,nh)
+    290          re = 0d0
+    291          im = 0d0
+    292          do j = 1-i_KL, i_N
+    293             l = max(1,j-i_KL)
+    294             r = min(j+i_KL,i_N)
+    295             do n = l, r
+    296                re(n) = re(n) + A%M(i_KL+1+n-j,j) * inRe(j)
+    297                im(n) = im(n) + A%M(i_KL+1+n-j,j) * inIm(j)
+    298             end do
+    299          end do
+    300          out%Re(:,nh) = re
+    301          out%Im(:,nh) = im
+    302       end do;  end do
+    303 
+    304    end subroutine var_coll_meshmult
+
+Page 19          Source Listing                  VAR_COLL_MESHMULT
+2023-01-27 11:38 Entry Points                    ./program/variables.f90
+
+
+
+ENTRY POINTS
+
+  Name                                       
+                                             
+ variables_mp_var_coll_meshmult_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  271      MESH            14112       scalar   ARG,IN           296,297                           
+ IM                         Local  277      R(8)            8     1     192                       291,297,301                       
+ IN                         Dummy  271      COLL            16090       scalar   ARG,IN           282,283,288,289                   
+                                                            39872                                                                   
+ INIM                       Local  276      R(8)            8     1     196                       283,286,289,297                   
+ INRE                       Local  276      R(8)            8     1     196                       282,285,288,296                   
+ I_KL                       Param  276      I(4)            4           scalar                    276,282,283,292,293,294,296,297   
+ I_N                        Param  276      I(4)            4           scalar                    80,81,93,94,276,277,292,294,395,44
+                                                                                                  3,520,536,552,616                 
+ J                          Local  278      I(4)            4           scalar                    292,293,294,296,297               
+ K                          Local  279      I(4)            4           scalar                    281                               
+ L                          Local  278      I(4)            4           scalar                    293,295                           
+ M                          Local  279      I(4)            4           scalar                    281,284                           
+ MAX                        Func   293                                  scalar                    293                               
+ MESH                       Type   273                                  scalar                    273                               
+ MIN                        Func   294                                  scalar                    294                               
+ MODULO                     Func   284                                  scalar                    284                               
+ N                          Local  278      I(4)            4           scalar                    295,296,297                       
+ NH                         Local  279      I(4)            4           scalar                    281,282,283,288,289,300,301       
+ OUT                        Dummy  271      COLL            16090       scalar   ARG,OUT          300,301                           
+                                                            39872                                                                   
+ R                          Local  278      I(4)            4           scalar                    294,295                           
+ RE                         Local  277      R(8)            8     1     192                       290,296,300                       
+ S                          Dummy  271      I(4)            4           scalar   ARG,IN           284                               
+ VAR_COLL_MESHMULT          Subr   271                                                            324,330,351,372                   
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ MESH.M                     R(8)            8     0        2     1764                      296,297                            
+
+Page 20          Source Listing                  VAR_COLL_MESHMULT
+2023-01-27 11:38                                 ./program/variables.f90
+
+    305 
+    306 
+    307 !------------------------------------------------------------------------
+    308 !  take the curl of a vector
+    309 !------------------------------------------------------------------------
+    310    subroutine var_coll_curl(r,t,z, or,ot,oz)
+    311       type (coll), intent(in)  :: r,t,z
+    312       type (coll), intent(out) :: or,ot,oz
+    313       integer :: nh,k,m
+    314 
+    315       call var_coll_copy(r,c1)
+    316       call var_coll_copy(t,c2)
+    317       call var_coll_copy(z,c3)
+    318  
+    319       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    320          or%Re(:,nh) = -c3%Im(:,nh)*ad_m1r1(:,m) + c2%Im(:,nh)*ad_k1a1(k)
+    321          or%Im(:,nh) =  c3%Re(:,nh)*ad_m1r1(:,m) - c2%Re(:,nh)*ad_k1a1(k)
+    322       end do;  end do
+    323 
+    324       call var_coll_meshmult(0,mes_D%dr(1),c3, ot)
+    325       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    326          ot%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k) - ot%Re(:,nh)
+    327          ot%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k) - ot%Im(:,nh)
+    328       end do;  end do
+    329 
+    330       call var_coll_meshmult(1,mes_D%dr(1),c2, oz)
+    331       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    332          oz%Re(:,nh) =  c2%Re(:,nh)*mes_D%r(:,-1) + oz%Re(:,nh)  &
+    333                        +c1%Im(:,nh)*ad_m1r1(:,m)
+    334          oz%Im(:,nh) =  c2%Im(:,nh)*mes_D%r(:,-1) + oz%Im(:,nh)  &
+    335                        -c1%Re(:,nh)*ad_m1r1(:,m)
+    336       end do;  end do
+    337 
+    338    end subroutine var_coll_curl
+
+Page 21          Source Listing                  VAR_COLL_CURL
+2023-01-27 11:38 Entry Points                    ./program/variables.f90
+
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_coll_curl_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ C1                         Local  315      COLL            16090       scalar   PRIV,SAVE        90,315,326,327,333,335,349,351,353
+                                                            39872                                 ,354,357,358,372,375,378,472,473,4
+                                                                                                  83,484                            
+ C2                         Local  316      COLL            16090       scalar   PRIV,SAVE        90,316,320,321,330,332,334,374,377
+                                                            39872                                 ,381,474,475,485,486              
+ C3                         Local  317      COLL            16090       scalar   PRIV,SAVE        90,317,320,321,324,476,477,487,488
+                                                            39872                                                                   
+ K                          Local  313      I(4)            4           scalar                    319,320,321,325,326,327,331       
+ M                          Local  313      I(4)            4           scalar                    319,320,321,325,331,333,335       
+ NH                         Local  313      I(4)            4           scalar                    319,320,321,325,326,327,331,332,33
+                                                                                                  3,334,335                         
+ OR                         Dummy  310      COLL            16090       scalar   ARG,OUT          320,321                           
+                                                            39872                                                                   
+ OT                         Dummy  310      COLL            16090       scalar   ARG,OUT          324,326,327                       
+                                                            39872                                                                   
+ OZ                         Dummy  310      COLL            16090       scalar   ARG,OUT          330,332,334                       
+                                                            39872                                                                   
+ R                          Dummy  310      COLL            16090       scalar   ARG,IN           315                               
+                                                            39872                                                                   
+ T                          Dummy  310      COLL            16090       scalar   ARG,IN           316                               
+                                                            39872                                                                   
+ VAR_COLL_CURL              Subr   310                                                                                              
+ Z                          Dummy  310      COLL            16090       scalar   ARG,IN           317                               
+                                                            39872                                                                   
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ RDOM.DR                    RECORD          14112 12712    1     4                         324,330,351,372                    
+
+Page 22          Source Listing                  VAR_COLL_CURL
+2023-01-27 11:38                                 ./program/variables.f90
+
+    339 
+    340 
+    341 !------------------------------------------------------------------------
+    342 !  take the gradient of a scalar
+    343 !------------------------------------------------------------------------
+    344    subroutine var_coll_grad(p, r,t,z)
+    345       type (coll), intent(in)  :: p
+    346       type (coll), intent(out) :: r,t,z
+    347       integer :: nh,k,m
+    348 
+    349       call var_coll_copy(p,c1)
+    350 
+    351       call var_coll_meshmult(0,mes_D%dr(1),c1, r)
+    352       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    353          t%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)
+    354          t%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)
+    355       end do;  end do
+    356       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    357          z%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+    358          z%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+    359       end do;  end do
+    360 
+    361    end subroutine var_coll_grad
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_coll_grad_             
+
+Page 23          Source Listing                  VAR_COLL_GRAD
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ K                          Local  347      I(4)            4           scalar                    352,356,357,358                   
+ M                          Local  347      I(4)            4           scalar                    352,353,354,356                   
+ NH                         Local  347      I(4)            4           scalar                    352,353,354,356,357,358           
+ P                          Dummy  344      COLL            16090       scalar   ARG,IN           349                               
+                                                            39872                                                                   
+ R                          Dummy  344      COLL            16090       scalar   ARG,OUT          351                               
+                                                            39872                                                                   
+ T                          Dummy  344      COLL            16090       scalar   ARG,OUT          353,354                           
+                                                            39872                                                                   
+ VAR_COLL_GRAD              Subr   344                                                                                              
+ Z                          Dummy  344      COLL            16090       scalar   ARG,OUT          357,358                           
+                                                            39872                                                                   
+
+Page 24          Source Listing                  VAR_COLL_GRAD
+2023-01-27 11:38                                 ./program/variables.f90
+
+    362 
+    363 
+    364 !------------------------------------------------------------------------
+    365 !  find the divergence of a vector
+    366 !------------------------------------------------------------------------
+    367    subroutine var_coll_div(r,t,z, dv)
+    368       type (coll), intent(in)  :: r,t,z
+    369       type (coll), intent(out) :: dv
+    370       integer :: nh,k,m
+    371 
+    372       call var_coll_meshmult(1,mes_D%dr(1),r, c1)
+    373       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    374          c2%Re(:,nh) =  &
+    375 	    r%Re(:,nh)*mes_D%r(:,-1) + c1%Re(:,nh)  &
+    376 	  - t%Im(:,nh)*ad_m1r1(:,m) - z%Im(:,nh)*ad_k1a1(k)
+    377          c2%Im(:,nh) =  &
+    378 	    r%Im(:,nh)*mes_D%r(:,-1) + c1%Im(:,nh)  &
+    379 	  + t%Re(:,nh)*ad_m1r1(:,m) + z%Re(:,nh)*ad_k1a1(k)
+    380       end do;  end do
+    381       call var_coll_copy(c2, dv)
+    382       
+    383    end subroutine var_coll_div
+
+
+ENTRY POINTS
+
+  Name                                  
+                                        
+ variables_mp_var_coll_div_             
+
+Page 25          Source Listing                  VAR_COLL_DIV
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ DV                         Dummy  367      COLL            16090       scalar   ARG,OUT          381                               
+                                                            39872                                                                   
+ K                          Local  370      I(4)            4           scalar                    373,376,379                       
+ M                          Local  370      I(4)            4           scalar                    373,376,379                       
+ NH                         Local  370      I(4)            4           scalar                    373,374,375,376,377,378,379       
+ R                          Dummy  367      COLL            16090       scalar   ARG,IN           372,375,378                       
+                                                            39872                                                                   
+ T                          Dummy  367      COLL            16090       scalar   ARG,IN           376,379                           
+                                                            39872                                                                   
+ VAR_COLL_DIV               Subr   367                                                                                              
+ Z                          Dummy  367      COLL            16090       scalar   ARG,IN           376,379                           
+                                                            39872                                                                   
+
+Page 26          Source Listing                  VAR_COLL_DIV
+2023-01-27 11:38                                 ./program/variables.f90
+
+    384 
+    385 
+    386 !------------------------------------------------------------------------
+    387 !  shift solution in z and theta
+    388 !------------------------------------------------------------------------
+    389    subroutine var_coll_shift(dt,dz,a, b)
+    390       double precision, intent(in)  :: dt,dz
+    391       type (coll),      intent(in)  :: a
+    392       type (coll),      intent(out) :: b
+    393       double precision, save :: sink(-i_K1:i_K1), sinm(0:i_M1), dz_=1d8
+    394       double precision, save :: cosk(-i_K1:i_K1), cosm(0:i_M1), dt_=1d8
+    395       double precision :: dRe(i_N)
+    396       integer :: nh,k,m
+    397       
+    398       call var_coll_copy(a, b)
+    399 
+    400       if(dz/=0d0) then
+    401          if(dz/=dz_) then
+    402             dz_ = dz      
+    403             do k = -i_K1, i_K1
+    404                sink(k) = dsin(dz*k*d_alpha)
+    405                cosk(k) = dcos(dz*k*d_alpha)
+    406             end do 
+    407          end if
+    408          nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    409             dRe = b%Re(:,nh)
+    410             b%Re(:,nh) = dRe*cosk(k) + b%Im(:,nh)*sink(k)
+    411             b%Im(:,nh) = b%Im(:,nh)*cosk(k) - dRe*sink(k)
+    412          end do;  end do
+    413       end if
+    414       
+    415       if(dt/=0d0) then
+    416          if(dt/=dt_) then
+    417             dt_ = dt      
+    418             do m = 0, i_M1
+    419                sinm(m) = dsin(dt*m*i_Mp)
+    420                cosm(m) = dcos(dt*m*i_Mp)
+    421             end do 
+    422          end if
+    423          nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    424             dRe = b%Re(:,nh)
+    425             b%Re(:,nh) = dRe*cosm(m) + b%Im(:,nh)*sinm(m)
+    426             b%Im(:,nh) = b%Im(:,nh)*cosm(m) - dRe*sinm(m)
+    427          end do;  end do
+    428       end if
+    429    
+    430    end subroutine var_coll_shift
+
+Page 27          Source Listing                  VAR_COLL_SHIFT
+2023-01-27 11:38 Entry Points                    ./program/variables.f90
+
+
+
+ENTRY POINTS
+
+  Name                                    
+                                          
+ variables_mp_var_coll_shift_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  389      COLL            16090       scalar   ARG,IN           398                               
+                                                            39872                                                                   
+ B                          Dummy  389      COLL            16090       scalar   ARG,OUT          398,409,410,411,424,425,426       
+                                                            39872                                                                   
+ COSK                       Local  394      R(8)            8     1     1023     SAVE             405,410,411                       
+ COSM                       Local  394      R(8)            8     1     512      SAVE             420,425,426                       
+ DCOS                       Func   405                                  scalar                    405,420                           
+ DRE                        Local  395      R(8)            8     1     192                       409,410,411,424,425,426           
+ DSIN                       Func   404                                  scalar                    404,419                           
+ DT                         Dummy  389      R(8)            8           scalar   ARG,IN           415,416,417,419,420               
+ DT_                        Local  394      R(8)            8           scalar   SAVE             394,416,417                       
+ DZ                         Dummy  389      R(8)            8           scalar   ARG,IN           400,401,402,404,405               
+ DZ_                        Local  393      R(8)            8           scalar   SAVE             393,401,402                       
+ K                          Local  396      I(4)            4           scalar                    403,404,405,408,410,411,423       
+ M                          Local  396      I(4)            4           scalar                    408,418,419,420,423,425,426       
+ NH                         Local  396      I(4)            4           scalar                    408,409,410,411,423,424,425,426   
+ SINK                       Local  393      R(8)            8     1     1023     SAVE             404,410,411                       
+ SINM                       Local  393      R(8)            8     1     512      SAVE             419,425,426                       
+ VAR_COLL_SHIFT             Subr   389                                                                                              
+
+Page 28          Source Listing                  VAR_COLL_SHIFT
+2023-01-27 11:38                                 ./program/variables.f90
+
+    431 
+    432 
+    433 !------------------------------------------------------------------------
+    434 !   i==0:  divergence-free conditions only
+    435 !   i==1:  mirror symmetric (Z)
+    436 !   i==2:  shift & reflect (S)
+    437 !   i==3:  shift & rotate (Omega)
+    438 !   NB: 'highly symm' == sh&ref + sh&rot
+    439 !------------------------------------------------------------------------
+    440  subroutine var_imposesym(i, r,t,z)   
+    441    integer,    intent(in)    :: i
+    442    type(coll), intent(inout) :: r,t,z
+    443    double precision :: a, b, bsend(i_N,6)
+    444    integer :: nh_,p1,p2
+    445    integer :: nh,k,m
+    446 
+    447    if(i==1 .or. i==2) then
+    448       do m = 0, i_M1
+    449          do k = -i_K1, i_K1
+    450             if(k<0 .and. m==0) cycle
+    451             
+    452             call var_harmonic( k,m, nh ,p1)
+    453             call var_harmonic(-k,m, nh_,p2)
+    454             if(m==0) nh_=nh
+    455             if(m==0) p2 =p1
+    456 
+    457             if(mpi_rnk==p1) then
+    458                b = -1d0
+    459                a =  1d0
+    460                if(i==2 .and. modulo(k,2)/=0) a = -1d0
+    461                if(m==0) b = 1d0
+    462                bsend(:,1) =  r%Re(:,nh) * a
+    463                bsend(:,2) =  r%Im(:,nh) * a * b
+    464                bsend(:,3) = -t%Re(:,nh) * a
+    465                bsend(:,4) = -t%Im(:,nh) * a * b
+    466                bsend(:,5) =  z%Re(:,nh) * a
+    467                bsend(:,6) =  z%Im(:,nh) * a * b
+    468             end if
+    469 # 587
+    470 
+    471             if(mpi_rnk==p2) then
+    472                c1%Re(:,nh_) = bsend(:,1)
+    473                c1%Im(:,nh_) = bsend(:,2)
+    474                c2%Re(:,nh_) = bsend(:,3)
+    475                c2%Im(:,nh_) = bsend(:,4)
+    476                c3%Re(:,nh_) = bsend(:,5)
+    477                c3%Im(:,nh_) = bsend(:,6)
+    478             end if
+    479          end do
+    480       end do
+    481 
+    482       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    483          r%Re(:,nh) = ( r%Re(:,nh) + c1%Re(:,nh) ) / 2d0
+    484          r%Im(:,nh) = ( r%Im(:,nh) + c1%Im(:,nh) ) / 2d0
+    485          t%Re(:,nh) = ( t%Re(:,nh) + c2%Re(:,nh) ) / 2d0
+    486          t%Im(:,nh) = ( t%Im(:,nh) + c2%Im(:,nh) ) / 2d0
+    487          z%Re(:,nh) = ( z%Re(:,nh) + c3%Re(:,nh) ) / 2d0
+
+Page 29          Source Listing                  VAR_IMPOSESYM
+2023-01-27 11:38                                 ./program/variables.f90
+
+    488          z%Im(:,nh) = ( z%Im(:,nh) + c3%Im(:,nh) ) / 2d0
+    489       end do;  end do
+    490    end if
+    491    
+    492    if(i==3) then
+    493       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    494          if(modulo(k+m,2)==0) cycle
+    495          r%Re(:,nh) = 0d0
+    496          r%Im(:,nh) = 0d0
+    497          t%Re(:,nh) = 0d0
+    498          t%Im(:,nh) = 0d0
+    499          z%Re(:,nh) = 0d0
+    500          z%Im(:,nh) = 0d0
+    501       end do;  end do
+    502    end if
+    503    
+    504    if(mpi_rnk==0) then
+    505       r%Re(:,0) = 0d0
+    506       r%Im(:,0) = 0d0
+    507       t%Im(:,0) = 0d0
+    508       z%Im(:,0) = 0d0
+    509    end if
+    510 
+    511  end subroutine var_imposesym 
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_imposesym_             
+
+Page 30          Source Listing                  VAR_IMPOSESYM
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Local  443      R(8)            8           scalar                    459,460,462,463,464,465,466,467   
+ B                          Local  443      R(8)            8           scalar                    458,461,463,465,467               
+ BSEND                      Local  443      R(8)            8     2     1152                      462,463,464,465,466,467,472,473,47
+                                                                                                  4,475,476,477                     
+ I                          Dummy  440      I(4)            4           scalar   ARG,IN           447,460,492                       
+ K                          Local  445      I(4)            4           scalar                    449,450,452,453,460,482,493,494   
+ M                          Local  445      I(4)            4           scalar                    448,450,452,453,454,455,461,482,49
+                                                                                                  3,494                             
+ MODULO                     Func   460                                  scalar                    460,494                           
+ NH                         Local  445      I(4)            4           scalar                    452,454,462,463,464,465,466,467,48
+                                                                                                  2,483,484,485,486,487,488,493,495,
+                                                                                                  496,497,498,499,500               
+ NH_                        Local  444      I(4)            4           scalar                    453,454,472,473,474,475,476,477   
+ P1                         Local  444      I(4)            4           scalar                    452,455,457                       
+ P2                         Local  444      I(4)            4           scalar                    453,455,471                       
+ R                          Dummy  440      COLL            16090       scalar   ARG,INOUT        462,463,483,484,495,496,505,506   
+                                                            39872                                                                   
+ T                          Dummy  440      COLL            16090       scalar   ARG,INOUT        464,465,485,486,497,498,507       
+                                                            39872                                                                   
+ VAR_IMPOSESYM              Subr   440                                                                                              
+ Z                          Dummy  440      COLL            16090       scalar   ARG,INOUT        466,467,487,488,499,500,508       
+                                                            39872                                                                   
+
+Page 31          Source Listing                  VAR_IMPOSESYM
+2023-01-27 11:38                                 ./program/variables.f90
+
+    512 
+    513 
+    514 !------------------------------------------------------------------------
+    515 !  get index of nearest point
+    516 !------------------------------------------------------------------------
+    517    subroutine var_nearestpt(x, ix)
+    518       double precision, intent(in)  :: x(3)
+    519       integer,          intent(out) :: ix(3)
+    520       double precision, save :: dt,dz, r_(i_N)
+    521       logical, save :: set = .false.
+    522 
+    523       if(.not.set) then 
+    524          r_ = mes_D%r(:,1)
+    525          dt = 2d0*d_PI/dble(i_Mp*i_Th)
+    526          dz = 2d0*d_PI/(d_alpha*i_Z)
+    527          set = .true.
+    528       end if
+    529       if(x(1)<0d0 .or. x(1)>1d0)              stop 'var_nearestpt: err1'
+    530       if(x(2)<0d0 .or. x(2)>2d0*d_PI)         stop 'var_nearestpt: err2'
+    531       if(x(3)<0d0 .or. x(3)>2d0*d_PI/d_alpha) stop 'var_nearestpt: err3'
+    532 
+    533       ix(1) = 1
+    534       do while( dabs(x(1)-r_(ix(1))) > dabs(x(1)-r_(ix(1)+1)) )
+    535          ix(1) = ix(1) + 1
+    536          if(ix(1)==i_N) exit
+    537       end do
+    538       ix(2) = modulo(nint(x(2)/dt),i_Th)
+    539       ix(3) = modulo(nint(x(3)/dz),i_Z)
+    540       
+    541    end subroutine var_nearestpt
+
+Page 32          Source Listing                  VAR_NEARESTPT
+2023-01-27 11:38 Entry Points                    ./program/variables.f90
+
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_nearestpt_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ DABS                       Func   534                                  scalar                    534                               
+ DBLE                       Func   525                                  scalar                    525                               
+ DT                         Local  520      R(8)            8           scalar   SAVE             525,538                           
+ DZ                         Local  520      R(8)            8           scalar   SAVE             526,539                           
+ D_PI                       Param  525      R(8)            8           scalar                    525,526,530,531,559,560,621       
+ IX                         Dummy  517      I(4)            4     1     3        ARG,OUT          533,534,535,536,538,539           
+ I_TH                       Param  525      I(4)            4           scalar                    85,525,538,559,573,574,577,582    
+ I_Z                        Param  526      I(4)            4           scalar                    526,539,560,585,586,589,594       
+ MODULO                     Func   538                                  scalar                    538,539                           
+ NINT                       Func   538                                  scalar                    538,539                           
+ R_                         Local  520      R(8)            8     1     192      SAVE             524,534                           
+ SET                        Local  521      L(4)            4           scalar   SAVE             521,523,527                       
+ VAR_NEARESTPT              Subr   517                                                                                              
+ X                          Dummy  517      R(8)            8     1     3        ARG,IN           529,530,531,534,538,539           
+
+Page 33          Source Listing                  VAR_NEARESTPT
+2023-01-27 11:38                                 ./program/variables.f90
+
+    542 
+    543 
+    544 !------------------------------------------------------------------------
+    545 !  trilinear interpolation about the nearest point
+    546 !------------------------------------------------------------------------
+    547    subroutine var_interpnearpt(x,ix,p, c)
+    548       double precision, intent(in)  :: x(3)
+    549       integer,          intent(in)  :: ix(3)
+    550       type (phys),      intent(in)  :: p
+    551       double precision, intent(out) :: c
+    552       double precision, save :: dt,dz, r_(i_N)
+    553       logical, save :: set = .false.
+    554       double precision :: rd,td,zd, c00,c10,c01,c11, c0,c1
+    555       integer :: ir0,ir1,it0,it1,iz0,iz1
+    556 
+    557       if(.not.set) then 
+    558          r_ = mes_D%r(:,1)
+    559          dt = 2d0*d_PI/dble(i_Mp*i_Th)
+    560          dz = 2d0*d_PI/(d_alpha*i_Z)
+    561          set = .true.
+    562       end if
+    563 
+    564       if(ix(1)==1 .or. x(1)>r_(ix(1))) then
+    565          ir0 = ix(1)
+    566          ir1 = ix(1)+1
+    567       else
+    568          ir0 = ix(1)-1
+    569          ir1 = ix(1)
+    570       end if
+    571       rd = (x(1)-r_(ir0))/(r_(ir1)-r_(ir0))
+    572 
+    573       it0 = nint(x(2)/dt)/i_Th
+    574       td = x(2) - dt*(ix(2) + i_Th*it0)
+    575       if(td<0d0) then
+    576          td  = td/dt + 1d0
+    577          it0 = modulo(ix(2)+i_Th-1,i_Th)
+    578          it1 = ix(2)
+    579       else
+    580          td  = td/dt
+    581          it0 = ix(2)
+    582          it1 = modulo(ix(2)+1,i_Th)
+    583       end if
+    584 
+    585       iz0 = nint(x(3)/dz)/i_Z
+    586       zd = x(3) - dz*(ix(3) + i_Z*iz0)
+    587       if(zd<0d0) then
+    588          zd  = zd/dz + 1d0
+    589          iz0 = modulo(ix(3)+i_Z-1,i_Z)
+    590          iz1 = ix(3)
+    591       else
+    592          zd  = zd/dz
+    593          iz0 = ix(3)
+    594          iz1 = modulo(ix(3)+1,i_Z)
+    595       end if
+    596 
+    597       c00 = p%Re(iz0,it0,ir0)*(1d0-rd) + p%Re(iz0,it0,ir1)*rd
+    598       c10 = p%Re(iz0,it1,ir0)*(1d0-rd) + p%Re(iz0,it1,ir1)*rd
+
+Page 34          Source Listing                  VAR_INTERPNEARPT
+2023-01-27 11:38                                 ./program/variables.f90
+
+    599       c01 = p%Re(iz1,it0,ir0)*(1d0-rd) + p%Re(iz1,it0,ir1)*rd
+    600       c11 = p%Re(iz1,it1,ir0)*(1d0-rd) + p%Re(iz1,it1,ir1)*rd
+    601       c0 = c00*(1d0-td) + c10*td
+    602       c1 = c01*(1d0-td) + c11*td
+    603       c = c0*(1d0-zd) + c1*zd      
+    604       
+    605  end subroutine var_interpnearpt
+
+
+ENTRY POINTS
+
+  Name                                      
+                                            
+ variables_mp_var_interpnearpt_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ C                          Dummy  547      R(8)            8           scalar   ARG,OUT          603                               
+ C0                         Local  554      R(8)            8           scalar                    601,603                           
+ C00                        Local  554      R(8)            8           scalar                    597,601                           
+ C01                        Local  554      R(8)            8           scalar                    599,602                           
+ C1                         Local  554      R(8)            8           scalar                    602,603                           
+ C10                        Local  554      R(8)            8           scalar                    598,601                           
+ C11                        Local  554      R(8)            8           scalar                    600,602                           
+ DBLE                       Func   559                                  scalar                    559                               
+ DT                         Local  552      R(8)            8           scalar   SAVE             559,573,574,576,580               
+ DZ                         Local  552      R(8)            8           scalar   SAVE             560,585,586,588,592               
+ IR0                        Local  555      I(4)            4           scalar                    565,568,571,597,598,599,600       
+ IR1                        Local  555      I(4)            4           scalar                    566,569,571,597,598,599,600       
+ IT0                        Local  555      I(4)            4           scalar                    573,574,577,581,597,599           
+ IT1                        Local  555      I(4)            4           scalar                    578,582,598,600                   
+ IX                         Dummy  547      I(4)            4     1     3        ARG,IN           564,565,566,568,569,574,577,578,58
+                                                                                                  1,582,586,589,590,593,594         
+ IZ0                        Local  555      I(4)            4           scalar                    585,586,589,593,597,598           
+ IZ1                        Local  555      I(4)            4           scalar                    590,594,599,600                   
+ MODULO                     Func   577                                  scalar                    577,582,589,594                   
+ NINT                       Func   573                                  scalar                    573,585                           
+ P                          Dummy  547      PHYS            36238       scalar   ARG,IN           597,598,599,600                   
+                                                            78656                                                                   
+ PHYS                       Type   550                      36238       scalar                    86,550                            
+                                                            78656                                                                   
+ RD                         Local  554      R(8)            8           scalar                    571,597,598,599,600               
+ R_                         Local  552      R(8)            8     1     192      SAVE             558,564,571                       
+ SET                        Local  553      L(4)            4           scalar   SAVE             553,557,561                       
+ TD                         Local  554      R(8)            8           scalar                    574,575,576,580,601,602           
+ VAR_INTERPNEARPT           Subr   547                                                                                              
+ X                          Dummy  547      R(8)            8     1     3        ARG,IN           564,571,573,574,585,586           
+ ZD                         Local  554      R(8)            8           scalar                    586,587,588,592,603               
+
+
+
+Page 35          Source Listing                  VAR_INTERPNEARPT
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ PHYS.RE                    R(8)            8     0        3     45298483                  597,598,599,600                    
+                                                                 2                                                            
+
+Page 36          Source Listing                  VAR_INTERPNEARPT
+2023-01-27 11:38                                 ./program/variables.f90
+
+    606 
+    607 
+    608 !------------------------------------------------------------------------
+    609 !  norm   (1/2) \int a.a dV  for each l,m
+    610 !------------------------------------------------------------------------
+    611    subroutine var_coll_norm(a, E,Ek,Em)
+    612       type (coll),      intent(in)  :: a
+    613       double precision, intent(out) :: E, Ek(0:i_K1), Em(0:i_M1)
+    614 # 733
+    615 
+    616       double precision :: w, b, f(i_N)
+    617       integer :: nh,k,m
+    618       
+    619       Ek = 0d0
+    620       Em = 0d0
+    621       w  = 4d0 * d_PI*d_PI / d_alpha
+    622       if(d_alpha==0d0) stop 'var_coll_norm: alpha=0'
+    623       nh = -1;    do m = 0, i_M1;     do k = -i_K1, i_K1;      if(k<0 .and. m==0) cycle;      nh = nh  + 1
+    624          f =  w * ( a%Re(:,nh)*a%Re(:,nh)  &
+    625                   + a%Im(:,nh)*a%Im(:,nh) )
+    626          b = dot_product(f,mes_D%intrdr )
+    627          if(k==0 .and. m==0) b = 0.5d0*b 
+    628          Em(m)      = Em(m)      + b
+    629          Ek(abs(k)) = Ek(abs(k)) + b
+    630       end do;  end do
+    631 
+    632 # 757
+    633 
+    634       
+    635       E = sum(Em)
+    636    
+    637    end subroutine var_coll_norm
+
+Page 37          Source Listing                  VAR_COLL_NORM
+2023-01-27 11:38 Entry Points                    ./program/variables.f90
+
+
+
+ENTRY POINTS
+
+  Name                                   
+                                         
+ variables_mp_var_coll_norm_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  611      COLL            16090       scalar   ARG,IN           624,625                           
+                                                            39872                                                                   
+ ABS                        Func   629                                  scalar                    629                               
+ B                          Local  616      R(8)            8           scalar                    626,627,628,629                   
+ DOT_PRODUCT                Func   626                                  scalar                    626                               
+ E                          Dummy  611      R(8)            8           scalar   ARG,OUT          635                               
+ EK                         Dummy  611      R(8)            8     1     512      ARG,OUT          619,629                           
+ EM                         Dummy  611      R(8)            8     1     512      ARG,OUT          620,628,635                       
+ F                          Local  616      R(8)            8     1     192                       624,626                           
+ K                          Local  617      I(4)            4           scalar                    623,627,629                       
+ M                          Local  617      I(4)            4           scalar                    623,627,628                       
+ NH                         Local  617      I(4)            4           scalar                    623,624,625                       
+ SUM                        Func   635                                  scalar                    635                               
+ VAR_COLL_NORM              Subr   611                                                                                              
+ W                          Local  616      R(8)            8           scalar                    621,624                           
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ RDOM.INTRDR                R(8)            8     10776    1     192                       626                                
+
+Page 38          Source Listing                  VAR_COLL_NORM
+2023-01-27 11:38 Symbol Table                    ./program/variables.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ HARM                       Type   69                       16          scalar                    71,89                             
+ I_PH1                      Param  80       I(4)            4           scalar                    80,81                             
+ I_PN                       Param  74       I(4)            4           scalar                    74,75,85                          
+ I_PZ                       Param  85       I(4)            4           scalar                    85                                
+ MESHS                      Module 65                                                             65                                
+ MPIF                       Module 63                                                             63                                
+ PARAMETERS                 Module 64                                                             64                                
+ VARIABLES                  Module 61                                                                                               
+
+Page 39          Source Listing                  VAR_COLL_NORM
+2023-01-27 11:38                                 ./program/variables.f90
+
+    638 
+    639 !*************************************************************************
+    640  end module variables
+    641 !*************************************************************************
+
+Page 40          Source Listing                  VAR_COLL_NORM
+2023-01-27 11:38 Subprograms/Common Blocks       ./program/variables.f90
+
+
+
+SUBPROGRAMS/COMMON BLOCKS
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ VARIABLES                  Module 61                                                                                               
+ VAR_COLL2SPEC              Subr   226                                                                                              
+ VAR_COLL_ADD               Subr   181                                                                                              
+ VAR_COLL_COPY              Subr   170                                                            315,316,317,349,381,398           
+ VAR_COLL_CURL              Subr   310                                                                                              
+ VAR_COLL_DIV               Subr   367                                                                                              
+ VAR_COLL_DMULT             Subr   203                                                                                              
+ VAR_COLL_GRAD              Subr   344                                                                                              
+ VAR_COLL_INIT              Subr   160                                                                                              
+ VAR_COLL_MESHMULT          Subr   271                                                            324,330,351,372                   
+ VAR_COLL_NEG               Subr   214                                                                                              
+ VAR_COLL_NORM              Subr   611                                                                                              
+ VAR_COLL_SHIFT             Subr   389                                                                                              
+ VAR_COLL_SUB               Subr   192                                                                                              
+ VAR_HARMONIC               Subr   136                                                            452,453                           
+ VAR_IMPOSESYM              Subr   440                                                                                              
+ VAR_INTERPNEARPT           Subr   547                                                                                              
+ VAR_NEARESTPT              Subr   517                                                                                              
+ VAR_NULL                   Subr   152                                                                                              
+ VAR_PRECOMPUTE             Subr   102                                                                                              
+ VAR_SPEC2COLL              Subr   248                                                                                              
+
+COMPILER OPTIONS BEING USED
+
+       -align noall                          -align nonone
+       -align nocommons                      -align nodcommons
+       -align noqcommons                     -align nozcommons
+       -align records                        -align nosequence
+       -align norec1byte                     -align norec2byte
+       -align norec4byte                     -align norec8byte
+       -align norec16byte                    -align norec32byte
+       -align norec64byte                    -align noarray8byte
+       -align noarray16byte                  -align noarray32byte
+       -align noarray64byte                  -align noarray128byte
+       -align noarray256byte                 -altparam
+       -assume accuracy_sensitive            -assume nobscc
+       -assume nobuffered_io                 -assume nobuffered_stdout
+       -assume nobyterecl                    -assume nocontiguous_assumed_shape
+       -assume nocontiguous_pointer          -assume nocc_omp
+       -assume nocstring                     -assume nodummy_aliases
+       -assume nofailed_images               -assume nofpe_summary
+       -assume noieee_compares               -assume noieee_fpe_flags
+       -assume nominus0                      -assume noold_boz
+       -assume old_complex_align             -assume old_unit_star
+       -assume old_inquire_recl              -assume old_ldout_format
+       -assume old_ldout_zero                -assume noold_logical_assign
+       -assume noold_logical_ldio            -assume old_maxminloc
+       -assume old_xor                       -assume noprotect_allocates
+       -assume protect_constants             -assume noprotect_parens
+       -assume realloc_lhs                   -assume norecursion
+       -assume split_common                  -assume source_include
+
+Page 41          Source Listing                  VAR_COLL_NORM
+2023-01-27 11:38                                 ./program/variables.f90
+
+       -assume nostd_intent_in               -assume std_minus0_rounding
+       -assume nostd_mod_proc_name           -assume std_value
+       -assume underscore                    -assume no2underscores
+  no   -auto                                 -auto_scalar
+  no   -bintext                              -ccdefault default
+       -check arg_temp_created               -check assume
+       -check bounds                         -check contiguous
+       -check format                         -check output_conversion
+       -check overflow                       -check pointers
+       -check shape                          -check stack
+       -check teams                          -check uninitialized
+       -check udio_iostat                    -coarray-num-procs 0
+  no   -coarray-config-file                  -convert native
+       -cross_reference                      -D __INTEL_COMPILER=2021
+       -D __INTEL_COMPILER_UPDATE=4          -D __unix__
+       -D __unix                             -D __linux__
+       -D __linux                            -D __gnu_linux__
+       -D unix                               -D linux
+       -D __ELF__                            -D __x86_64
+       -D __x86_64__                         -D __amd64
+       -D __amd64__                          -D __INTEL_COMPILER_BUILD_DATE=20210910
+       -D __PIC__                            -D __pic__
+       -D __INTEL_OFFLOAD                    -D __MMX__
+       -D __SSE__                            -D __SSE_MATH__
+       -D __SSE2__                           -D __SSE2_MATH__
+       -D __pentium4                         -D __pentium4__
+       -D __tune_pentium4__                  -double_size 64
+  no   -d_lines                         no   -Qdyncom
+       -error_limit 30                  no   -f66
+  no   -f77rtl                          no   -fast
+       -fpscomp nofilesfromcmd               -fpscomp nogeneral
+       -fpscomp noioformat                   -fpscomp noldio_spacing
+       -fpscomp nologicals              no   -fpconstant
+       -fpe0                                 -fprm nearest
+  no   -ftz                                  -fp_model noprecise
+       -fp_model fast                        -fp_model nostrict
+       -fp_model nosource                    -fp_model nodouble
+       -fp_model noextended                  -fp_model novery_fast
+       -fp_model noexcept                    -fp_model nono_except
+       -fp_modbits nofp_contract             -fp_modbits nono_fp_contract
+       -fp_modbits nofenv_access             -fp_modbits nono_fenv_access
+       -fp_modbits nocx_limited_range        -fp_modbits nono_cx_limited_range
+       -fp_modbits noprec_div                -fp_modbits nono_prec_div
+       -fp_modbits noprec_sqrt               -fp_modbits nono_prec_sqrt
+       -fp_modbits noftz                     -fp_modbits nono_ftz
+       -fp_modbits nointrin_limited_range       -fp_modbits nono_intrin_limited_range
+       -fp_modbits notrunc_compares          -fp_modbits nono_trunc_compares
+       -fp_modbits noieee_nan_compares       -fp_modbits nono_ieee_nan_compares
+       -fp_modbits honor_f32_conversion       -fp_modbits nono_honor_f32_conversion
+       -fp_modbits honor_f64_conversion       -fp_modbits nono_honor_f64_conversion
+       -fp_modbits nono_x87_copy             -fp_modbits nono_no_x87_copy
+       -fp_modbits noexception_semantics       -fp_modbits nono_exception_semantics
+       -fp_modbits noprecise_libm_functions       -fp_modbits nono_precise_libm_functions
+       -heap_arrays 0                   no   -threadprivate_compat
+       -free                                 -g2
+       -iface nomixed_str_len_arg            -iface nono_mixed_str_len_arg
+       -init noarrays                        -init nohuge
+
+Page 42          Source Listing                  VAR_COLL_NORM
+2023-01-27 11:38                                 ./program/variables.f90
+
+       -init noinfinity                      -init nominus_huge
+       -init nominus_infinity                -init nominus_tiny
+       -init nonan                           -init nosnan
+       -init notiny                          -init nozero
+  no   -intconstant                          -integer_size 32
+  no   -mixed_str_len_arg               no   -module
+       -names lowercase                 no   -noinclude
+  no   -o                                    -offload-build=host
+       -O0                              no   -pad_source
+       -real_size 32                    no   -recursive
+       -reentrancy threaded                  -vec=simd
+       -show nofullpath                      -show noinclude
+       -show map                             -show options
+  no   -syntax_only                     no   -threadcom
+  no   -U                               no   -vms
+       -w noall                              -w nonone
+       -w alignments                         -w nodeclarations
+       -w noexternals                        -w general
+       -w noignore_bounds                    -w noignore_loc
+       -w nointerfaces                       -w noshape
+       -w notruncated_source                 -w uncalled
+       -w uninitialized                      -w unused
+       -w usage                         no   -wrap-margins
+
+       -includepath : /home/intel/oneapi/mpi/2021.4.0//include/,/home/intel/oneapi/dpl/2021.5.0/linux/include/,/home/intel/oneapi/compiler/2021.4.0/linux/include/,
+           /usr/local/include/,.f90,./program/.f90,./.f90,/home/intel/oneapi/vpl/2021.6.0/include/.f90,/home/intel/oneapi/tbb/2021.4.0/env/../include/.f90,
+           /home/intel/oneapi/mpi/2021.4.0//include/.f90,/home/intel/oneapi/mkl/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,
+           /home/intel/oneapi/ippcp/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,/home/intel/oneapi/dpl/2021.5.0/linux/include/.f90,
+           /home/intel/oneapi/dpcpp-ct/2021.4.0/include/.f90,/home/intel/oneapi/dnnl/2021.4.0/cpu_dpcpp_gpu_dpcpp/lib/.f90,
+           /home/intel/oneapi/dev-utilities/2021.4.0/include/.f90,/home/intel/oneapi/dal/2021.4.0/include/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/include/.f90,
+           /home/intel/oneapi/ccl/2021.4.0/include/cpu_gpu_dpcpp/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/intel64/.f90,
+           /home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/icc/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/.f90,
+           /usr/local/include/.f90,/usr/lib/gcc/x86_64-linux-gnu/9/include/.f90,/usr/include/.f90,/usr/include/.f90,
+           /usr/include/x86_64-linux-gnu/.f90,/usr/include/.f90
+       -list filename : variables.lst
+  no   -o
+
+COMPILER: Intel(R) Fortran 2021.4.0-2742

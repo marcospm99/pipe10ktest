@@ -1,0 +1,61 @@
+function netcdf2h5(filinp,filout)
+% script assign_old2h5
+%
+% Important. It doesn't change anything else. To change to a new file, use
+% readh5 after using this one
+
+if exist(filinp, 'file') ~= 2
+   error([ 'The file ', filinp, ' does not exist']);
+end
+
+time = ncreadatt(fiilinp,"/",'t');
+Re   = ncreadatt(fiilinp,"/",'Re');
+alp  = ncreadatt(fiilinp,"/",'alpha');
+
+r     = ncread(fiilinp,"r") ;
+dt    = ncread(fiilinp,"dt");
+dtcor = ncread(fiilinp,"dtcor");
+dtcfl = ncread(fiilinp,"dtcfl");
+
+% Fields 
+
+Ur = ncread(fiilinp,"Ur");
+Uz = ncread(fiilinp,"Uz");
+Ut = ncread(fiilinp,"Ut");
+
+[n1,n2,n3] = size(ur);
+
+K = ncreadatt(fiilinp,"Ur","K");
+M = ncreadatt(fiilinp,"Ur","M");
+
+h5create(filout,'/Re'  ,1,'Datatype','double');
+h5create(filout,'/alp' ,1,'Datatype','double');
+h5create(filout,'/time',1,'Datatype','double');
+
+h5create(filout,'/dt'  ,1,'Datatype','double');
+h5create(filout,'/dtcor' ,1,'Datatype','double');
+h5create(filout,'/dtcfl',1,'Datatype','double');
+
+h5write(filout,'Re',Re);
+h5write(filout,'alp',alp);
+h5write(filout,'time',time);
+
+h5write(filout,'dt',Re);
+h5write(filout,'dtcor',alp);
+h5write(filout,'dtcfl',time);
+
+
+% Copy to new file.
+
+h5create(filout,'K',1,'Datatype','int32'); % Fourier en x. 
+h5create(filout,'M',1,'Datatype','int32'); % Fourier en theta
+h5create(filout,'N',1,'Datatype','int32'); % Puntos radiales
+
+h5write(filout,'K',int32(K));
+h5write(filout,'M',int32(M));
+h5write(filout,'N',int32(N));
+
+h5create(filout,'/',double([2*my mz mx/2]),'Datatype','single');
+
+
+

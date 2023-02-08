@@ -1,0 +1,347 @@
+Page 1           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38                                 /tmp/ifortzs47hB.i90
+
+      1 # 1 "./program/parameters.f90"
+      2 !***************************************************************************
+      3 ! parameters
+      4 !***************************************************************************
+      5 !
+      6 !
+      7 !  i_N   Number of radial points n in [1,N]
+      8 !  i_K   Maximum k (axial), k in (−K,K)
+      9 !  i_M   Maximum m (azimuthal), m in [0,M)
+     10 !  i_Mp  Azimuthal periodicity, i.e. m=0,Mp,2Mp,…,(M−1)Mp (set =1 for no symmetry assumption)
+     11 !  d_Re    Reynolds number Re or Rmm
+     12 !  d_alpha Axial wavenumber α=2π/Lz. \alpha must be 0.25 (8pi)
+     13 !  b_const_flux    Enforce constant flux Ub=1/2.
+     14 !
+     15 ! --------------------------------------------------------
+     16 !
+     17 !  i_save_rate1    Save frequency for snapshot data files (timesteps between saves)
+     18 !  i_save_rate2    Save frequency for time-series data
+     19 !  i_maxtstep      Maximum number of timesteps (no limit if set =-1)
+     20 !  d_cpuhours      Maximum number of cpu hours
+     21 !  d_time          Start time (taken from state.cdf.in if set =-1d0)
+     22 !  d_timestep      Fixed timestep (typically =0.01d0 or dynamically controlled if set =-1d0)
+     23 !  d_dterr         Maximum corrector norm, ∥fcorr∥ (typically =1d-5 or set =1d1 to avoid extra corrector iterations)
+     24 !  d_courant       Courant number C (unlikely to need changing)
+     25 !  d_implicit      Implicitness c (unlikely to need changing)!
+     26 !
+     27 !***************************************************************************
+     28 # 1 "./program/../parallel.h" 1 
+     29 
+     30 
+     31 
+     32  
+     33 
+     34 
+     35 
+     36  
+     37 
+     38  
+     39 
+     40 # 14
+     41 
+     42 
+     43 
+     44 
+     45 
+     46 
+     47  
+     48 # 23
+     49 
+     50 
+     51  
+     52 # 44
+     53 
+     54  
+     55 
+     56 
+     57 
+
+Page 2           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/../parallel.h
+
+     58 # 54
+     59 
+     60          
+     61 
+     62 
+     63  
+     64 
+     65  
+     66 
+     67 
+     68 # 28 "./program/parameters.f90" 2 
+     69  module parameters
+     70 !***************************************************************************
+     71    implicit none
+     72    save
+     73 
+     74    integer,          parameter :: i_N           = 192 ! n in [1,N] radial r_n
+     75    integer,          parameter :: i_K           = 512 ! ! Este tiene que ser potencia de 2 y 3 y grande!!
+     76    integer,          parameter :: i_M           = 512 ! azimutal
+     77    integer,          parameter :: i_Mp          = 1  ! Siempre 1.
+     78 
+     79 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+     80    double precision            :: d_Re          = 5300d0
+     81    double precision            :: d_alpha       = 0.2d0
+     82    logical,          parameter :: b_const_flux  = .true.
+     83    logical,          parameter :: b_mirrorsym   = .false.
+     84    logical,          parameter :: b_shiftrefl   = .false.
+     85    logical,          parameter :: b_shiftrott   = .false.
+     86    double precision, parameter :: d_minE3d      = 1d-5
+     87    
+     88 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+     89    integer,          parameter :: i_save_rate1  = 2000!100
+     90    integer,          parameter :: i_save_rate2  = 10  
+     91    integer,          parameter :: i_maxtstep    = -1 
+     92    double precision, parameter :: d_maxt        = -1d0
+     93    double precision, parameter :: d_cpuhours    = 1d99 !90d0
+     94    double precision, parameter :: d_time        = 0d0 !-1d0 !0d0
+     95    double precision, parameter :: d_timestep    = 0.01d0 !-1d0
+     96    double precision, parameter :: d_maxdt       = 1d99
+     97    double precision, parameter :: d_dterr       = 1d-5 !1d99
+     98    double precision, parameter :: d_courant     = 0.5d0
+     99    double precision, parameter :: d_implicit    = 0.51d0
+    100 
+    101 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+    102    integer,          parameter :: i_KL  = 4   
+    103    integer,          parameter :: i_K1  = i_K-1
+    104    integer,          parameter :: i_M1  = i_M-1
+    105    integer,          parameter :: i_Z   = 3*i_K  
+    106    integer,          parameter :: i_Th  = 3*i_M
+    107    integer,          parameter :: i_H1  = (2*i_K1+1)*i_M-i_K1-1
+    108    integer,          parameter :: i_pN  = (1+i_N-1)/1
+    109    integer,          parameter :: i_pH1 = (1+((2*i_K-1)*(i_M/1)-1))/1-1
+    110    integer,          parameter :: i_pZ  = i_Z/1
+    111    double precision, parameter :: d_PI  = 3.1415926535897931d0
+    112 
+    113  contains
+    114 
+
+Page 3           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/parameters.f90
+
+    115 !---------------------------------------------------------------------------
+    116 !  check params are ok
+    117 !---------------------------------------------------------------------------
+    118    subroutine par_precompute()
+    119       if(modulo(i_Z,1)/=0) stop '_Ns must divide i_Z'
+    120       if(modulo(i_M,1)/=0) stop '_Ns must divide i_M'
+    121    end subroutine par_precompute
+
+
+ENTRY POINTS
+
+  Name                                     
+                                           
+ parameters_mp_par_precompute_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ I_M                        Param  120      I(4)            4           scalar                    104,106,107,109,120               
+ I_Z                        Param  119      I(4)            4           scalar                    110,119                           
+ MODULO                     Func   119                                  scalar                    119,120                           
+ PAR_PRECOMPUTE             Subr   118                                                                                              
+
+Page 4           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38 Symbol Table                    ./program/parameters.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ B_CONST_FLUX               Param  82       L(4)            4           scalar                                                      
+ B_MIRRORSYM                Param  83       L(4)            4           scalar                                                      
+ B_SHIFTREFL                Param  84       L(4)            4           scalar                                                      
+ B_SHIFTROTT                Param  85       L(4)            4           scalar                                                      
+ D_ALPHA                    Local  81       R(8)            8           scalar   SAVE             81                                
+ D_COURANT                  Param  98       R(8)            8           scalar                                                      
+ D_CPUHOURS                 Param  93       R(8)            8           scalar                                                      
+ D_DTERR                    Param  97       R(8)            8           scalar                                                      
+ D_IMPLICIT                 Param  99       R(8)            8           scalar                                                      
+ D_MAXDT                    Param  96       R(8)            8           scalar                                                      
+ D_MAXT                     Param  92       R(8)            8           scalar                                                      
+ D_MINE3D                   Param  86       R(8)            8           scalar                                                      
+ D_PI                       Param  111      R(8)            8           scalar                                                      
+ D_RE                       Local  80       R(8)            8           scalar   SAVE             80                                
+ D_TIME                     Param  94       R(8)            8           scalar                                                      
+ D_TIMESTEP                 Param  95       R(8)            8           scalar                                                      
+ I_H1                       Param  107      I(4)            4           scalar                                                      
+ I_K                        Param  75       I(4)            4           scalar                    103,105,109                       
+ I_K1                       Param  103      I(4)            4           scalar                    107                               
+ I_KL                       Param  102      I(4)            4           scalar                                                      
+ I_M1                       Param  104      I(4)            4           scalar                                                      
+ I_MAXTSTEP                 Param  91       I(4)            4           scalar                                                      
+ I_MP                       Param  77       I(4)            4           scalar                                                      
+ I_N                        Param  74       I(4)            4           scalar                    108                               
+ I_PH1                      Param  109      I(4)            4           scalar                                                      
+ I_PN                       Param  108      I(4)            4           scalar                                                      
+ I_PZ                       Param  110      I(4)            4           scalar                                                      
+ I_SAVE_RATE1               Param  89       I(4)            4           scalar                                                      
+ I_SAVE_RATE2               Param  90       I(4)            4           scalar                                                      
+ I_TH                       Param  106      I(4)            4           scalar                                                      
+ PARAMETERS                 Module 69                                                                                               
+
+Page 5           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/parameters.f90
+
+    122  
+    123 
+    124 !***************************************************************************
+    125  end module parameters
+    126 !***************************************************************************
+    127 
+    128 
+    129 
+
+Page 6           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38 Subprograms/Common Blocks       ./program/parameters.f90
+
+
+
+SUBPROGRAMS/COMMON BLOCKS
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ PARAMETERS                 Module 69                                                                                               
+ PAR_PRECOMPUTE             Subr   118                                                                                              
+
+COMPILER OPTIONS BEING USED
+
+       -align noall                          -align nonone
+       -align nocommons                      -align nodcommons
+       -align noqcommons                     -align nozcommons
+       -align records                        -align nosequence
+       -align norec1byte                     -align norec2byte
+       -align norec4byte                     -align norec8byte
+       -align norec16byte                    -align norec32byte
+       -align norec64byte                    -align noarray8byte
+       -align noarray16byte                  -align noarray32byte
+       -align noarray64byte                  -align noarray128byte
+       -align noarray256byte                 -altparam
+       -assume accuracy_sensitive            -assume nobscc
+       -assume nobuffered_io                 -assume nobuffered_stdout
+       -assume nobyterecl                    -assume nocontiguous_assumed_shape
+       -assume nocontiguous_pointer          -assume nocc_omp
+       -assume nocstring                     -assume nodummy_aliases
+       -assume nofailed_images               -assume nofpe_summary
+       -assume noieee_compares               -assume noieee_fpe_flags
+       -assume nominus0                      -assume noold_boz
+       -assume old_complex_align             -assume old_unit_star
+       -assume old_inquire_recl              -assume old_ldout_format
+       -assume old_ldout_zero                -assume noold_logical_assign
+       -assume noold_logical_ldio            -assume old_maxminloc
+       -assume old_xor                       -assume noprotect_allocates
+       -assume protect_constants             -assume noprotect_parens
+       -assume realloc_lhs                   -assume norecursion
+       -assume split_common                  -assume source_include
+       -assume nostd_intent_in               -assume std_minus0_rounding
+       -assume nostd_mod_proc_name           -assume std_value
+       -assume underscore                    -assume no2underscores
+  no   -auto                                 -auto_scalar
+  no   -bintext                              -ccdefault default
+       -check arg_temp_created               -check assume
+       -check bounds                         -check contiguous
+       -check format                         -check output_conversion
+       -check overflow                       -check pointers
+       -check shape                          -check stack
+       -check teams                          -check uninitialized
+       -check udio_iostat                    -coarray-num-procs 0
+  no   -coarray-config-file                  -convert native
+       -cross_reference                      -D __INTEL_COMPILER=2021
+       -D __INTEL_COMPILER_UPDATE=4          -D __unix__
+       -D __unix                             -D __linux__
+       -D __linux                            -D __gnu_linux__
+       -D unix                               -D linux
+       -D __ELF__                            -D __x86_64
+
+Page 7           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/parameters.f90
+
+       -D __x86_64__                         -D __amd64
+       -D __amd64__                          -D __INTEL_COMPILER_BUILD_DATE=20210910
+       -D __PIC__                            -D __pic__
+       -D __INTEL_OFFLOAD                    -D __MMX__
+       -D __SSE__                            -D __SSE_MATH__
+       -D __SSE2__                           -D __SSE2_MATH__
+       -D __pentium4                         -D __pentium4__
+       -D __tune_pentium4__                  -double_size 64
+  no   -d_lines                         no   -Qdyncom
+       -error_limit 30                  no   -f66
+  no   -f77rtl                          no   -fast
+       -fpscomp nofilesfromcmd               -fpscomp nogeneral
+       -fpscomp noioformat                   -fpscomp noldio_spacing
+       -fpscomp nologicals              no   -fpconstant
+       -fpe0                                 -fprm nearest
+  no   -ftz                                  -fp_model noprecise
+       -fp_model fast                        -fp_model nostrict
+       -fp_model nosource                    -fp_model nodouble
+       -fp_model noextended                  -fp_model novery_fast
+       -fp_model noexcept                    -fp_model nono_except
+       -fp_modbits nofp_contract             -fp_modbits nono_fp_contract
+       -fp_modbits nofenv_access             -fp_modbits nono_fenv_access
+       -fp_modbits nocx_limited_range        -fp_modbits nono_cx_limited_range
+       -fp_modbits noprec_div                -fp_modbits nono_prec_div
+       -fp_modbits noprec_sqrt               -fp_modbits nono_prec_sqrt
+       -fp_modbits noftz                     -fp_modbits nono_ftz
+       -fp_modbits nointrin_limited_range       -fp_modbits nono_intrin_limited_range
+       -fp_modbits notrunc_compares          -fp_modbits nono_trunc_compares
+       -fp_modbits noieee_nan_compares       -fp_modbits nono_ieee_nan_compares
+       -fp_modbits honor_f32_conversion       -fp_modbits nono_honor_f32_conversion
+       -fp_modbits honor_f64_conversion       -fp_modbits nono_honor_f64_conversion
+       -fp_modbits nono_x87_copy             -fp_modbits nono_no_x87_copy
+       -fp_modbits noexception_semantics       -fp_modbits nono_exception_semantics
+       -fp_modbits noprecise_libm_functions       -fp_modbits nono_precise_libm_functions
+       -heap_arrays 0                   no   -threadprivate_compat
+       -free                                 -g2
+       -iface nomixed_str_len_arg            -iface nono_mixed_str_len_arg
+       -init noarrays                        -init nohuge
+       -init noinfinity                      -init nominus_huge
+       -init nominus_infinity                -init nominus_tiny
+       -init nonan                           -init nosnan
+       -init notiny                          -init nozero
+  no   -intconstant                          -integer_size 32
+  no   -mixed_str_len_arg               no   -module
+       -names lowercase                 no   -noinclude
+  no   -o                                    -offload-build=host
+       -O0                              no   -pad_source
+       -real_size 32                    no   -recursive
+       -reentrancy threaded                  -vec=simd
+       -show nofullpath                      -show noinclude
+       -show map                             -show options
+  no   -syntax_only                     no   -threadcom
+  no   -U                               no   -vms
+       -w noall                              -w nonone
+       -w alignments                         -w nodeclarations
+       -w noexternals                        -w general
+       -w noignore_bounds                    -w noignore_loc
+
+Page 8           Source Listing                  PAR_PRECOMPUTE
+2023-01-27 11:38                                 ./program/parameters.f90
+
+       -w nointerfaces                       -w noshape
+       -w notruncated_source                 -w uncalled
+       -w uninitialized                      -w unused
+       -w usage                         no   -wrap-margins
+
+       -includepath : /home/intel/oneapi/mpi/2021.4.0//include/,/home/intel/oneapi/dpl/2021.5.0/linux/include/,/home/intel/oneapi/compiler/2021.4.0/linux/include/,
+           /usr/local/include/,.f90,./program/.f90,./.f90,/home/intel/oneapi/vpl/2021.6.0/include/.f90,/home/intel/oneapi/tbb/2021.4.0/env/../include/.f90,
+           /home/intel/oneapi/mpi/2021.4.0//include/.f90,/home/intel/oneapi/mkl/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,
+           /home/intel/oneapi/ippcp/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,/home/intel/oneapi/dpl/2021.5.0/linux/include/.f90,
+           /home/intel/oneapi/dpcpp-ct/2021.4.0/include/.f90,/home/intel/oneapi/dnnl/2021.4.0/cpu_dpcpp_gpu_dpcpp/lib/.f90,
+           /home/intel/oneapi/dev-utilities/2021.4.0/include/.f90,/home/intel/oneapi/dal/2021.4.0/include/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/include/.f90,
+           /home/intel/oneapi/ccl/2021.4.0/include/cpu_gpu_dpcpp/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/intel64/.f90,
+           /home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/icc/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/.f90,
+           /usr/local/include/.f90,/usr/lib/gcc/x86_64-linux-gnu/9/include/.f90,/usr/include/.f90,/usr/include/.f90,
+           /usr/include/x86_64-linux-gnu/.f90,/usr/include/.f90
+       -list filename : parameters.lst
+  no   -o
+
+COMPILER: Intel(R) Fortran 2021.4.0-2742

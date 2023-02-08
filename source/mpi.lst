@@ -1,0 +1,254 @@
+Page 1           Source Listing                  MPI_PRECOMPUTE
+2023-01-27 11:38                                 /tmp/iforti4ka83.i90
+
+      1 # 1 "./program/mpi.f90"
+      2 !*************************************************************************
+      3 !
+      4 !
+      5 !*************************************************************************
+      6 # 1 "./program/../parallel.h" 1 
+      7 
+      8 
+      9 
+     10  
+     11 
+     12 
+     13 
+     14  
+     15 
+     16  
+     17 
+     18 # 14
+     19 
+     20 
+     21 
+     22 
+     23 
+     24 
+     25  
+     26 # 23
+     27 
+     28 
+     29  
+     30 # 44
+     31 
+     32  
+     33 
+     34 
+     35 
+     36 # 54
+     37 
+     38          
+     39 
+     40 
+     41  
+     42 
+     43  
+     44 
+     45 
+     46 # 6 "./program/mpi.f90" 2 
+     47  module mpif
+     48 !*************************************************************************
+     49    implicit none
+     50    save
+     51    
+     52 # 14
+     53 
+     54    integer :: mpi_rnk, mpi_sze
+     55    
+     56  contains
+     57 
+
+Page 2           Source Listing                  MPI_PRECOMPUTE
+2023-01-27 11:38                                 ./program/mpi.f90
+
+     58 !------------------------------------------------------------------------
+     59 !  initialise
+     60 !------------------------------------------------------------------------
+     61    subroutine mpi_precompute()
+     62       mpi_rnk = 0
+     63       mpi_sze = 1
+     64 # 30
+     65 
+     66    end subroutine mpi_precompute
+
+
+ENTRY POINTS
+
+  Name                               
+                                     
+ mpif_mp_mpi_precompute_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ MPI_PRECOMPUTE             Subr   61                                                                                               
+ MPI_RNK                    Local  62       I(4)            4           scalar   SAVE             62                                
+ MPI_SZE                    Local  63       I(4)            4           scalar   SAVE             63                                
+
+Page 3           Source Listing                  MPI_PRECOMPUTE
+2023-01-27 11:38 Symbol Table                    ./program/mpi.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ MPIF                       Module 47                                                                                               
+
+Page 4           Source Listing                  MPI_PRECOMPUTE
+2023-01-27 11:38                                 ./program/mpi.f90
+
+     67 
+     68    
+     69 !*************************************************************************
+     70  end module mpif
+     71 !*************************************************************************
+
+Page 5           Source Listing                  MPI_PRECOMPUTE
+2023-01-27 11:38 Subprograms/Common Blocks       ./program/mpi.f90
+
+
+
+SUBPROGRAMS/COMMON BLOCKS
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ MPIF                       Module 47                                                                                               
+ MPI_PRECOMPUTE             Subr   61                                                                                               
+
+COMPILER OPTIONS BEING USED
+
+       -align noall                          -align nonone
+       -align nocommons                      -align nodcommons
+       -align noqcommons                     -align nozcommons
+       -align records                        -align nosequence
+       -align norec1byte                     -align norec2byte
+       -align norec4byte                     -align norec8byte
+       -align norec16byte                    -align norec32byte
+       -align norec64byte                    -align noarray8byte
+       -align noarray16byte                  -align noarray32byte
+       -align noarray64byte                  -align noarray128byte
+       -align noarray256byte                 -altparam
+       -assume accuracy_sensitive            -assume nobscc
+       -assume nobuffered_io                 -assume nobuffered_stdout
+       -assume nobyterecl                    -assume nocontiguous_assumed_shape
+       -assume nocontiguous_pointer          -assume nocc_omp
+       -assume nocstring                     -assume nodummy_aliases
+       -assume nofailed_images               -assume nofpe_summary
+       -assume noieee_compares               -assume noieee_fpe_flags
+       -assume nominus0                      -assume noold_boz
+       -assume old_complex_align             -assume old_unit_star
+       -assume old_inquire_recl              -assume old_ldout_format
+       -assume old_ldout_zero                -assume noold_logical_assign
+       -assume noold_logical_ldio            -assume old_maxminloc
+       -assume old_xor                       -assume noprotect_allocates
+       -assume protect_constants             -assume noprotect_parens
+       -assume realloc_lhs                   -assume norecursion
+       -assume split_common                  -assume source_include
+       -assume nostd_intent_in               -assume std_minus0_rounding
+       -assume nostd_mod_proc_name           -assume std_value
+       -assume underscore                    -assume no2underscores
+  no   -auto                                 -auto_scalar
+  no   -bintext                              -ccdefault default
+       -check arg_temp_created               -check assume
+       -check bounds                         -check contiguous
+       -check format                         -check output_conversion
+       -check overflow                       -check pointers
+       -check shape                          -check stack
+       -check teams                          -check uninitialized
+       -check udio_iostat                    -coarray-num-procs 0
+  no   -coarray-config-file                  -convert native
+       -cross_reference                      -D __INTEL_COMPILER=2021
+       -D __INTEL_COMPILER_UPDATE=4          -D __unix__
+       -D __unix                             -D __linux__
+       -D __linux                            -D __gnu_linux__
+       -D unix                               -D linux
+       -D __ELF__                            -D __x86_64
+
+Page 6           Source Listing                  MPI_PRECOMPUTE
+2023-01-27 11:38                                 ./program/mpi.f90
+
+       -D __x86_64__                         -D __amd64
+       -D __amd64__                          -D __INTEL_COMPILER_BUILD_DATE=20210910
+       -D __PIC__                            -D __pic__
+       -D __INTEL_OFFLOAD                    -D __MMX__
+       -D __SSE__                            -D __SSE_MATH__
+       -D __SSE2__                           -D __SSE2_MATH__
+       -D __pentium4                         -D __pentium4__
+       -D __tune_pentium4__                  -double_size 64
+  no   -d_lines                         no   -Qdyncom
+       -error_limit 30                  no   -f66
+  no   -f77rtl                          no   -fast
+       -fpscomp nofilesfromcmd               -fpscomp nogeneral
+       -fpscomp noioformat                   -fpscomp noldio_spacing
+       -fpscomp nologicals              no   -fpconstant
+       -fpe0                                 -fprm nearest
+  no   -ftz                                  -fp_model noprecise
+       -fp_model fast                        -fp_model nostrict
+       -fp_model nosource                    -fp_model nodouble
+       -fp_model noextended                  -fp_model novery_fast
+       -fp_model noexcept                    -fp_model nono_except
+       -fp_modbits nofp_contract             -fp_modbits nono_fp_contract
+       -fp_modbits nofenv_access             -fp_modbits nono_fenv_access
+       -fp_modbits nocx_limited_range        -fp_modbits nono_cx_limited_range
+       -fp_modbits noprec_div                -fp_modbits nono_prec_div
+       -fp_modbits noprec_sqrt               -fp_modbits nono_prec_sqrt
+       -fp_modbits noftz                     -fp_modbits nono_ftz
+       -fp_modbits nointrin_limited_range       -fp_modbits nono_intrin_limited_range
+       -fp_modbits notrunc_compares          -fp_modbits nono_trunc_compares
+       -fp_modbits noieee_nan_compares       -fp_modbits nono_ieee_nan_compares
+       -fp_modbits honor_f32_conversion       -fp_modbits nono_honor_f32_conversion
+       -fp_modbits honor_f64_conversion       -fp_modbits nono_honor_f64_conversion
+       -fp_modbits nono_x87_copy             -fp_modbits nono_no_x87_copy
+       -fp_modbits noexception_semantics       -fp_modbits nono_exception_semantics
+       -fp_modbits noprecise_libm_functions       -fp_modbits nono_precise_libm_functions
+       -heap_arrays 0                   no   -threadprivate_compat
+       -free                                 -g2
+       -iface nomixed_str_len_arg            -iface nono_mixed_str_len_arg
+       -init noarrays                        -init nohuge
+       -init noinfinity                      -init nominus_huge
+       -init nominus_infinity                -init nominus_tiny
+       -init nonan                           -init nosnan
+       -init notiny                          -init nozero
+  no   -intconstant                          -integer_size 32
+  no   -mixed_str_len_arg               no   -module
+       -names lowercase                 no   -noinclude
+  no   -o                                    -offload-build=host
+       -O0                              no   -pad_source
+       -real_size 32                    no   -recursive
+       -reentrancy threaded                  -vec=simd
+       -show nofullpath                      -show noinclude
+       -show map                             -show options
+  no   -syntax_only                     no   -threadcom
+  no   -U                               no   -vms
+       -w noall                              -w nonone
+       -w alignments                         -w nodeclarations
+       -w noexternals                        -w general
+       -w noignore_bounds                    -w noignore_loc
+
+Page 7           Source Listing                  MPI_PRECOMPUTE
+2023-01-27 11:38                                 ./program/mpi.f90
+
+       -w nointerfaces                       -w noshape
+       -w notruncated_source                 -w uncalled
+       -w uninitialized                      -w unused
+       -w usage                         no   -wrap-margins
+
+       -includepath : /home/intel/oneapi/mpi/2021.4.0//include/,/home/intel/oneapi/dpl/2021.5.0/linux/include/,/home/intel/oneapi/compiler/2021.4.0/linux/include/,
+           /usr/local/include/,.f90,./program/.f90,./.f90,/home/intel/oneapi/vpl/2021.6.0/include/.f90,/home/intel/oneapi/tbb/2021.4.0/env/../include/.f90,
+           /home/intel/oneapi/mpi/2021.4.0//include/.f90,/home/intel/oneapi/mkl/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,
+           /home/intel/oneapi/ippcp/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,/home/intel/oneapi/dpl/2021.5.0/linux/include/.f90,
+           /home/intel/oneapi/dpcpp-ct/2021.4.0/include/.f90,/home/intel/oneapi/dnnl/2021.4.0/cpu_dpcpp_gpu_dpcpp/lib/.f90,
+           /home/intel/oneapi/dev-utilities/2021.4.0/include/.f90,/home/intel/oneapi/dal/2021.4.0/include/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/include/.f90,
+           /home/intel/oneapi/ccl/2021.4.0/include/cpu_gpu_dpcpp/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/intel64/.f90,
+           /home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/icc/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/.f90,
+           /usr/local/include/.f90,/usr/lib/gcc/x86_64-linux-gnu/9/include/.f90,/usr/include/.f90,/usr/include/.f90,
+           /usr/include/x86_64-linux-gnu/.f90,/usr/include/.f90
+       -list filename : mpi.lst
+  no   -o
+
+COMPILER: Intel(R) Fortran 2021.4.0-2742

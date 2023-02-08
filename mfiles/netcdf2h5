@@ -1,0 +1,21 @@
+function sta=field2sta(frt)
+% script assign_old2h5
+%
+% Important. It doesn't change anything else. To change to a new file, use
+% readh5 after using this one
+
+
+if exist(frt, 'file') ~= 2
+   error([ 'The file ', frt, ' does not exist']);
+end
+
+% Header
+N = 192
+
+r = h5read(frt,'/phys/r');
+
+ur = h5read(frt,'/U/Uz/Re'); 
+u0 = ur(:,1)+1d0-r.^2; % Ojito, hay que quitarle esto, por ahora un arcano. 
+u =  ur + 1i * h5read(frt,'/U/Uz/Im');
+up = sqrt(sum(u.*conj(u),2)-u(:,1).^2);
+

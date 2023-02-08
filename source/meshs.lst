@@ -1,0 +1,694 @@
+Page 1           Source Listing                  MES_PRECOMPUTE
+2023-01-27 11:38                                 /tmp/ifortRqotKW.i90
+
+      1 # 1 "./program/meshs.f90"
+      2 !**************************************************************************
+      3 ! Definition of mesh-types.
+      4 !
+      5 ! Public variables:
+      6 !
+      7 !   r(n,k)              radial points r_j^k, j in [1,N]
+      8 !
+      9 !   dr(p)%M             p-th derivative of f  =  dr(p)%M . f
+     10 !
+     11 !   radLap%M            radial part of laplacian  (1/r)dr + drr
+     12 !
+     13 !
+     14 ! (mesh)-type matricies are stored s.t.   M(   KL+1+n-j, j) = A(n,j)
+     15 ! (lumesh)-type matricies are stored s.t. M( 2*KL+1+n-j, j) = A(n,j)
+     16 !
+     17 ! Note that the index n is usually used to denote r_n and the operator on
+     18 ! the n-th point corresponds to the n-th row of the matrix.  The index
+     19 ! j usually denotes the column and is therefore in the outer loop below.
+     20 ! Matrix multiplication  y := M . x  can be achieved accessing M only
+     21 ! once along the memory by the loop form
+     22 !
+     23 !   y = 0
+     24 !   do j = 1, N
+     25 !      do n = max(1,j-KL), min(j+KL,N)
+     26 !         y(n) = y(n) + M(KL+1+n-j,j) * x(j)
+     27 !
+     28 !
+     29 !**************************************************************************
+     30 # 1 "./program/../parallel.h" 1 
+     31 
+     32 
+     33 
+     34  
+     35 
+     36 
+     37 
+     38  
+     39 
+     40  
+     41 
+     42 # 14
+     43 
+     44 
+     45 
+     46 
+     47 
+     48 
+     49  
+     50 # 23
+     51 
+     52 
+     53  
+     54 # 44
+     55 
+     56  
+     57 
+
+Page 2           Source Listing                  MES_PRECOMPUTE
+2023-01-27 11:38                                 ./program/../parallel.h
+
+     58 
+     59 
+     60 # 54
+     61 
+     62          
+     63 
+     64 
+     65  
+     66 
+     67  
+     68 
+     69 
+     70 # 30 "./program/meshs.f90" 2 
+     71  module meshs
+     72 !**************************************************************************
+     73    use mpif
+     74    use parameters
+     75    implicit none
+     76    save
+     77 ! M(KL+1+n-j, j) = A(n,j)
+     78    type mesh
+     79       double precision :: M(2*i_KL+1, 1-i_KL:i_N)
+     80    end type mesh
+     81 ! M(2*KL+1+n-j, j) = A(n,j)
+     82 ! see lapack dgbtrf
+     83    type lumesh
+     84       integer          :: ipiv(i_N)
+     85       double precision :: M(3*i_KL+1, i_N)
+     86    end type lumesh
+     87 
+     88 
+     89    type rdom
+     90       integer          :: N, pNi,pN, pNi_(0:(1*1)-1),pN_(0:(1*1)-1)
+     91       double precision :: r(i_N,-3:3)
+     92       double precision :: intrdr(i_N)
+     93       double precision :: dr0(1:1+i_KL,0:i_KL), dr1(1:1+i_KL,0:i_KL)
+     94       type (mesh)      :: dr(i_KL)
+     95       type (mesh)      :: radLap
+     96    end type rdom
+     97 
+     98 
+     99    type (rdom) :: mes_D
+    100 
+    101  contains
+    102 
+    103 
+    104 !------------------------------------------------------------------------
+    105 !  Precompute the mesh stuff
+    106 !------------------------------------------------------------------------
+    107    subroutine mes_precompute()
+    108       double precision :: dr
+    109       integer :: n, N_
+    110       logical :: file_exist
+    111 ! collocation pts
+    112 ! T_{N-1}(x) has N extrema
+    113 ! Numerical Recipes 5.8.5
+    114       if(1>i_N) stop '_Nr>i_N'
+
+Page 3           Source Listing                  MES_PRECOMPUTE
+2023-01-27 11:38                                 ./program/meshs.f90
+
+    115       mes_D%N = i_N
+    116 
+    117       inquire(file='mesh.in', exist=file_exist)
+    118       if(file_exist) then
+    119          if(mpi_rnk==0) print*, ' using custom mesh!'
+    120          open(99,status='old',file='mesh.in')
+    121          read(99,*) n
+    122          if(n/=i_N) stop 'mes_precompute: mesh.in err1: N mismatch'
+    123          do n = 1, i_N
+    124             read(99,*) mes_D%r(n,1) 
+    125          end do
+    126          close(99)
+    127          if(mes_D%r(1,1)<0d0) stop 'mes_precompute: mesh.in err 2'
+    128          dr = dabs(mes_D%r(i_N,1)-1d0)
+    129          if(dr>1d-8) stop 'mes_precompute: mesh.in err 3'
+    130          
+    131       else ! default mesh
+    132          N_ = i_N+int(dsqrt(dble(i_N)))
+    133          do n = N_-i_N+1, N_
+    134             mes_D%r(n-N_+i_N,1) = 0.5d0*( 1d0+dcos(d_PI*(N_-n)/dble(N_)) )
+    135          end do
+    136          do n = 1, 10
+    137             dr = 1.5d0*mes_D%r(1,1)-0.5d0*mes_D%r(2,1)
+    138             mes_D%r(:,1) = mes_D%r(:,1)*(1d0+dr) - dr
+    139          end do
+    140       end if
+    141       
+    142       call mes_rdom_init(mes_D)
+    143 
+    144    end subroutine mes_precompute
+
+Page 4           Source Listing                  MES_PRECOMPUTE
+2023-01-27 11:38 Entry Points                    ./program/meshs.f90
+
+
+
+ENTRY POINTS
+
+  Name                                
+                                      
+ meshs_mp_mes_precompute_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ DABS                       Func   128                                  scalar                    128                               
+ DBLE                       Func   132                                  scalar                    132,134                           
+ DCOS                       Func   134                                  scalar                    134                               
+ DR                         Local  108      R(8)            8           scalar                    128,129,137,138                   
+ DSQRT                      Func   132                                  scalar                    132                               
+ D_PI                       Param  134      R(8)            8           scalar                    134                               
+ FILE_EXIST                 Local  110      L(4)            4           scalar                    117,118                           
+ INT                        Func   132                                  scalar                    132                               
+ I_N                        Param  114      I(4)            4           scalar                    79,84,85,91,92,114,115,122,123,128
+                                                                                                  ,132,133,134                      
+ MES_D                      Local  115      RDOM            83272       scalar   SAVE             115,124,127,128,134,137,138,142   
+ MES_PRECOMPUTE             Subr   107                                                                                              
+ MPI_RNK                    Local  119      I(4)            4           scalar   SAVE             119,171,172                       
+ N                          Local  109      I(4)            4           scalar                    121,122,123,124,133,134,136       
+ N_                         Local  109      I(4)            4           scalar                    132,133,134                       
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ RDOM.N                     I(4)            4     0              scalar                    115,155,159,187,190,192,204,207,20 
+                                                                                           9,217,219,228                      
+ RDOM.R                     R(8)            8     24       2     1344                      124,127,128,134,137,138,176,187,18 
+                                                                                           8                                  
+
+Page 5           Source Listing                  MES_PRECOMPUTE
+2023-01-27 11:38                                 ./program/meshs.f90
+
+    145 
+    146 
+    147 !------------------------------------------------------------------------
+    148 ! for the radial domain D, set the number of points D%N and their
+    149 ! values D%r, then mes_rdom_init() will fill in the rest...
+    150 !------------------------------------------------------------------------
+    151    subroutine mes_rdom_init(D)
+    152       type (rdom), intent(inout) :: D
+    153       integer, parameter :: lda = 2*i_KL+1
+    154       double precision   :: A(lda,lda), w(lda), c,e
+    155       double precision   :: r_(1-i_KL:D%N)
+    156       integer :: n,i,j,nn, l,r
+    157 ! distribute radial points over procs
+    158       D%pN_ = 0
+    159       do n = 1, D%N
+    160          r = 1 - modulo(n-1,1) - 1
+    161          D%pN_(r) = D%pN_(r) + 1
+    162       end do
+    163       D%pNi_(0) = 1
+    164       do r = 1, 1-1
+    165          D%pNi_(r) = D%pNi_(r-1) + D%pN_(r-1)
+    166       end do
+    167       do r = 1, (1*1)-1
+    168          D%pN_ (r) = D%pN_ (r-1)
+    169          D%pNi_(r) = D%pNi_(r-1)
+    170       end do
+    171       D%pN  = D%pN_ (mpi_rnk)
+    172       D%pNi = D%pNi_(mpi_rnk)
+    173 ! get ad_r(:,j) = r^j
+    174       do j = -3, 3
+    175          if(j==1) cycle
+    176          D%r(:,j) = D%r(:,1)**j
+    177       end do
+    178 
+    179 ! get finite difference weights
+    180       if(i_KL<2) stop 'mes: KL<2'
+    181       do i = 1, i_KL
+    182          D%dr(i)%M = 0d0
+    183       end do
+    184       D%radLap%M = 0d0
+    185       D%intrdr = 0d0
+    186 
+    187       r_(1:D%N) =  D%r(:,1)
+    188       r_(:0)    = -D%r(i_KL:1:-1,1)
+    189 
+    190       do n = 1, D%N
+    191          l = max(1-i_KL,n-i_KL)
+    192          r = min(n+i_KL,D%N)
+    193          nn = r-l+1
+    194 	 do i = 1, i_KL
+    195    	    call mes_weights(i,nn,r_(l),r_(n), w)
+    196             do j = l, r
+    197                D%dr(i)%M(i_KL+1+n-j,j) = w(j-l+1)
+    198             end do
+    199 	 end do
+    200       end do
+    201 ! weights for extrapolation to r=0, 1
+
+Page 6           Source Listing                  MES_RDOM_INIT
+2023-01-27 11:38                                 ./program/meshs.f90
+
+    202       do i = 0, i_KL
+    203          call mes_weights(i,1+i_KL,r_(1),       0d0, D%dr0(1,i))
+    204          call mes_weights(i,1+i_KL,r_(D%N-i_KL),1d0, D%dr1(1,i))
+    205       end do
+    206 ! get  (1/r)dr + drr
+    207       do j = 1-i_KL, D%N
+    208          l = max(1,j-i_KL)
+    209          r = min(j+i_KL,D%N)
+    210          do n = l, r
+    211             D%radLap%M(i_KL+1+n-j,j)  &
+    212                = D%dr(2)%M(i_KL+1+n-j,j)  &
+    213                + D%dr(1)%M(i_KL+1+n-j,j) / r_(n)
+    214          end do
+    215       end do
+    216 ! weights for integration  r dr
+    217       do n = 1, D%N
+    218          l = max(1,n-i_KL)
+    219          r = min(n+i_KL,D%N)
+    220          nn = r-l+1
+    221 	 do i = 1, nn
+    222 	    call mes_weights(i-1,nn,r_(l),r_(n), w)
+    223 	    A(i,:) = w 
+    224 	 end do
+    225          c = 1d0
+    226          e = 1d0
+    227          do i = 1, nn
+    228             c = c * (r_(min(n+1,D%N))-r_(n)) / dble(i)
+    229             e = e * (r_(max(  0,n-1))-r_(n)) / dble(i)
+    230             D%intrdr(l:l+nn-1) =  &
+    231                D%intrdr(l:l+nn-1) + 0.5d0*(c-e)*A(i,1:nn)*r_(n)
+    232          end do
+    233       end do
+    234 
+    235    end subroutine mes_rdom_init
+
+Page 7           Source Listing                  MES_RDOM_INIT
+2023-01-27 11:38 Entry Points                    ./program/meshs.f90
+
+
+
+ENTRY POINTS
+
+  Name                               
+                                     
+ meshs_mp_mes_rdom_init_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Local  154      R(8)            8     2     81                        223,231                           
+ C                          Local  154      R(8)            8           scalar                    225,228,231                       
+ D                          Dummy  151      RDOM            83272       scalar   ARG,INOUT        155,158,159,161,163,165,168,169,17
+                                                                                                  1,172,176,182,184,185,187,188,190,
+                                                                                                  192,197,203,204,207,209,211,212,21
+                                                                                                  3,217,219,228,230,231             
+ DBLE                       Func   228                                  scalar                    228,229                           
+ E                          Local  154      R(8)            8           scalar                    226,229,231                       
+ I                          Local  156      I(4)            4           scalar                    181,182,194,195,197,202,203,204,22
+                                                                                                  1,222,223,227,228,229,231         
+ I_KL                       Param  153      I(4)            4           scalar                    79,85,93,94,153,155,180,181,188,19
+                                                                                                  1,192,194,197,202,203,204,207,208,
+                                                                                                  209,211,212,213,218,219           
+ J                          Local  156      I(4)            4           scalar                    174,175,176,196,197,207,208,209,21
+                                                                                                  1,212,213                         
+ L                          Local  156      I(4)            4           scalar                    191,193,195,196,197,208,210,218,22
+                                                                                                  0,222,230,231                     
+ LDA                        Param  153      I(4)            4           scalar                    154                               
+ MAX                        Func   191                                  scalar                    191,208,218,229                   
+ MES_RDOM_INIT              Subr   151                                                            142                               
+ MIN                        Func   192                                  scalar                    192,209,219,228                   
+ MODULO                     Func   160                                  scalar                    160                               
+ N                          Local  156      I(4)            4           scalar                    159,160,190,191,192,195,197,210,21
+                                                                                                  1,212,213,217,218,219,222,228,229,
+                                                                                                  231                               
+ NN                         Local  156      I(4)            4           scalar                    193,195,220,221,222,227,230,231   
+ R                          Local  156      I(4)            4           scalar                    160,161,164,165,167,168,169,192,19
+                                                                                                  3,196,209,210,219,220             
+ RDOM                       Type   152                      83272       scalar                    96,99,152                         
+ R_                         Local  155      R(8)            8     1     0                         187,188,195,203,204,213,222,228,22
+                                                                                                  9,231                             
+ W                          Local  154      R(8)            8     1     9                         195,197,222,223                   
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ MESH.M                     R(8)            8     0        2     1764                      182,184,197,211,212,213            
+ RDOM.DR                    RECORD          14112 12712    1     4                         182,197,212,213                    
+ RDOM.DR0                   R(8)            8     12312    2     25                        203                                
+ RDOM.DR1                   R(8)            8     12512    2     25                        204                                
+ RDOM.INTRDR                R(8)            8     10776    1     192                       185,230,231                        
+ RDOM.PN                    I(4)            4     8              scalar                    171                                
+
+Page 8           Source Listing                  MES_RDOM_INIT
+2023-01-27 11:38 Symbol Table                    ./program/meshs.f90
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ RDOM.PNI                   I(4)            4     4              scalar                    172                                
+ RDOM.PNI_                  I(4)            4     12       1     1                         163,165,169,172                    
+ RDOM.PN_                   I(4)            4     16       1     1                         158,161,165,168,171                
+ RDOM.RADLAP                MESH            14112 69160          scalar                    184,211                            
+
+Page 9           Source Listing                  MES_RDOM_INIT
+2023-01-27 11:38                                 ./program/meshs.f90
+
+    236 
+    237 
+    238 !------------------------------------------------------------------------
+    239 !  given n pts x, find weights w to get i^th deriv at x0
+    240 !------------------------------------------------------------------------
+    241    subroutine mes_weights(i,n,x,x0, w)
+    242       integer,          intent(in)  :: i, n
+    243       double precision, intent(in)  :: x(n), x0
+    244       double precision, intent(out) :: w(n)
+    245       double precision :: A(n,n)
+    246       integer :: j
+    247    
+    248       A(:,1) = 1d0
+    249       do j = 2, n
+    250          A(:,j) = A(:,j-1) * (x-x0) / dble(j-1)
+    251       end do
+    252       call mes_mat_invert(n,A,n)
+    253       w = A(i+1,:)
+    254 	 
+    255    end subroutine mes_weights 
+
+
+ENTRY POINTS
+
+  Name                             
+                                   
+ meshs_mp_mes_weights_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Local  245      R(8)            8     2     0                         248,250,252,253                   
+ DBLE                       Func   250                                  scalar                    250                               
+ I                          Dummy  241      I(4)            4           scalar   ARG,IN           253                               
+ J                          Local  246      I(4)            4           scalar                    249,250                           
+ MES_WEIGHTS                Subr   241                                                            195,203,204,222                   
+ N                          Dummy  241      I(4)            4           scalar   ARG,IN           243,244,245,249,252               
+ W                          Dummy  241      R(8)            8     1     0        ARG,OUT          253                               
+ X                          Dummy  241      R(8)            8     1     0        ARG,IN           250                               
+ X0                         Dummy  241      R(8)            8           scalar   ARG,IN           250                               
+
+Page 10          Source Listing                  MES_WEIGHTS
+2023-01-27 11:38                                 ./program/meshs.f90
+
+    256 	 
+    257 	 
+    258 !------------------------------------------------------------------------
+    259 !  Replace nxn matrix A by its inverse
+    260 !------------------------------------------------------------------------
+    261    subroutine mes_mat_invert(n,A,lda)
+    262       integer, intent(in) :: n, lda
+    263       double precision, intent(inout) :: A(lda,n)
+    264       double precision :: work(n)
+    265       integer :: info, ipiv(n)
+    266    
+    267       call dgetrf(n, n, A, lda, ipiv, info)
+    268       if(info /= 0) stop 'matrix inversion error 1'
+    269 
+    270       call dgetri(n, A, lda, ipiv, work, n, info)
+    271       if(info /= 0) stop 'matrix inversion error 2'
+    272 
+    273    end subroutine mes_mat_invert
+
+
+ENTRY POINTS
+
+  Name                                
+                                      
+ meshs_mp_mes_mat_invert_             
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Dummy  261      R(8)            8     2     0        ARG,INOUT        267,270                           
+ DGETRF                     Subr   267                                                            267                               
+ DGETRI                     Subr   270                                                            270                               
+ INFO                       Local  265      I(4)            4           scalar                    267,268,270,271                   
+ IPIV                       Local  265      I(4)            4     1     0                         267,270                           
+ LDA                        Dummy  261      I(4)            4           scalar   ARG,IN           263,267,270                       
+ MES_MAT_INVERT             Subr   261                                                            252                               
+ N                          Dummy  261      I(4)            4           scalar   ARG,IN           263,264,265,267,270               
+ WORK                       Local  264      R(8)            8     1     0                         270                               
+
+Page 11          Source Listing                  MES_MAT_INVERT
+2023-01-27 11:38                                 ./program/meshs.f90
+
+    274 
+    275 !------------------------------------------------------------------------
+    276 !  Replace complex nxn matrix A by its inverse
+    277 !------------------------------------------------------------------------
+    278  subroutine mes_mat_invert_complex(n,Ar,Ai,lda)
+    279       integer, intent(in) :: n, lda
+    280       double precision, intent(inout) :: Ar(lda,n), Ai(lda,n)
+    281       double complex :: A(lda,n), work(n)
+    282       integer :: info, ipiv(n)
+    283    
+    284       A = dcmplx(Ar,Ai)
+    285 
+    286       call zgetrf(n, n, A, lda, ipiv, info)
+    287       if(info /= 0) stop 'mat_invert_complex, zgetrf fail'
+    288 
+    289       call zgetri(n, A, lda, ipiv, work, n, info)
+    290       if(info /= 0) stop 'mat_invert_complex, zgetri fail'
+    291       
+    292       Ar =  dble(A)
+    293       Ai = dimag(A)
+    294 
+    295  end subroutine mes_mat_invert_complex
+
+
+ENTRY POINTS
+
+  Name                                        
+                                              
+ meshs_mp_mes_mat_invert_complex_             
+
+Page 12          Source Listing                  MES_MAT_INVERT_COMPLEX
+2023-01-27 11:38 Symbol Table                    ./program/meshs.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ A                          Local  281      C(16)           16    2     0                         284,286,289,292,293               
+ AI                         Dummy  278      R(8)            8     2     0        ARG,INOUT        284,293                           
+ AR                         Dummy  278      R(8)            8     2     0        ARG,INOUT        284,292                           
+ DBLE                       Func   292                                  scalar                    292                               
+ DCMPLX                     Func   284                                  scalar                    284                               
+ DIMAG                      Func   293                                  scalar                    293                               
+ INFO                       Local  282      I(4)            4           scalar                    286,287,289,290                   
+ IPIV                       Local  282      I(4)            4     1     0                         286,289                           
+ LDA                        Dummy  278      I(4)            4           scalar   ARG,IN           280,281,286,289                   
+ MES_MAT_INVERT_COMPLEX     Subr   278                                                                                              
+ N                          Dummy  278      I(4)            4           scalar   ARG,IN           280,281,282,286,289               
+ WORK                       Local  281      C(16)           16    1     0                         289                               
+ ZGETRF                     Subr   286                                                            286                               
+ ZGETRI                     Subr   289                                                            289                               
+
+Page 13          Source Listing                  MES_MAT_INVERT_COMPLEX
+2023-01-27 11:38 Symbol Table                    ./program/meshs.f90
+
+
+
+SYMBOL CROSS REFERENCE
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ LUMESH                     Type   83                       20736       scalar                    86                                
+ MESH                       Type   78                       14112       scalar                    80,94,95                          
+ MESHS                      Module 71                                                                                               
+ MPIF                       Module 73                                                             73                                
+ PARAMETERS                 Module 74                                                             74                                
+
+
+TYPE COMPONENTS/COMMON VARIABLES
+
+ Name                       Type            Bytes Offset   Dimen Elements Attributes       References                         
+                                                                                                                              
+ LUMESH.IPIV                I(4)            4     0        1     192                                                          
+ LUMESH.M                   R(8)            8     768      2     2496                                                         
+
+Page 14          Source Listing                  MES_MAT_INVERT_COMPLEX
+2023-01-27 11:38                                 ./program/meshs.f90
+
+    296 
+    297 !**************************************************************************
+    298  end module meshs
+    299 !**************************************************************************
+
+Page 15          Source Listing                  MES_MAT_INVERT_COMPLEX
+2023-01-27 11:38 Subprograms/Common Blocks       ./program/meshs.f90
+
+
+
+SUBPROGRAMS/COMMON BLOCKS
+
+ Name                       Object Declared Type            Bytes Dimen Elements Attributes       References                        
+                                                                                                                                    
+ MESHS                      Module 71                                                                                               
+ MES_MAT_INVERT             Subr   261                                                            252                               
+ MES_MAT_INVERT_COMPLEX     Subr   278                                                                                              
+ MES_PRECOMPUTE             Subr   107                                                                                              
+ MES_RDOM_INIT              Subr   151                                                            142                               
+ MES_WEIGHTS                Subr   241                                                            195,203,204,222                   
+
+COMPILER OPTIONS BEING USED
+
+       -align noall                          -align nonone
+       -align nocommons                      -align nodcommons
+       -align noqcommons                     -align nozcommons
+       -align records                        -align nosequence
+       -align norec1byte                     -align norec2byte
+       -align norec4byte                     -align norec8byte
+       -align norec16byte                    -align norec32byte
+       -align norec64byte                    -align noarray8byte
+       -align noarray16byte                  -align noarray32byte
+       -align noarray64byte                  -align noarray128byte
+       -align noarray256byte                 -altparam
+       -assume accuracy_sensitive            -assume nobscc
+       -assume nobuffered_io                 -assume nobuffered_stdout
+       -assume nobyterecl                    -assume nocontiguous_assumed_shape
+       -assume nocontiguous_pointer          -assume nocc_omp
+       -assume nocstring                     -assume nodummy_aliases
+       -assume nofailed_images               -assume nofpe_summary
+       -assume noieee_compares               -assume noieee_fpe_flags
+       -assume nominus0                      -assume noold_boz
+       -assume old_complex_align             -assume old_unit_star
+       -assume old_inquire_recl              -assume old_ldout_format
+       -assume old_ldout_zero                -assume noold_logical_assign
+       -assume noold_logical_ldio            -assume old_maxminloc
+       -assume old_xor                       -assume noprotect_allocates
+       -assume protect_constants             -assume noprotect_parens
+       -assume realloc_lhs                   -assume norecursion
+       -assume split_common                  -assume source_include
+       -assume nostd_intent_in               -assume std_minus0_rounding
+       -assume nostd_mod_proc_name           -assume std_value
+       -assume underscore                    -assume no2underscores
+  no   -auto                                 -auto_scalar
+  no   -bintext                              -ccdefault default
+       -check arg_temp_created               -check assume
+       -check bounds                         -check contiguous
+       -check format                         -check output_conversion
+       -check overflow                       -check pointers
+       -check shape                          -check stack
+       -check teams                          -check uninitialized
+       -check udio_iostat                    -coarray-num-procs 0
+  no   -coarray-config-file                  -convert native
+       -cross_reference                      -D __INTEL_COMPILER=2021
+       -D __INTEL_COMPILER_UPDATE=4          -D __unix__
+
+Page 16          Source Listing                  MES_MAT_INVERT_COMPLEX
+2023-01-27 11:38                                 ./program/meshs.f90
+
+       -D __unix                             -D __linux__
+       -D __linux                            -D __gnu_linux__
+       -D unix                               -D linux
+       -D __ELF__                            -D __x86_64
+       -D __x86_64__                         -D __amd64
+       -D __amd64__                          -D __INTEL_COMPILER_BUILD_DATE=20210910
+       -D __PIC__                            -D __pic__
+       -D __INTEL_OFFLOAD                    -D __MMX__
+       -D __SSE__                            -D __SSE_MATH__
+       -D __SSE2__                           -D __SSE2_MATH__
+       -D __pentium4                         -D __pentium4__
+       -D __tune_pentium4__                  -double_size 64
+  no   -d_lines                         no   -Qdyncom
+       -error_limit 30                  no   -f66
+  no   -f77rtl                          no   -fast
+       -fpscomp nofilesfromcmd               -fpscomp nogeneral
+       -fpscomp noioformat                   -fpscomp noldio_spacing
+       -fpscomp nologicals              no   -fpconstant
+       -fpe0                                 -fprm nearest
+  no   -ftz                                  -fp_model noprecise
+       -fp_model fast                        -fp_model nostrict
+       -fp_model nosource                    -fp_model nodouble
+       -fp_model noextended                  -fp_model novery_fast
+       -fp_model noexcept                    -fp_model nono_except
+       -fp_modbits nofp_contract             -fp_modbits nono_fp_contract
+       -fp_modbits nofenv_access             -fp_modbits nono_fenv_access
+       -fp_modbits nocx_limited_range        -fp_modbits nono_cx_limited_range
+       -fp_modbits noprec_div                -fp_modbits nono_prec_div
+       -fp_modbits noprec_sqrt               -fp_modbits nono_prec_sqrt
+       -fp_modbits noftz                     -fp_modbits nono_ftz
+       -fp_modbits nointrin_limited_range       -fp_modbits nono_intrin_limited_range
+       -fp_modbits notrunc_compares          -fp_modbits nono_trunc_compares
+       -fp_modbits noieee_nan_compares       -fp_modbits nono_ieee_nan_compares
+       -fp_modbits honor_f32_conversion       -fp_modbits nono_honor_f32_conversion
+       -fp_modbits honor_f64_conversion       -fp_modbits nono_honor_f64_conversion
+       -fp_modbits nono_x87_copy             -fp_modbits nono_no_x87_copy
+       -fp_modbits noexception_semantics       -fp_modbits nono_exception_semantics
+       -fp_modbits noprecise_libm_functions       -fp_modbits nono_precise_libm_functions
+       -heap_arrays 0                   no   -threadprivate_compat
+       -free                                 -g2
+       -iface nomixed_str_len_arg            -iface nono_mixed_str_len_arg
+       -init noarrays                        -init nohuge
+       -init noinfinity                      -init nominus_huge
+       -init nominus_infinity                -init nominus_tiny
+       -init nonan                           -init nosnan
+       -init notiny                          -init nozero
+  no   -intconstant                          -integer_size 32
+  no   -mixed_str_len_arg               no   -module
+       -names lowercase                 no   -noinclude
+  no   -o                                    -offload-build=host
+       -O0                              no   -pad_source
+       -real_size 32                    no   -recursive
+       -reentrancy threaded                  -vec=simd
+       -show nofullpath                      -show noinclude
+       -show map                             -show options
+  no   -syntax_only                     no   -threadcom
+  no   -U                               no   -vms
+
+Page 17          Source Listing                  MES_MAT_INVERT_COMPLEX
+2023-01-27 11:38                                 ./program/meshs.f90
+
+       -w noall                              -w nonone
+       -w alignments                         -w nodeclarations
+       -w noexternals                        -w general
+       -w noignore_bounds                    -w noignore_loc
+       -w nointerfaces                       -w noshape
+       -w notruncated_source                 -w uncalled
+       -w uninitialized                      -w unused
+       -w usage                         no   -wrap-margins
+
+       -includepath : /home/intel/oneapi/mpi/2021.4.0//include/,/home/intel/oneapi/dpl/2021.5.0/linux/include/,/home/intel/oneapi/compiler/2021.4.0/linux/include/,
+           /usr/local/include/,.f90,./program/.f90,./.f90,/home/intel/oneapi/vpl/2021.6.0/include/.f90,/home/intel/oneapi/tbb/2021.4.0/env/../include/.f90,
+           /home/intel/oneapi/mpi/2021.4.0//include/.f90,/home/intel/oneapi/mkl/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,
+           /home/intel/oneapi/ippcp/2021.4.0/include/.f90,/home/intel/oneapi/ipp/2021.4.0/include/.f90,/home/intel/oneapi/dpl/2021.5.0/linux/include/.f90,
+           /home/intel/oneapi/dpcpp-ct/2021.4.0/include/.f90,/home/intel/oneapi/dnnl/2021.4.0/cpu_dpcpp_gpu_dpcpp/lib/.f90,
+           /home/intel/oneapi/dev-utilities/2021.4.0/include/.f90,/home/intel/oneapi/dal/2021.4.0/include/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/include/.f90,
+           /home/intel/oneapi/ccl/2021.4.0/include/cpu_gpu_dpcpp/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/intel64/.f90,
+           /home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/icc/.f90,/home/intel/oneapi/compiler/2021.4.0/linux/bin/intel64/../../compiler/include/.f90,
+           /usr/local/include/.f90,/usr/lib/gcc/x86_64-linux-gnu/9/include/.f90,/usr/include/.f90,/usr/include/.f90,
+           /usr/include/x86_64-linux-gnu/.f90,/usr/include/.f90
+       -list filename : meshs.lst
+  no   -o
+
+COMPILER: Intel(R) Fortran 2021.4.0-2742
