@@ -14,6 +14,7 @@
    real :: d_start, d_stop
    double precision :: steptimer = 0d0, retau
 
+
    call h5open_f(h5err)
    call initialise()
 
