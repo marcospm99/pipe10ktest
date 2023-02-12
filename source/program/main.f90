@@ -9,6 +9,7 @@
 !*************************************************************************
    use velocity
    use io
+   use sta, only:compute_sta, initialisestd, savestats
    implicit none
    real :: d_start, d_stop
    double precision :: steptimer = 0d0, retau
@@ -37,7 +38,7 @@
 
       ! Estadisticas on the fly aquí!!!!
       if (tim_step>1) then
-         if (mod(tim_step,5)==1) then
+         if (mod(tim_step,s_step)==1) then
             call compute_sta()
          endif
          call io_write2files()
@@ -58,7 +59,7 @@
       tim_t    = tim_t    + tim_dt
       tim_step = tim_step + 1
 
-      if (mod(tim_step,5)==1) then
+      if (mod(tim_step,s_step)==1) then
          steptimer = MPI_Wtime()-steptimer
          call io_write_friction(tim_step,tim_t,steptimer,retau)
          if (mpi_rnk==0) then 
@@ -66,7 +67,7 @@
             write(*,325) 'Step',tim_step,tim_t,steptimer, retau
          endif
       endif
-      if (tim_step>1210) exit
+      if (tim_step>2410) exit
          
 
    end do

@@ -29,29 +29,17 @@ function varargout=pipecf(A,i,varargin)
 %
 
 % Structure of the cf files.
-labels={'\Deltat'               ,... % 1
-    '\omega_{0}'            ,... % 2
-    '\omega_{2h}'           ,... % 3
-    'Re_{\tau}'             ,... % 4
-    '\omega_{0}-\omega_{2h}',... % 5
-    'Ri_\tau'               ,... % 6
-    'E_{u}'                 ,... % 7
-    'E_{v}'                 ,... % 8
-    'E_{w}'                 ,... % 9
-    'E_{uv}'                ,... %10
-    'E_{uw}'                ,... %11
-    'E_{vw}'                ,... %12
-    'E_{\omega_{x}}'        ,... %13
-    'massu'                 ,... %14
-    'massw'                 ,... %15
-    't_{step}'              ,... %16
-    't_{comm}'              ,... %17
-    't_{trans}'             ,... %18
-    'heat'                  ,... %19
-    '\Delta\theta'          ,... %20
-    '\theta_{y,down}'       ,... %21
-    '\theta_{y,up}'};        ... %22
+labels={'\step'               ,... % 1
+    '\Nr'            ,... % procs NR
+    '\Ns'           ,... % procs Ns
+    'time'   ,... % 4
+    'timr'   ,... % 5
+    'Ub'               ,... % 6
+    'Uc'                 ,... % 7
+    'Ufr'                 ,... % 8
+    'Re_{\tau}'                 ,... % 9
     
+};
 
 if nargin==0
     A=[];

@@ -1,0 +1,21 @@
+% The three sets are assumed to be in the same folder
+
+el180 = load('180_Re_1.dat');
+p180l = load('pipe180.LR.dat');
+p180d = load('pipe180.DR.dat');
+
+
+subplot(3,2,1); plot(p180l(:,1),p180l(:,3),'k',p180l(:,1),p180l(:,3),'.r',el180(:,1),el180(:,3),'--g')
+xlabel('1-r','fontsize',14);ylabel('$U_z^+$','fontsize',14);
+subplot(3,2,2); plot(p180l(:,1),p180l(:,4),'k',p180l(:,1),p180l(:,4),'.r',el180(:,1),el180(:,3),'--g')
+xlabel('1-r','fontsize',14);ylabel('$ur_{rms}^+$','fontsize',14);
+subplot(3,2,3); plot(p180l(:,1),p180l(:,5),'k',p180l(:,1),p180l(:,5),'.r',el180(:,1),el180(:,3),'--g')
+subplot(3,2,4); plot(p180l(:,1),p180l(:,6),'k',p180l(:,1),p180l(:,6),'.r',el180(:,1),el180(:,3),'--g')
+subplot(3,2,5); plot(p180l(:,1),p180l(:,7),'k',p180l(:,1),p180l(:,7),'.r',el180(:,1),el180(:,3),'--g')
+
+subplot(3,2,1); plot(p180l(:,1),p180l(:,3),'k',p180l(:,1),p180l(:,3),'.r',el180(:,1),el180(:,3),'--g')
+
+subplot(3,2,1); plot(p180l(:,1),stas.urz,el180(:,1),el180(:,8),'--')
+subplot(3,2,4); plot(stas.r2,stas.urp,el180(:,1),el180(:,5),'--')
+subplot(3,2,5); plot(stas.r2,stas.uzp,el180(:,1),el180(:,7),'--')
+subplot(3,2,6); plot(stas.r2,stas.utp,el180(:,1),el180(:,6),'--')

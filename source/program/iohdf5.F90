@@ -12,6 +12,7 @@
  module io
 !**************************************************************************
    use velocity
+   use sta, only:savestats
    use h5lt
    use hdf5
 
@@ -66,12 +67,12 @@
 
 
       io_save2 = 0
-      io_dt    = 10
+      io_dt    = 0
       io_hre   = 19
-      io_KE    = 20
-      io_ID    = 21
+      io_KE    = 0
+      io_ID    = 0
       io_pt    = 0
-      io_fr    = 50
+      io_fr    = 0
       io_cf    = 89
 
      if(mpi_rnk.eq.0) then
@@ -118,7 +119,6 @@
       if(io_ID/=0) open(io_ID,status='unknown',access=a, file=trim(filstt)//'.vel_totEID')
       if(io_pt/=0) open(io_pt,status='unknown',access=a, file=trim(filstt)//'.vel_point')
       if(io_fr/=0) open(io_fr,status='unknown',access=a, file=trim(filstt)//'.vel_friction')
-      
 
       a = 'append'
    end subroutine io_openfiles
@@ -144,9 +144,10 @@
 
       if(modulo(tim_step,i_save_rate1)==0) then
          call io_save_state()
-         call saveStats()
-         !call io_save_spectrum()
-         call io_save_meanprof()
+         fnameima=trim(filstt)//'.'//extc//'.'//'sth'
+         call saveStats(fnameima)
+         ! call io_save_spectrum()
+         ! call io_save_meanprof()
          extn = extn+1
       endif
 
@@ -409,101 +410,6 @@
       close(11)
 
    end subroutine io_save_meanprof
-
-! Compute statistics
-subroutine compute_sta()
-implicit none
-integer:: n, n_
-
-   call vel_sta() ! Compute vel_r
-
-   do n = 1, mes_D%pN
-      n_ = mes_D%pNi + n - 1
-      mean_ur(n_) = mean_ur(n_) + sum(vel_r%Re(:,:,n))
-      stdv_ur(n_) = stdv_ur(n_) + sum(vel_r%Re(:,:,n)**2)
-      mean_ut(n_) = mean_ut(n_) + sum(vel_t%Re(:,:,n))
-      stdv_ut(n_) = stdv_ut(n_) + sum(vel_t%Re(:,:,n)**2)
-      mean_uz(n_) = mean_uz(n_) + sum(vel_z%Re(:,:,n))
-      stdv_uz(n_) = stdv_uz(n_) + sum(vel_z%Re(:,:,n)**2)
-      stdv_rz(n_) = stdv_rz(n_) + sum(vel_z%Re(:,:,n)*vel_r%Re(:,:,n))
-   end do
-
-
-   call mpi_barrier(mpi_comm_world, mpi_er)
-
-end subroutine
-
-subroutine initialiseSTD()
-implicit none
-   csta = 0
-   mean_ur = 0d0
-   stdv_ur = 0d0
-   mean_ut = 0d0
-   stdv_ut = 0d0
-   mean_uz = 0d0
-   stdv_uz = 0d0
-   stdv_rz = 0d0
-end
-
-subroutine saveStats()
-implicit none
-
-    fnameima=trim(filstt)//'.'//extc//'.'//'sth'
-    call mpi_allreduce(mean_ur, d, i_N, mpi_double_precision,  &
-       mpi_sum, mpi_comm_world, mpi_er)
-    mean_ur = d
-    call mpi_allreduce(stdv_ur, d, i_N, mpi_double_precision,  &
-       mpi_sum, mpi_comm_world, mpi_er)
-    stdv_ur = d
-    call mpi_allreduce(mean_ut, d, i_N, mpi_double_precision,  &
-       mpi_sum, mpi_comm_world, mpi_er)
-    mean_ut = d
-    call mpi_allreduce(stdv_ut, d, i_N, mpi_double_precision,  &
-       mpi_sum, mpi_comm_world, mpi_er)
-    stdv_ut = d
-    call mpi_allreduce(mean_uz, d, i_N, mpi_double_precision,  &
-       mpi_sum, mpi_comm_world, mpi_er)
-    mean_uz = d
-    call mpi_allreduce(stdv_uz, d, i_N, mpi_double_precision,  &
-       mpi_sum, mpi_comm_world, mpi_er)
-    stdv_uz = d
-    call mpi_allreduce(stdv_rz, d, i_N, mpi_double_precision,  &
-       mpi_sum, mpi_comm_world, mpi_er)
-    stdv_rz = d
-
-    if(mpi_rnk.ne.0)  return
-
-    call h5fcreate_f(trim(fnameima),H5F_ACC_TRUNC_F,fid,h5err)
-   ! call h5fopen_f(trim(fnameima),H5F_ACC_RDWR_F,fid,h5err)
-    hdims = (/1/)
-    call h5ltmake_dataset_double_f(fid,"time",1,hdims,(/tim_t/),h5err)
-    call h5ltmake_dataset_double_f(fid,"Re",1,hdims,(/d_Re/),h5err)
-    call h5ltmake_dataset_double_f(fid,"alpha",1,hdims,(/d_alpha/),h5err)
-
-    call h5ltmake_dataset_int_f(fid,"N" ,1,hdims,(/i_N/),h5err)
-    call h5ltmake_dataset_int_f(fid,"num" ,1,hdims,(/csta/),h5err)
-    call h5ltmake_dataset_int_f(fid,"M" ,1,hdims,(/i_M/),h5err)
-    call h5ltmake_dataset_int_f(fid,"K" ,1,hdims,(/i_K/),h5err)
-    call h5ltmake_dataset_int_f(fid,"Mp",1,hdims,(/i_Mp/),h5err)
-
-    call h5ltmake_dataset_double_f(fid,"dt"   ,1,hdims,(/tim_dt/),h5err)
-
-    hdims = (/i_N/)
-    call h5ltmake_dataset_double_f(fid,"r"   ,1,hdims,mes_D%r(1:i_N,1),h5err)
-
-    call h5ltmake_dataset_double_f(fid,"mean_ur",1,hdims,mean_ur,h5err)
-    call h5ltmake_dataset_double_f(fid,"mean_uz",1,hdims,mean_uz,h5err)
-    call h5ltmake_dataset_double_f(fid,"mean_ut",1,hdims,mean_ut,h5err)
-
-    call h5ltmake_dataset_double_f(fid,"stdv_ur",1,hdims,stdv_ur,h5err)
-    call h5ltmake_dataset_double_f(fid,"stdv_ut",1,hdims,stdv_ut,h5err)
-    call h5ltmake_dataset_double_f(fid,"stdv_uz",1,hdims,stdv_uz,h5err)
-    call h5ltmake_dataset_double_f(fid,"stdv_rz",1,hdims,stdv_rz,h5err)
-    call h5fclose_f(fid,h5err)
-
-    call initialiseSTD()
-
-end subroutine
 
 !--------------------------------------------------------------------------
 !  write velocity at points.  r,t,z components at 3 points.

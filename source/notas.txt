@@ -1,0 +1,3 @@
+%% Progreso %%
+
+1) Memoria inicial empleada en la simulación de referencia, re_tau 180 double resolution: 92 GB.
