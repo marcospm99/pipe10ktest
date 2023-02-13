@@ -12,9 +12,9 @@
  module io
 !**************************************************************************
    use velocity
-   use sta, only:savestats
    use h5lt
    use hdf5
+   use sta, only: saveStats
 
    implicit none
    save
@@ -141,7 +141,7 @@
 !--------------------------------------------------------------------------
    subroutine io_write2files()
      implicit none
-
+     
       if(modulo(tim_step,i_save_rate1)==0) then
          call io_save_state()
          fnameima=trim(filstt)//'.'//extc//'.'//'sth'

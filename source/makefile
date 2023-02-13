@@ -5,7 +5,7 @@ UTIL		= prim2matlab
 
 TRANSFORM	= fftw3
 MODSOBJ		=  iohdf5.o meshs.o mpi.o parameters.o \
-		  timestep.o transform.o variables.o velocity.o
+		  timestep.o transform.o variables.o velocity.o sta.o
 
 #COMPILER	= g95 -C  
 #COMPFLAGS	= -cpp -c -O3
@@ -25,10 +25,10 @@ COMPILER	= h5pfc
 ### -mcmodel=medium seems to be neeessary because all the memory is static! 
 ### DBFLAGS = -g -warn unused -debug extended -check all -fPIC -fpe0 
 
-FLAGS           = -mcmodel=medium -cpp -O3
-LIBRARYF  =  -I/usr/include/ -qmkl -I$(MKLROOT)/include/fftw
-HDF5_LINK=-I/dss/dsshome1/lrz/sys/spack/release/22.2.1/opt/skylake_avx512/hdf5/1.10.7-intel-v7t5g3t/include
-HDF5_F90_LIB = -L/dss/dsshome1/lrz/sys/spack/release/22.2.1/opt/skylake_avx512/hdf5/1.10.7-intel-v7t5g3t/lib/ -lhdf5_hl_fortran -lhdf5_fortran -lhdf5_hl -lhdf5
+FLAGS           = -mcmodel=medium -cpp -O3 -qmkl
+##LIBRARYF  =  -I/usr/include/ -qmkl -I$(MKLROOT)/include/fftw
+##HDF5_LINK=-I/dss/dsshome1/lrz/sys/spack/release/22.2.1/opt/skylake_avx512/hdf5/1.10.7-intel-v7t5g3t/include
+##HDF5_F90_LIB = -L/dss/dsshome1/lrz/sys/spack/release/22.2.1/opt/skylake_avx512/hdf5/1.10.7-intel-v7t5g3t/lib/ -lhdf5_hl_fortran -lhdf5_fortran -lhdf5_hl -lhdf5
 
 COMPFLAGS = -c $(FLAGS) $(DBFLAGS) $(LIBRARYF) $(LIBRARYF) $(HDF5_LINK)
 LIBS      =  cheby.o
@@ -87,3 +87,5 @@ variables.o : $(PROGDIR)variables.f90 meshs.o
 velocity.o : $(PROGDIR)velocity.f90 timestep.o transform.o
 	$(COMPILER) $(COMPFLAGS) $(PROGDIR)velocity.f90
 
+sta.o : $(PROGDIR)sta.f90 timestep.o transform.o
+			$(COMPILER) $(COMPFLAGS) $(PROGDIR)sta.f90
