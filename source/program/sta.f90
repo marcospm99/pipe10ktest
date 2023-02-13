@@ -14,14 +14,18 @@
 
 
    double precision, private :: uclm, utaum,ucl, utau, Ub
+   double precision, private :: aa, bb, cc
 
 ! ------------------------- stats  -------------------------------
 
    double precision :: mean_ur(i_N), stdv_ur(i_N)
    double precision :: mean_ut(i_N), stdv_ut(i_N)
    double precision :: mean_uz(i_N), stdv_uz(i_N), stdv_rz(i_N)
+   double precision :: mom_ur(i_N,10)
+   double precision :: mom_ut(i_N,10)
+   double precision :: mom_uz(i_N,10)
 
-   double precision :: d(i_N) ! auxiliary mem
+   double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
 
 ! ------------------------- HDF5 -------------------------------
@@ -44,7 +48,7 @@
 ! Compute statistics
    subroutine compute_sta()
    implicit none
-   integer:: n, n_
+   integer:: n, n_, ii, jj, kk 
 
    ! Compute friction velocity
 
@@ -74,12 +78,71 @@
       mean_uz(n_) = mean_uz(n_) + sum(vel_z%Re(:,:,n))
       stdv_uz(n_) = stdv_uz(n_) + sum(vel_z%Re(:,:,n)**2)
       stdv_rz(n_) = stdv_rz(n_) + sum(vel_z%Re(:,:,n)*vel_r%Re(:,:,n))
+
+      do kk =  0,i_Th-1
+         do jj =  0,i_pZ-1
+            aa = 1d0
+            bb = 1d0
+            cc = 1d0
+            do ii = 1,10
+               aa = aa * vel_r%Re(jj,kk,n)
+               bb = bb * vel_t%Re(jj,kk,n)
+               cc = cc * vel_z%Re(jj,kk,n)
+               mom_ur(n_,ii) =  mom_ur(n_,ii) + aa
+               mom_ut(n_,ii) =  mom_ut(n_,ii) + bb
+               mom_uz(n_,ii) =  mom_uz(n_,ii) + cc
+            enddo
+         enddo
+      enddo
    end do
    csta = csta + 1
 
    call mpi_barrier(mpi_comm_world, mpi_er)
 
 end subroutine
+
+! Crear rutins,a etc etc
+
+! Subrutina para cálculo de dissp_ii
+
+c1 = dissp11 ! Formulas del cuaderno 
+c2 = dissp12
+c3 = dissp13 
+
+call tra_coll_phys(c1,vel_r,c2,vel_t,c3, vel_z) ! Ahora contiene las disipaciones en físico!!
+
+do n = 1, mes_D%pN
+   n_ = mes_D%pNi + n - 1
+   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
+end do
+
+c1 = dissp21
+c2 = dissp22
+c3 = dissp23 
+
+call tra_coll_phys(c1,vel_r,c2,vel_t,c3, vel_z) ! Ahora contiene las disipaciones en físico!!
+
+do n = 1, mes_D%pN
+   n_ = mes_D%pNi + n - 1
+   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
+enddo
+
+c1 = dissp31
+c2 = dissp32
+c3 = dissp33 
+
+call tra_coll_phys(c1,vel_r,c2,vel_t,c3, vel_z) ! Ahora contiene las disipaciones en físico!!
+
+do n = 1, mes_D%pN
+   n_ = mes_D%pNi + n - 1
+   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
+enddo
+
+
+
+
+
+
 
 subroutine initialiseSTD()
 implicit none
@@ -93,6 +156,10 @@ implicit none
    mean_uz = 0d0
    stdv_uz = 0d0
    stdv_rz = 0d0
+
+   mom_ur = 0d0
+   mom_uz = 0d0
+   mom_ut = 0d0
 end
 
 subroutine saveStats(fnameima)
@@ -120,6 +187,16 @@ implicit none
     call mpi_reduce(stdv_rz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_rz = d
+
+    call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    mom_ur = dd
+    call mpi_reduce(mom_uz, dd, i_N*10, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    mom_uz = dd
+    call mpi_reduce(mom_ut, dd, i_N*10, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    mom_ut = dd
 
     if(mpi_rnk==0)  then
 
@@ -154,6 +231,12 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_ut",1,hdims,stdv_ut,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_uz",1,hdims,stdv_uz,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_rz",1,hdims,stdv_rz,h5err)
+
+       hdims2 = (/i_N,10/)
+
+       call h5ltmake_dataset_double_f(sta_id,"mom_ur",2,hdims2,mom_ur,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"mom_uz",2,hdims2,mom_uz,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"mom_ut",2,hdims2,mom_ut,h5err)
 
        call h5gclose_f(header_id,h5err)
        call h5gclose_f(sta_id,h5err)

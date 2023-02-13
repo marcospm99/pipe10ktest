@@ -14,7 +14,6 @@
    real :: d_start, d_stop
    double precision :: steptimer = 0d0, retau
 
-
    call h5open_f(h5err)
    call initialise()
 
@@ -68,7 +67,7 @@
             write(*,325) 'Step',tim_step,tim_t,steptimer, retau
          endif
       endif
-      if (tim_step>2410) exit
+      if (tim_step>3005) exit
          
 
    end do
