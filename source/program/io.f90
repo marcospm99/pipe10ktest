@@ -550,7 +550,7 @@
       call var_coll_norm(c3,     E__,Ek,Em)
       Enrg = E + E_ + E__
       
-      call var_coll_curl(vel_ur,vel_ut,c3, c1,c2,c3)
+      call var_coll_curl(vel_ur,vel_ut,c3, c1,c2,c3) ! Solo ur y ut? c3 es uz, pero por qué lo hace así?
       call var_coll_norm(c1, E,Ek,Em)
       call var_coll_norm(c2, E_,Ek,Em)
       call var_coll_norm(c3, E__,Ek,Em)
