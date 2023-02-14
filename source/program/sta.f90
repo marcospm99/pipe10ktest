@@ -31,7 +31,7 @@
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
 
-   type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
+   type (coll), private  :: c1!,c2,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
                                      ! 
@@ -115,99 +115,57 @@ end subroutine compute_sta
 
 
 !------------------------------------------------------------------------
-!  Dissipation
+!  Dissipation, % optimization pending
 !------------------------------------------------------------------------
-   subroutine var_coll_dissp(r,t,z,dissp11,dissp12,dissp13,dissp21,dissp22,dissp23,dissp31,dissp32,dissp33)
+   subroutine var_coll_dissp(r,t,z,dissp1,dissp2,dissp3, diss)
    implicit none
-      double precision :: diss(i_N), n_
-      integer :: n
+      !double precision :: n_
+      integer :: n, comp , N_
       type (coll), intent(in)  :: r,t,z
-      type (coll), intent(out) :: dissp11,dissp12,dissp13,dissp21,dissp22,dissp23,dissp31,dissp32,dissp33
+      type (phys), intent(out) :: diss(N_)
+      type (coll), intent(out) :: dissp1,dissp2,dissp3
       _loop_km_vars
 
-
+      ! Component and r derivative
+      if (comp == 1) then
          call var_coll_copy(r,c1)
-         call var_coll_copy(t,c2)
-         call var_coll_copy(z,c3)
+         call var_coll_meshmult(1,mes_D%dr(1),c1, dissp1)
+      else if (comp == 2) then
+         call var_coll_copy(t,c1)
+         call var_coll_meshmult(1,mes_D%dr(1),c1, dissp1)
+      else if (comp == 3) then
+         call var_coll_copy(z,c1)
+         call var_coll_meshmult(0,mes_D%dr(1),c1, dissp1)
+      else
+         print*, 'Dissp comp error'
+      endif
 
 
-
-      call var_coll_meshmult(1,mes_D%dr(1),c1, dissp11)
-      call var_coll_meshmult(1,mes_D%dr(1),c2, dissp21)
-      call var_coll_meshmult(0,mes_D%dr(1),c3, dissp31)
-
-
-      ! Theta derivatives
+      ! Theta derivative
       _loop_km_begin
-         dissp12%Re(:,nh) = -c1%Im(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-         dissp12%Im(:,nh) =  c1%Re(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-      _loop_km_end
-
-      _loop_km_begin
-         dissp22%Re(:,nh) = -c2%Im(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-         dissp22%Im(:,nh) =  c2%Re(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-      _loop_km_end
-
-      _loop_km_begin
-         dissp32%Re(:,nh) = -c3%Im(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-         dissp32%Im(:,nh) =  c3%Re(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-      _loop_km_end
-
-      ! Z derivatives
-      _loop_km_begin
-         dissp13%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-         dissp13%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
-      _loop_km_end
-
-      _loop_km_begin
-         dissp23%Re(:,nh) = -c2%Im(:,nh)*ad_k1a1(k)
-         dissp23%Im(:,nh) =  c2%Re(:,nh)*ad_k1a1(k)
-      _loop_km_end
-
-      _loop_km_begin
-         dissp33%Re(:,nh) = -c3%Im(:,nh)*ad_k1a1(k)
-         dissp33%Im(:,nh) =  c3%Re(:,nh)*ad_k1a1(k)
+         dissp2%Re(:,nh) = -c1%Im(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
+         dissp2%Im(:,nh) =  c1%Re(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
       _loop_km_end
 
 
+      ! Z derivative
+      _loop_km_begin
+         dissp3%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+         dissp3%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+      _loop_km_end
 
 
+!c1 = dissp1 ! Formulas del cuaderno 
+!c2 = dissp2
+!c3 = dissp3 
 
-!c1 = dissp11 ! Formulas del cuaderno 
-!c2 = dissp12
-!c3 = dissp13 
+call tra_coll2phys(dissp1,vel_r,dissp2,vel_t,dissp3,vel_z) ! Ahora contiene las disipaciones en físico
 
-call tra_coll2phys(dissp11,vel_r,dissp12,vel_t,dissp13,vel_z) ! Ahora contiene las disipaciones en físico
-
-n_ = 0
+N_ = 0
 do n = 1, mes_D%pN
-   n_ = mes_D%pNi + n - 1
-   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
+   N_ = mes_D%pNi + n - 1
+   diss(N_) = diss(N_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
 end do
-
-!c1 = dissp21
-!c2 = dissp22
-!c3 = dissp23 
-
-call tra_coll2phys(dissp21,vel_r,dissp22,vel_t,dissp23,vel_z) ! Ahora contiene las disipaciones en físico!!
-
-n_ = 0
-do n = 1, mes_D%pN
-   n_ = mes_D%pNi + n - 1
-   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
-enddo
-
-!c1 = dissp31
-!c2 = dissp32
-!c3 = dissp33 
-
-call tra_coll2phys(dissp31,vel_r,dissp32,vel_t,dissp33, vel_z) ! Ahora contiene las disipaciones en físico!!
-
-n_ = 0
-do n = 1, mes_D%pN
-   n_ = mes_D%pNi + n - 1
-   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
-enddo
 
 end subroutine var_coll_dissp
 
