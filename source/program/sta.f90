@@ -26,12 +26,13 @@
    double precision :: mom_ur(i_N,10)
    double precision :: mom_ut(i_N,10)
    double precision :: mom_uz(i_N,10)
-   double precision :: dissip(i_N)
+   !double precision :: dissip(i_N)
+   double precision :: diss(i_N)
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
 
-   type (coll), private  :: c1!,c2,c3 ! Three colls are defined here. Why! They are really big. 
+   type (coll), private  :: c1,c2!,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
                                      ! 
@@ -76,9 +77,9 @@
    call vel_sta() ! Compute vel_r
    ! call vel_diss
 
-!  call diss_sta1()
-!  call diss_sta2()
-!  call diss_sta3()
+      call var_coll_dissp(1)
+      call var_coll_dissp(2)
+      call var_coll_dissp(3)
 
    do n = 1, mes_D%pN
       n_ = mes_D%pNi + n - 1
@@ -117,56 +118,62 @@ end subroutine compute_sta
 !------------------------------------------------------------------------
 !  Dissipation, % optimization pending
 !------------------------------------------------------------------------
-   subroutine var_coll_dissp(r,t,z,dissp1,dissp2,dissp3, diss)
+   subroutine var_coll_dissp(comp)
    implicit none
       !double precision :: n_
       integer :: n, comp, n_
-      type (coll), intent(in)  :: r,t,z
-      type (phys), intent(out) :: diss !phys??
-      type (coll), intent(out) :: dissp1,dissp2,dissp3
       _loop_km_vars
 
       ! Component and r derivative
       if (comp == 1) then
-         call var_coll_copy(r,c1)
-         call var_coll_meshmult(1,mes_D%dr(1),c1, dissp1)
+         call var_coll_copy(vel_ur,c1)
+         call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
       else if (comp == 2) then
-         call var_coll_copy(t,c1)
-         call var_coll_meshmult(1,mes_D%dr(1),c1, dissp1)
+         call var_coll_copy(vel_ut,c1)
+         call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
       else if (comp == 3) then
-         call var_coll_copy(z,c1)
-         call var_coll_meshmult(0,mes_D%dr(1),c1, dissp1)
+         call var_coll_copy(vel_uz,c1)
+         call var_coll_meshmult(0,mes_D%dr(1),c1, c2)
       else
          print*, 'Dissp comp error'
       endif
 
+      
+      call tra_coll2phys(c2,vel_r) ! udr 2phys
+
+      do n = 1, mes_D%pN
+         n_ = mes_D%pNi + n - 1
+         diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+      end do
+
 
       ! Theta derivative
       _loop_km_begin
-         dissp2%Re(:,nh) = -c1%Im(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-         dissp2%Im(:,nh) =  c1%Re(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
+         c2%Re(:,nh) = -c1%Im(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
+         c2%Im(:,nh) =  c1%Re(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
       _loop_km_end
+
+      call tra_coll2phys(c2,vel_r) ! udt 2phys
+
+      do n = 1, mes_D%pN
+         n_ = mes_D%pNi + n - 1
+         diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+      end do
 
 
       ! Z derivative
       _loop_km_begin
-         dissp3%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-         dissp3%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+         c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+         c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
 
+      call tra_coll2phys(c2,vel_r) ! udz 2phys
 
-!c1 = dissp1 ! Formulas del cuaderno 
-!c2 = dissp2
-!c3 = dissp3 
+      do n = 1, mes_D%pN
+         n_ = mes_D%pNi + n - 1
+         diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+      end do
 
-call tra_coll2phys(dissp1,vel_r,dissp2,vel_t,dissp3,vel_z) ! Ahora contiene las disipaciones en físico
-
-!n_ = 0
-
-do n = 1, mes_D%pN
-   n_ = mes_D%pNi + n - 1
-   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 ) !Aclararse con phys
-end do
 
 end subroutine var_coll_dissp
 
@@ -189,7 +196,7 @@ implicit none
    mom_uz = 0d0
    mom_ut = 0d0
 
-   dissip = 0d0
+   diss = 0d0
 
 end subroutine initialiseSTD
 
@@ -220,9 +227,9 @@ implicit none
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_rz = d
 
-   call mpi_reduce(dissip, d, i_N, mpi_double_precision,  &
+   call mpi_reduce(diss, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    dissip = d
+    diss = d
 
     call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -268,7 +275,7 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_uz",1,hdims,stdv_uz,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_rz",1,hdims,stdv_rz,h5err)
 
-       call h5ltmake_dataset_double_f(sta_id,"diss",1,hdims,dissip,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"diss",1,hdims,diss,h5err)
 
        hdims2 = (/i_N,10/)
 
