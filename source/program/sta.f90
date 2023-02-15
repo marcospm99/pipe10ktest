@@ -26,7 +26,7 @@
    double precision :: mom_ur(i_N,10)
    double precision :: mom_ut(i_N,10)
    double precision :: mom_uz(i_N,10)
-
+   double precision :: dissip(i_N)
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
@@ -120,9 +120,9 @@ end subroutine compute_sta
    subroutine var_coll_dissp(r,t,z,dissp1,dissp2,dissp3, diss)
    implicit none
       !double precision :: n_
-      integer :: n, comp , N_
+      integer :: n, comp, n_
       type (coll), intent(in)  :: r,t,z
-      type (phys), intent(out) :: diss(N_)
+      type (phys), intent(out) :: diss !phys??
       type (coll), intent(out) :: dissp1,dissp2,dissp3
       _loop_km_vars
 
@@ -161,10 +161,11 @@ end subroutine compute_sta
 
 call tra_coll2phys(dissp1,vel_r,dissp2,vel_t,dissp3,vel_z) ! Ahora contiene las disipaciones en físico
 
-N_ = 0
+!n_ = 0
+
 do n = 1, mes_D%pN
-   N_ = mes_D%pNi + n - 1
-   diss(N_) = diss(N_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 )
+   n_ = mes_D%pNi + n - 1
+   diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2 + vel_t%Re(:,:,n)**2 + vel_z%Re(:,:,n)**2 ) !Aclararse con phys
 end do
 
 end subroutine var_coll_dissp
@@ -187,6 +188,8 @@ implicit none
    mom_ur = 0d0
    mom_uz = 0d0
    mom_ut = 0d0
+
+   dissip = 0d0
 
 end subroutine initialiseSTD
 
@@ -216,6 +219,10 @@ implicit none
     call mpi_reduce(stdv_rz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_rz = d
+
+   call mpi_reduce(dissip, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    dissip = d
 
     call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -260,6 +267,8 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_ut",1,hdims,stdv_ut,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_uz",1,hdims,stdv_uz,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_rz",1,hdims,stdv_rz,h5err)
+
+       call h5ltmake_dataset_double_f(sta_id,"diss",1,hdims,dissip,h5err)
 
        hdims2 = (/i_N,10/)
 
