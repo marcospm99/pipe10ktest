@@ -149,8 +149,8 @@ end subroutine compute_sta
 
       ! Theta derivative
       _loop_km_begin
-         c2%Re(:,nh) = -c1%Im(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
-         c2%Im(:,nh) =  c1%Re(:,nh)*mes_D%r(:,-1)*ad_m1r1(:,m)
+         c2%Re(:,nh) = -c1%Im(:,nh)/mes_D%r(:,-1)*ad_m1r1(:,m)
+         c2%Im(:,nh) =  c1%Re(:,nh)/mes_D%r(:,-1)*ad_m1r1(:,m)
       _loop_km_end
 
       call tra_coll2phys(c2,vel_r) ! udt 2phys
