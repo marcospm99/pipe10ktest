@@ -27,7 +27,7 @@
    double precision :: mom_ut(i_N,10)
    double precision :: mom_uz(i_N,10)
    !double precision :: dissip(i_N)
-   double precision :: diss(i_N)
+   double precision :: dissrr(i_N),disstt(i_N),disszz(i_N)
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
@@ -74,12 +74,14 @@
       utaum = utaum + utau 
    endif
 
-   call vel_sta() ! Compute vel_r
+  
    ! call vel_diss
 
       call var_coll_dissp(1)
       call var_coll_dissp(2)
       call var_coll_dissp(3)
+
+      call vel_sta() ! Compute vel_r
 
    do n = 1, mes_D%pN
       n_ = mes_D%pNi + n - 1
@@ -143,7 +145,7 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
-         diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+         dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
 
@@ -157,7 +159,7 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
-         diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+         disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
 
@@ -171,7 +173,7 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
-         diss(n_) = diss(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+         disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
 
@@ -196,7 +198,9 @@ implicit none
    mom_uz = 0d0
    mom_ut = 0d0
 
-   diss = 0d0
+   dissrr = 0d0
+   disstt = 0d0
+   disszz = 0d0
 
 end subroutine initialiseSTD
 
@@ -227,9 +231,15 @@ implicit none
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_rz = d
 
-   call mpi_reduce(diss, d, i_N, mpi_double_precision,  &
+   call mpi_reduce(dissrr, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    diss = d
+    dissrr = d
+   call mpi_reduce(disstt, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    disstt = d
+   call mpi_reduce(disszz, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    disszz = d
 
     call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -275,7 +285,9 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_uz",1,hdims,stdv_uz,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_rz",1,hdims,stdv_rz,h5err)
 
-       call h5ltmake_dataset_double_f(sta_id,"diss",1,hdims,diss,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"dissrr",1,hdims,dissrr,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"disstt",1,hdims,disstt,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,disszz,h5err)
 
        hdims2 = (/i_N,10/)
 
