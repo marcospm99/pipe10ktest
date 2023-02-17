@@ -36,8 +36,8 @@
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
                                      ! 
-   double precision, private :: ad_k1a1(-i_K1:i_K1)
-   double precision, private :: ad_m1r1(i_N,0:i_M1)
+!   double precision, private :: ad_k1a1(-i_K1:i_K1)
+!   double precision, private :: ad_m1r1(i_N,0:i_M1)
 
 ! ------------------------- HDF5 -------------------------------
 

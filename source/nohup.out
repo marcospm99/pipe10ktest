@@ -2,15 +2,12 @@
  loading state...
  
  Done reading fields
- Time spend reading:     0.118 sc
+ Time spend reading:     0.158 sc
  initialising output files...
  /data/marcos/pipe10k/source/runs/re180sr_wdiss.cf
  timestepping.....
-  step=           0  dt=  2.8785018E-03
-Step    1  0.252065D+03  0.736754D+01  0.181284D+03
-Step    6  0.252079D+03  0.576821D+01  0.181283D+03
-  step=          10  dt=  2.8785018E-03
-Step   11  0.252094D+03  0.573444D+01  0.181283D+03
-Step   16  0.252108D+03  0.574318D+01  0.181282D+03
-  step=          20  dt=  2.8785018E-03
-Step   21  0.252123D+03  0.573233D+01  0.181282D+03
+  step=           0  dt=  3.2883296E-03
+Step    1  0.256118D+03  0.678976D+01  0.181071D+03
+Step    6  0.256134D+03  0.533176D+01  0.181071D+03
+  step=          10  dt=  3.2883296E-03
+Step   11  0.256151D+03  0.534150D+01  0.181070D+03

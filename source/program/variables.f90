@@ -48,8 +48,8 @@
    type (harm)               :: var_H
    type (coll),      private :: c1,c2,c3
    double precision, private :: ad_k2a2(-i_K1:i_K1)
-   double precision, private :: ad_k1a1(-i_K1:i_K1)
-   double precision, private :: ad_m1r1(i_N,0:i_M1)
+   double precision :: ad_k1a1(-i_K1:i_K1)
+   double precision :: ad_m1r1(i_N,0:i_M1)
    double precision, private :: ad_m2r2(i_N,0:i_M1)
 
  contains
