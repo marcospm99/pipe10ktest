@@ -76,16 +76,17 @@
    endif
 
 
+      call vel_sta() ! Compute vel_r
 
-
-   ! call vel_diss
+      
+   ! call vel_disscd 
 
       call var_coll_dissp(1)
       call var_coll_dissp(2)
       call var_coll_dissp(3)
 
 
-      call vel_sta() ! Compute vel_r
+      
 
    do n = 1, mes_D%pN
       n_ = mes_D%pNi + n - 1
@@ -149,6 +150,7 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
+         dissr(n_) = 0
          dissr(n_) = dissr(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
@@ -163,6 +165,7 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
+         disst(n_) = 0
          disst(n_) = disst(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
@@ -177,6 +180,7 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
+         dissz(n_) = 0
          dissz(n_) = dissz(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
@@ -190,6 +194,7 @@ end subroutine compute_sta
       else
          print*, 'Dissp comp error'
       endif
+
 
 
 end subroutine var_coll_dissp
@@ -213,13 +218,13 @@ implicit none
    mom_uz = 0d0
    mom_ut = 0d0
 
-   dissr = 0d0
-   disst = 0d0
-   dissz = 0d0
-
    dissrr = 0d0
    disstt = 0d0
    disszz = 0d0
+
+   dissr = 0d0
+   disst = 0d0
+   dissz = 0d0
 
 
 end subroutine initialiseSTD
