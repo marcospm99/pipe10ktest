@@ -75,12 +75,15 @@
       utaum = utaum + utau 
    endif
 
-  
+
+
+
    ! call vel_diss
 
       call var_coll_dissp(1)
       call var_coll_dissp(2)
       call var_coll_dissp(3)
+
 
       call vel_sta() ! Compute vel_r
 
