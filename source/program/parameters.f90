@@ -45,11 +45,11 @@
    double precision, parameter :: d_minE3d      = 1d-5
    
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-   integer,          parameter :: i_save_rate1  = 300
+   integer,          parameter :: i_save_rate1  = 10
    integer,          parameter :: i_save_rate2  = 10  
    integer,          parameter :: i_maxtstep    = -1 
    integer,          parameter :: s_step        = 5 ! interval to take statistics. 
-   integer,          parameter :: f_step        = 5000 ! Steps
+   integer,          parameter :: f_step        = 1d8 ! Steps
    double precision, parameter :: d_maxt        = -1d0
    double precision, parameter :: d_cpuhours    = 1d99 !90d0
    double precision, parameter :: d_time        = 0d0 !-1d0 !0d0

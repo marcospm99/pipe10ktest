@@ -28,6 +28,7 @@
    double precision :: mom_uz(i_N,10)
    !double precision :: dissip(i_N)
    double precision :: dissrr(i_N),disstt(i_N),disszz(i_N)
+   double precision :: dissr(i_N),disst(i_N),dissz(i_N)
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
@@ -145,21 +146,21 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
-         dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+         dissr(n_) = dissr(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
 
       ! Theta derivative
       _loop_km_begin
-         c2%Re(:,nh) = -c1%Im(:,nh)/mes_D%r(:,-1)*ad_m1r1(:,m)
-         c2%Im(:,nh) =  c1%Re(:,nh)/mes_D%r(:,-1)*ad_m1r1(:,m)
+         c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) !ad_m1r1 lleva incluido el termino *mes_D%r(:,-1)
+         c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) !*mes_D%r(:,-1)
       _loop_km_end
 
       call tra_coll2phys(c2,vel_r) ! udt 2phys
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
-         disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+         disst(n_) = disst(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
 
 
@@ -173,8 +174,19 @@ end subroutine compute_sta
 
       do n = 1, mes_D%pN
          n_ = mes_D%pNi + n - 1
-         disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
+         dissz(n_) = dissz(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
       end do
+
+      
+      if (comp == 1) then
+      dissrr = dissr + disst + dissz 
+      else if (comp == 2) then
+      disstt = dissr + disst + dissz
+      else if (comp == 3) then
+      disszz = dissr + disst + dissz
+      else
+         print*, 'Dissp comp error'
+      endif
 
 
 end subroutine var_coll_dissp
@@ -198,9 +210,14 @@ implicit none
    mom_uz = 0d0
    mom_ut = 0d0
 
+   dissr = 0d0
+   disst = 0d0
+   dissz = 0d0
+
    dissrr = 0d0
    disstt = 0d0
    disszz = 0d0
+
 
 end subroutine initialiseSTD
 
