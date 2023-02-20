@@ -10,6 +10,7 @@
    use velocity
    use io
    use sta, only:compute_sta, initialisestd, savestats
+   use parameters
    implicit none
    real :: d_start, d_stop
    double precision :: steptimer = 0d0, retau
@@ -67,7 +68,7 @@
             write(*,325) 'Step',tim_step,tim_t,steptimer, retau
          endif
       endif
-      if (tim_step>3005) exit
+      if (tim_step>f_step) exit
          
 
    end do
