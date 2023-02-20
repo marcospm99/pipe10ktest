@@ -6,10 +6,23 @@
  initialising output files...
  /data/marcos/pipe10k/source/runs/re180sr_wdiss.cf
  timestepping.....
-  step=           0  dt=  3.9034826E-03
-Step    1  0.316268D+03  0.726912D+01  0.181623D+03
-Step    6  0.316288D+03  0.565897D+01  0.181629D+03
-Step   11  0.316307D+03  0.564864D+01  0.181634D+03
-Step   16  0.316327D+03  0.563467D+01  0.181639D+03
-Step   21  0.316346D+03  0.559481D+01  0.181645D+03
-Step   26  0.316366D+03  0.558031D+01  0.181650D+03
+  step=           0  dt=  2.8266716E-03
+Step    1  0.328049D+03  0.638978D+01  0.180722D+03
+Step    6  0.328064D+03  0.504694D+01  0.180720D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2259.h5
+  step=           6  dt=  2.8266716E-03
+Step   11  0.328078D+03  0.504497D+01  0.180718D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2260.h5
+  step=          12  dt=  2.8266716E-03
+Step   16  0.328092D+03  0.505084D+01  0.180716D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2261.h5
+  step=          18  dt=  2.8266716E-03
+Step   21  0.328106D+03  0.503743D+01  0.180715D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2262.h5
+  step=          24  dt=  2.8266716E-03
+Step   26  0.328120D+03  0.502092D+01  0.180713D+03
+ RUNNING deleted !
+ cleanup...
+  sec/step  =    5.682187    
+  CPU time  =            2  mins.
+ ...done!
