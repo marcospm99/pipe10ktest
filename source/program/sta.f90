@@ -27,7 +27,7 @@
    double precision :: mom_ut(i_N,10)
    double precision :: mom_uz(i_N,10)
    !double precision :: dissip(i_N)
-   double precision :: dissrr(i_N),disstt(i_N),disszz(i_N)
+   double precision :: urdrsq(i_N),urdzsq(i_N),utdrsq(i_N),utdzsq(i_N),uzdrsq(i_N),uzdzsq(i_N)
    double precision :: dissr(i_N),disst(i_N),dissz(i_N)
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
@@ -125,7 +125,7 @@ end subroutine compute_sta
 !------------------------------------------------------------------------
 !  Dissipation, % optimization pending
 !------------------------------------------------------------------------
-   subroutine var_coll_dissp(comp)
+subroutine var_coll_dissp(comp)
    implicit none
       !double precision :: n_
       integer :: n, comp, n_
@@ -155,19 +155,9 @@ end subroutine compute_sta
       end do
 
 
-      ! Theta derivative
-      _loop_km_begin
-         c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)!/mes_D%r(:,-1)!ad_m1r1 lleva incluido el termino *mes_D%r(:,-1)
-         c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)!/mes_D%r(:,-1) !*mes_D%r(:,-1)
-      _loop_km_end
+      ! Theta derivative, special, has to be carried out in physical space
 
-      call tra_coll2phys(c2,vel_r) ! udt 2phys
-
-      do n = 1, mes_D%pN
-         n_ = mes_D%pNi + n - 1
-         disst(n_) = 0
-         disst(n_) = disst(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
-      end do
+         ! Invoke finite differencies to derive u with theta
 
 
       ! Z derivative
@@ -186,18 +176,24 @@ end subroutine compute_sta
 
       
       if (comp == 1) then
-      dissrr = dissr + disst + dissz 
+      urdrsq = urdrsq + dissr  
+      urdzsq = urdzsq + dissz
       else if (comp == 2) then
-      disstt = dissr + disst + dissz
+      utdrsq = utdrsq + dissr
+      utdzsq = utdzsq + dissz
       else if (comp == 3) then
-      disszz = dissr + disst + dissz
+      uzdrsq = uzdrsq + dissr
+      uzdzsq = uzdzsq + dissz
       else
          print*, 'Dissp comp error'
       endif
 
 
 
+
 end subroutine var_coll_dissp
+
+
 
 
 subroutine initialiseSTD()
@@ -218,10 +214,12 @@ implicit none
    mom_uz = 0d0
    mom_ut = 0d0
 
-   dissrr = 0d0
-   disstt = 0d0
-   disszz = 0d0
-
+   urdrsq = 0d0
+   urdzsq = 0d0
+   utdrsq = 0d0
+   utdzsq = 0d0
+   uzdrsq = 0d0
+   uzdzsq = 0d0
 
 end subroutine initialiseSTD
 
@@ -252,15 +250,24 @@ implicit none
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_rz = d
 
-   call mpi_reduce(dissrr, d, i_N, mpi_double_precision,  &
+   call mpi_reduce(urdrsq, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    dissrr = d
-   call mpi_reduce(disstt, d, i_N, mpi_double_precision,  &
+    urdrsq = d
+   call mpi_reduce(urdzsq, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    disstt = d
-   call mpi_reduce(disszz, d, i_N, mpi_double_precision,  &
+    urdzsq = d
+   call mpi_reduce(utdrsq, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    disszz = d
+    utdrsq = d
+   call mpi_reduce(utdzsq, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    utdzsq = d
+   call mpi_reduce(uzdrsq, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    uzdrsq = d
+   call mpi_reduce(uzdzsq, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    uzdzsq = d
 
     call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -306,9 +313,14 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_uz",1,hdims,stdv_uz,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_rz",1,hdims,stdv_rz,h5err)
 
-       call h5ltmake_dataset_double_f(sta_id,"dissrr",1,hdims,dissrr,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"disstt",1,hdims,disstt,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,disszz,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"urdrsq",1,hdims,urdrsq,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"urdzsq",1,hdims,urdzsq,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"utdrsq",1,hdims,utdrsq,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"utdzsq",1,hdims,utdzsq,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"uzdrsq",1,hdims,uzdrsq,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"uzdzsq",1,hdims,uzdzsq,h5err)
+
+
 
        hdims2 = (/i_N,10/)
 
