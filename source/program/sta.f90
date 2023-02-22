@@ -26,19 +26,17 @@
    double precision :: mom_ur(i_N,10)
    double precision :: mom_ut(i_N,10)
    double precision :: mom_uz(i_N,10)
-   !double precision :: dissip(i_N)
-   double precision :: urdrsq(i_N),urdzsq(i_N),utdrsq(i_N),utdzsq(i_N),uzdrsq(i_N),uzdzsq(i_N)
-   double precision :: dissr(i_N),disst(i_N),dissz(i_N)
+
+   double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3)
+   double precision :: tmpr1(i_N),tmpr2(i_N),tmpt1(i_N),tmpt2(i_N),tmpz1(i_N),tmpz2(i_N)
+   double precision :: factor
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
 
-   type (coll), private  :: c1,c2!,c3 ! Three colls are defined here. Why! They are really big. 
+   type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
-                                     ! 
-!   double precision, private :: ad_k1a1(-i_K1:i_K1)
-!   double precision, private :: ad_m1r1(i_N,0:i_M1)
 
 ! ------------------------- HDF5 -------------------------------
 
@@ -79,11 +77,10 @@
       call vel_sta() ! Compute vel_r
 
       
-   ! call vel_disscd 
 
-      call var_coll_dissp(1)
-      call var_coll_dissp(2)
-      call var_coll_dissp(3)
+
+      call var_coll_dissp()
+
 
 
       
@@ -121,80 +118,279 @@
 end subroutine compute_sta
 
 
+! !------------------------------------------------------------------------
+! !------------------------------------------------------------------------
+! !                    Dissipation, % optimization pending
+! !------------------------------------------------------------------------
+! !------------------------------------------------------------------------
+! subroutine var_coll_dissp()
+!    implicit none
+!       !double precision :: n_
+!       integer :: n, comp, n_
+!       _loop_km_vars
+
+!       ! Component and r derivative
+!       if (comp == 1) then
+!          call var_coll_copy(vel_ur,c1)
+!          call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
+!       else if (comp == 2) then
+!          call var_coll_copy(vel_ut,c1)
+!          call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
+!       else if (comp == 3) then
+!          call var_coll_copy(vel_uz,c1)
+!          call var_coll_meshmult(0,mes_D%dr(1),c1, c2)
+!       else
+!          print*, 'Dissp comp error'
+!       endif
+
+!       !!!!!!!!!!!!!!!!!
+!       ! Uz, component !
+!       !!!!!!!!!!!!!!!!!
+
+!       call var_coll_copy(vel_uz,c1)
+
+!        ! R derivative
+!       call var_coll_meshmult(0,mes_D%dr(1),c1, c2)  
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2) 
+!       end do
+
+!        ! Theta derivative
+!       _loop_km_begin
+!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) 
+!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) 
+!       _loop_km_end
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2)
+!       end do
+
+
+!       ! Z derivative
+!       _loop_km_begin
+!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+!       _loop_km_end
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2)
+!       end do
+
+
+!       !!!!!!!!!!!!!!!!!
+!       ! Ur, component !
+!       !!!!!!!!!!!!!!!!!
+
+!    call var_coll_copy(vel_ur,c1)
+!    call var_coll_copy(vel_ut,c3)
+
+!        ! R derivative
+!       call var_coll_meshmult(0,mes_D%dr(1),c1, c2)  
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2) 
+!       end do
+
+!       ! Theta derivative
+!       _loop_km_begin
+!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) - c3%Re(:,nh)*mes_D%r(:,-1) 
+!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) - c3%Im(:,nh)*mes_D%r(:,-1)
+!       _loop_km_end
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2)
+!       end do
+
+
+!       ! Z derivative
+!       _loop_km_begin
+!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+!       _loop_km_end
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2)
+!       end do   
+
+      
+!       !!!!!!!!!!!!!!!!!
+!       ! Ut, component !
+!       !!!!!!!!!!!!!!!!!
+
+!    call var_coll_copy(vel_ut,c1)
+!    call var_coll_copy(vel_ur,c3)
+
+!        ! R derivative
+!       call var_coll_meshmult(0,mes_D%dr(1),c1, c2)  
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2) 
+!       end do
+
+!        ! Theta derivative
+!       _loop_km_begin
+!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) + c3%Re(:,nh)*mes_D%r(:,-1)
+!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) + c3%Im(:,nh)*mes_D%r(:,-1)
+!       _loop_km_end
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2)
+!       end do
+
+
+!       ! Z derivative
+!       _loop_km_begin
+!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+!       _loop_km_end
+
+!       call tra_coll2phys(c2,vel_r)
+
+!       do n = 1, mes_D%pN
+!          n_ = mes_D%pNi + n - 1
+!          disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2)
+!       end do   
+
+
+
+! end subroutine var_coll_dissp
 
 !------------------------------------------------------------------------
 !  Dissipation, % optimization pending
 !------------------------------------------------------------------------
-subroutine var_coll_dissp(comp)
+subroutine var_coll_dissp()
    implicit none
-      !double precision :: n_
-      integer :: n, comp, n_
+
+      double precision :: factor
+      integer :: n, comp!, n_
       _loop_km_vars
 
-      ! Component and r derivative
-      if (comp == 1) then
-         call var_coll_copy(vel_ur,c1)
-         call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
-      else if (comp == 2) then
-         call var_coll_copy(vel_ut,c1)
-         call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
-      else if (comp == 3) then
-         call var_coll_copy(vel_uz,c1)
-         call var_coll_meshmult(0,mes_D%dr(1),c1, c2)
-      else
-         print*, 'Dissp comp error'
-      endif
 
-      
-      call tra_coll2phys(c2,vel_r) ! udr 2phys
-
-      do n = 1, mes_D%pN
-         n_ = mes_D%pNi + n - 1
-         dissr(n_) = 0
-         dissr(n_) = dissr(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
-      end do
+      !!! Empezamos para uz !!!
 
 
-      ! Theta derivative, special, has to be carried out in physical space
+      call var_coll_copy(vel_uz,c1)
+      call var_coll_meshmult(0,mes_D%dr(1),c1, c2) ! cr is drduz
 
-         ! Invoke finite differencies to derive u with theta
-
-
-      ! Z derivative
       _loop_km_begin
-         c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-         c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
-      _loop_km_end
+      tmpr1 =  c2%Re(:,nh)
+      tmpr2 =  c2%Im(:,nh)
 
-      call tra_coll2phys(c2,vel_r) ! udz 2phys
+      tmpz1 = -c1%Im(:,nh)*ad_k1a1(k)
+      tmpz2 =  c1%Re(:,nh)*ad_k1a1(k)
+
+      tmpt1 = -c1%Im(:,nh)*ad_m1r1(:,m)
+      tmpt2 =  c1%Re(:,nh)*ad_m1r1(:,m)
+      
+       factor = 2d0
+      if (m==0) then;
+       factor = 1d0
+       end if
 
       do n = 1, mes_D%pN
-         n_ = mes_D%pNi + n - 1
-         dissz(n_) = 0
-         dissz(n_) = dissz(n_) + sum(vel_r%Re(:,:,n)**2) ! diss sum
-      end do
+        ! n_ = mes_D%pNi + n - 1
+         dissr(n,1) = dissr(n,1) + factor*(tmpr1(n)**2+tmpr2(n)**2)
+         dissz(n,1) = dissz(n,1) + factor*(tmpz1(n)**2+tmpz2(n)**2)
+         disst(n,1) = disst(n,1) + factor*(tmpt1(n)**2+tmpt2(n)**2)
 
+       
+      enddo
       
-      if (comp == 1) then
-      urdrsq = urdrsq + dissr  
-      urdzsq = urdzsq + dissz
-      else if (comp == 2) then
-      utdrsq = utdrsq + dissr
-      utdzsq = utdzsq + dissz
-      else if (comp == 3) then
-      uzdrsq = uzdrsq + dissr
-      uzdzsq = uzdzsq + dissz
-      else
-         print*, 'Dissp comp error'
-      endif
+      _loop_km_end
+   
+      diss(:,1) = dissr(:,1) + disst(:,1) + dissz(:,1)
 
 
+      ! Lo mismo para theta
+
+      call var_coll_copy(vel_ut,c1)
+      call var_coll_copy(vel_ur,c3)
+      call var_coll_meshmult(0,mes_D%dr(1),c1, c2) ! cr is drdut
+
+      _loop_km_begin
+
+      tmpr1 =  c2%Re(:,nh)
+      tmpr2 =  c2%Im(:,nh)
+
+      tmpz1 = -c1%Im(:,nh)*ad_k1a1(k)
+      tmpz2 =  c1%Re(:,nh)*ad_k1a1(k)
+
+      tmpt1 = -c1%Im(:,nh)*ad_m1r1(:,m) + c3%Re(:,nh)*mes_D%r(:,-1)
+      tmpt2 =  c1%Re(:,nh)*ad_m1r1(:,m) + c3%Im(:,nh)*mes_D%r(:,-1)
+
+      factor = 2d0
+      if (m==0) then
+       factor = 1d0
+      end if
+
+      do n = 1, mes_D%pN
+         !n_ = mes_D%pNi + n - 1
+         dissr(n,2) = dissr(n,2) + factor*(tmpr1(n)**2+tmpr2(n)**2)
+         dissz(n,2) = dissz(n,2) + factor*(tmpz1(n)**2+tmpz2(n)**2)
+         disst(n,2) = disst(n,2) + factor*(tmpt1(n)**2+tmpt2(n)**2)
+
+         
+         
+      end do
+      _loop_km_end
+      diss(:,2) = dissr(:,2) + disst(:,2) + dissz(:,2)
+      ! Lo mismo para r
+
+      call var_coll_copy(vel_ur,c1)
+      call var_coll_copy(vel_ut,c3)
+      call var_coll_meshmult(0,mes_D%dr(1),c1, c2) ! cr is drdut
+
+      _loop_km_begin
+      tmpr1 =  c2%Re(:,nh)
+      tmpr2 =  c2%Im(:,nh)
+
+      tmpz1 = -c1%Im(:,nh)*ad_k1a1(k)
+      tmpz2 =  c1%Re(:,nh)*ad_k1a1(k)
+
+      tmpt1 = -c1%Im(:,nh)*ad_m1r1(:,m) - c3%Re(:,nh)*mes_D%r(:,-1)
+      tmpt2 =  c1%Re(:,nh)*ad_m1r1(:,m) - c3%Im(:,nh)*mes_D%r(:,-1)
 
 
+      factor = 2d0
+      if (m==0) then
+       factor = 1d0
+      end if
+
+      do n = 1, mes_D%pN
+        ! n_ = mes_D%pNi + n - 1
+         dissr(n,3) = dissr(n,3) + factor*(tmpr1(n)**2+tmpr2(n)**2)
+         dissz(n,3) = dissz(n,3) + factor*(tmpz1(n)**2+tmpz2(n)**2)
+         disst(n,3) = disst(n,3) + factor*(tmpt1(n)**2+tmpt2(n)**2)
+        end do
+   _loop_km_end
+
+   diss(:,3) = dissr(:,3) + disst(:,3) + dissz(:,3)
 end subroutine var_coll_dissp
-
-
-
 
 subroutine initialiseSTD()
 
@@ -214,12 +410,9 @@ implicit none
    mom_uz = 0d0
    mom_ut = 0d0
 
-   urdrsq = 0d0
-   urdzsq = 0d0
-   utdrsq = 0d0
-   utdzsq = 0d0
-   uzdrsq = 0d0
-   uzdzsq = 0d0
+   dissr = 0d0
+   disst = 0d0
+   dissz = 0d0
 
 end subroutine initialiseSTD
 
@@ -250,24 +443,16 @@ implicit none
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_rz = d
 
-   call mpi_reduce(urdrsq, d, i_N, mpi_double_precision,  &
+   call mpi_reduce(diss(1,3), d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    urdrsq = d
-   call mpi_reduce(urdzsq, d, i_N, mpi_double_precision,  &
+    diss(:,3) = d
+   call mpi_reduce(diss(1,2), d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    urdzsq = d
-   call mpi_reduce(utdrsq, d, i_N, mpi_double_precision,  &
+    diss(:,2) = d
+   call mpi_reduce(diss(1,1), d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    utdrsq = d
-   call mpi_reduce(utdzsq, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    utdzsq = d
-   call mpi_reduce(uzdrsq, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    uzdrsq = d
-   call mpi_reduce(uzdzsq, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    uzdzsq = d
+    diss(:,1) = d
+
 
     call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -313,12 +498,12 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_uz",1,hdims,stdv_uz,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_rz",1,hdims,stdv_rz,h5err)
 
-       call h5ltmake_dataset_double_f(sta_id,"urdrsq",1,hdims,urdrsq,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"urdzsq",1,hdims,urdzsq,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"utdrsq",1,hdims,utdrsq,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"utdzsq",1,hdims,utdzsq,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"uzdrsq",1,hdims,uzdrsq,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"uzdzsq",1,hdims,uzdzsq,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"dissrr",1,hdims,diss(:,3),h5err)
+       call h5ltmake_dataset_double_f(sta_id,"disstt",1,hdims,diss(:,2),h5err)
+       call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,diss(:,1),h5err)
+       
+       
+       
 
 
 
