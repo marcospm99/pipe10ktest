@@ -121,168 +121,6 @@
 end subroutine compute_sta
 
 
-!------------------------------------------------------------------------
-!------------------------------------------------------------------------
-!                    Dissipation, % optimization pending
-!------------------------------------------------------------------------
-!------------------------------------------------------------------------
-! subroutine var_coll_dissp()
-!    implicit none
-!       !double precision :: n_
-!       integer :: n, comp, n_
-!       _loop_km_vars
-
-!       ! Component and r derivative
-!       if (comp == 1) then
-!          call var_coll_copy(vel_ur,c1)
-!          call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
-!       else if (comp == 2) then
-!          call var_coll_copy(vel_ut,c1)
-!          call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
-!       else if (comp == 3) then
-!          call var_coll_copy(vel_uz,c1)
-!          call var_coll_meshmult(0,mes_D%dr(1),c1, c2)
-!       else
-!          print*, 'Dissp comp error'
-!       endif
-
-!       !!!!!!!!!!!!!!!!!
-!       ! Uz, component !
-!       !!!!!!!!!!!!!!!!!
-
-!       call var_coll_copy(vel_uz,c1)
-
-!        ! R derivative
-!       call var_coll_meshmult(0,mes_D%dr(1),c1, c2)  
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2) 
-!       end do
-
-!        ! Theta derivative
-!       _loop_km_begin
-!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) 
-!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) 
-!       _loop_km_end
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2)
-!       end do
-
-
-!       ! Z derivative
-!       _loop_km_begin
-!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
-!       _loop_km_end
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          disszz(n_) = disszz(n_) + sum(vel_r%Re(:,:,n)**2)
-!       end do
-
-
-!       !!!!!!!!!!!!!!!!!
-!       ! Ur, component !
-!       !!!!!!!!!!!!!!!!!
-
-!    call var_coll_copy(vel_ur,c1)
-!    call var_coll_copy(vel_ut,c3)
-
-!        ! R derivative
-!       call var_coll_meshmult(0,mes_D%dr(1),c1, c2)  
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2) 
-!       end do
-
-!       ! Theta derivative
-!       _loop_km_begin
-!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) - c3%Re(:,nh)*mes_D%r(:,-1) 
-!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) - c3%Im(:,nh)*mes_D%r(:,-1)
-!       _loop_km_end
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2)
-!       end do
-
-
-!       ! Z derivative
-!       _loop_km_begin
-!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
-!       _loop_km_end
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          dissrr(n_) = dissrr(n_) + sum(vel_r%Re(:,:,n)**2)
-!       end do   
-
-      
-!       !!!!!!!!!!!!!!!!!
-!       ! Ut, component !
-!       !!!!!!!!!!!!!!!!!
-
-!    call var_coll_copy(vel_ut,c1)
-!    call var_coll_copy(vel_ur,c3)
-
-!        ! R derivative
-!       call var_coll_meshmult(0,mes_D%dr(1),c1, c2)  
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2) 
-!       end do
-
-!        ! Theta derivative
-!       _loop_km_begin
-!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) + c3%Re(:,nh)*mes_D%r(:,-1)
-!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) + c3%Im(:,nh)*mes_D%r(:,-1)
-!       _loop_km_end
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2)
-!       end do
-
-
-!       ! Z derivative
-!       _loop_km_begin
-!          c2%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-!          c2%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
-!       _loop_km_end
-
-!       call tra_coll2phys(c2,vel_r)
-
-!       do n = 1, mes_D%pN
-!          n_ = mes_D%pNi + n - 1
-!          disstt(n_) = disstt(n_) + sum(vel_r%Re(:,:,n)**2)
-!       end do   
-
-
-
-! end subroutine var_coll_dissp
-
 ! !------------------------------------------------------------------------
 ! !  Dissipation, % optimization pending
 ! !------------------------------------------------------------------------
@@ -298,7 +136,7 @@ end subroutine compute_sta
 
 
        call var_coll_copy(vel_uz,c1)
-       call var_coll_meshmult(0,mes_D%dr(1),c1, c2) ! cr is drduz
+       call var_coll_meshmult(0,mes_D%dr(1),c1, c2) 
 
        _loop_km_begin
        tmpr1 =  c2%Re(:,nh)
@@ -325,7 +163,7 @@ end subroutine compute_sta
 
       call var_coll_copy(vel_ut,c1)
       call var_coll_copy(vel_ur,c3)
-      call var_coll_meshmult(0,mes_D%dr(1),c1, c2) ! cr is drdut
+      call var_coll_meshmult(1,mes_D%dr(1),c1, c2) 
 
       _loop_km_begin
 
@@ -352,7 +190,7 @@ end subroutine compute_sta
 
       call var_coll_copy(vel_ur,c1)
       call var_coll_copy(vel_ut,c3)
-      call var_coll_meshmult(0,mes_D%dr(1),c1, c2) ! cr is drdut
+      call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
 
       _loop_km_begin
       tmpr1 =  c2%Re(:,nh)
@@ -507,6 +345,7 @@ implicit none
    !     mpi_sum, 0, mpi_comm_world, mpi_er)
    !  urf = d
 
+   ! or, ot, oz: vort's
    call mpi_reduce(or, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
     or = d
