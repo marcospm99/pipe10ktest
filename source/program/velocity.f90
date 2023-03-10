@@ -193,7 +193,7 @@
             call var_coll_init(c3)
             if(j==1) then
                c1%Re(i_N,:) = 1d0
-               call tim_lumesh_invert(0,LDp, c1)
+               call tim_lumesh_invert(0,LDp, c1) ! Solve the systems, but what systems?
                U(:,:,1) = c1%Re
             else if(j==2) then
                c2%Re(i_N,:) = 1d0
@@ -220,7 +220,7 @@
             call mes_mat_invert(4,A(1,1,nh),4)
          _loop_km_end
 
-      else if(F==1) then			! get p, project RHS
+      else if(F==1) then			! get p, project RHS -> Hint, Right Hand Side (?) of the PPE (?)
          call vel_pm2rt(vel_ur,vel_ut, c1,c2)
          call var_coll_div(c1,c2,vel_uz, c1)
          call tim_zerobc(c1)
@@ -230,6 +230,29 @@
          call var_coll_sub(c1, vel_ur)
          call var_coll_sub(c2, vel_ut)
          call var_coll_sub(c3, vel_uz)
+
+         ! Explanation
+
+! This block of code appears to be calculating the pressure field given
+! the velocity field, using the Laplace-Neumann pressure operator (LNp) -> Not quite sure BUT originally 
+! there is a comment: pressure matrix, so presumably we could have reached the pressure matrix. 
+
+! Breakdown:
+
+!     1) call vel_pm2rt(vel_ur,vel_ut, c1,c2) converts the input velocity field (vel_ur and vel_ut)
+!        to u+ and u- (see literature)
+!     2) call var_coll_div(c1,c2,vel_uz, c1) computes the divergence of the input velocity field 
+!        in the axial direction (vel_uz) and stores the result in c1.
+!     3) call tim_zerobc(c1) applies boundary conditions to the c1 variable. -> No more details by the moment
+
+!     4) call tim_lumesh_invert(1,LNp, c1) solves the Laplace equation with the Neumann boundary condition
+!        to obtain the pressure field (c1).
+
+!     5) call var_coll_grad(c1, c1,c2,c3) computes the gradient of the pressure field (c1) in the radial (c1),
+!        tangential (c2), and axial (c3) directions.
+!     6) call vel_rt2pm(c1,c2, c1,c2) converts the pressure gradient field (c1 and c2) back to Cartesian coordinates.
+!     7) call var_coll_sub(c1, vel_ur), call var_coll_sub(c2, vel_ut), and call var_coll_sub(c3, vel_uz) subtract
+!        the pressure gradient field from the input velocity field to obtain the corrected velocity field.
 
       else if(F==2) then                        ! correct the BCs
          call vel_evalBC(vel_ur,vel_ut,vel_uz, BRe,BIm)

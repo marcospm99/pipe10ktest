@@ -22,7 +22,7 @@
 
    double precision :: mean_ur(i_N), stdv_ur(i_N)
    double precision :: mean_ut(i_N), stdv_ut(i_N)
-   double precision :: mean_uz(i_N), stdv_uz(i_N), stdv_rz(i_N)
+   double precision :: mean_uz(i_N), stdv_uz(i_N), stdv_rz(i_N), stdv_rt(i_N), stdv_tz(i_N)
    double precision :: mom_ur(i_N,10)
    double precision :: mom_ut(i_N,10)
    double precision :: mom_uz(i_N,10)
@@ -85,7 +85,6 @@
 
 
 
-
       
 
    do n = 1, mes_D%pN
@@ -97,6 +96,8 @@
       mean_uz(n_) = mean_uz(n_) + sum(vel_z%Re(:,:,n))
       stdv_uz(n_) = stdv_uz(n_) + sum(vel_z%Re(:,:,n)**2)
       stdv_rz(n_) = stdv_rz(n_) + sum(vel_z%Re(:,:,n)*vel_r%Re(:,:,n))
+      stdv_rt(n_) = stdv_rz(n_) + sum(vel_r%Re(:,:,n)*vel_t%Re(:,:,n))
+      stdv_tz(n_) = stdv_rz(n_) + sum(vel_t%Re(:,:,n)*vel_z%Re(:,:,n))
 
       do kk =  0,i_Th-1
          do jj =  0,i_pZ-1
@@ -218,7 +219,7 @@ end subroutine compute_sta
 
 
 !------------------------------------------------------------------------
-!  Dissipation, % optimization pending
+!  Velocities using fourier, % optimization pending
 !------------------------------------------------------------------------
  subroutine staFFT()
     implicit none
@@ -268,6 +269,12 @@ end subroutine compute_sta
 
      end subroutine vort
 
+
+
+
+
+
+
 subroutine initialiseSTD()
 
 implicit none
@@ -281,6 +288,8 @@ implicit none
    mean_uz = 0d0
    stdv_uz = 0d0
    stdv_rz = 0d0
+   stdv_rt = 0d0
+   stdv_tz = 0d0
 
    mom_ur = 0d0
    mom_uz = 0d0
@@ -321,7 +330,12 @@ implicit none
     call mpi_reduce(stdv_rz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_rz = d
-
+    call mpi_reduce(stdv_rt, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    stdv_rt = d
+    call mpi_reduce(stdv_tz, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    stdv_tz = d
        diss(:,1) = dissr(:,1) + disst(:,1) + dissz(:,1)
        diss(:,2) = dissr(:,2) + disst(:,2) + dissz(:,2)
        diss(:,3) = dissr(:,3) + disst(:,3) + dissz(:,3)
@@ -398,6 +412,8 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_ut",1,hdims,stdv_ut,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_uz",1,hdims,stdv_uz,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_rz",1,hdims,stdv_rz,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"stdv_rt",1,hdims,stdv_rt,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"stdv_tz",1,hdims,stdv_tz,h5err)
 
        call h5ltmake_dataset_double_f(sta_id,"urf",1,hdims,urf,h5err)
 
