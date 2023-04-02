@@ -138,8 +138,8 @@ type (coll) :: pfp !pressure field perturbation
 double precision :: factor
 _loop_km_vars
 
-call vel_adjPPE(1) ! compute p'
-pfp = c4
+call vel_adjPPE(3) !call pressure field
+call tra_phys2coll(vel_p, pfp) !from phys2coll
 
 
 ! fourier interp
@@ -504,7 +504,7 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_tz",1,hdims,stdv_tz,h5err)
 
        call h5ltmake_dataset_double_f(sta_id,"urf",1,hdims,urf,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"pfpF",1,hdims,pfpF,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"pressure",1,hdims,pfpF,h5err)
 
        
        call h5ltmake_dataset_double_f(sta_id,"disstt",1,hdims,diss(:,2),h5err)
