@@ -38,7 +38,7 @@
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
 
-   !type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
+   type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
 

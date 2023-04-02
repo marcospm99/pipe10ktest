@@ -34,7 +34,7 @@
    type (mesh),   private :: Ltz(0:i_pH1)
    type (coll),   private :: Nr_,Nt_,Nz_,ur_,ut_,uz_
 
-   type (coll) :: c1,c2,c3
+   type (coll), private :: c1,c2,c3
    type (coll) :: c4
    
  contains
