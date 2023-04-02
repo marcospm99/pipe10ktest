@@ -34,7 +34,8 @@
    type (mesh),   private :: Ltz(0:i_pH1)
    type (coll),   private :: Nr_,Nt_,Nz_,ur_,ut_,uz_
 
-   type (coll), private :: c1,c2,c3
+   type (coll) :: c1,c2,c3
+   type (coll) :: c4
    
  contains
 
@@ -223,9 +224,11 @@
       else if(F==1) then			! get p, project RHS -> Hint, Right Hand Side (?) of the PPE (?)
          call vel_pm2rt(vel_ur,vel_ut, c1,c2)
          call var_coll_div(c1,c2,vel_uz, c1)
-         call tim_zerobc(c1)
-         call tim_lumesh_invert(1,LNp, c1)
-         call var_coll_grad(c1, c1,c2,c3)
+         call tim_zerobc(c1) !c1 is set to 0 (wall BC)
+         call tim_lumesh_invert(1,LNp,c1) ! c1 (inout). System is solved and c1 stores presumably the pressure perturbation (??)
+         c4 = c1
+          !copio la presión
+         call var_coll_grad(c1, c1,c2,c3) !grad to c1 -> velocities
          call vel_rt2pm(c1,c2, c1,c2)
          call var_coll_sub(c1, vel_ur)
          call var_coll_sub(c2, vel_ut)

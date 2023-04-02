@@ -1,0 +1,19 @@
+ precomputing function requisites...
+ loading state...
+ 
+ Done reading fields
+ Time spend reading:     0.110 sc
+ initialising output files...
+ /data/marcos/pipe10k/source/runs/re180sr_wdiss.cf
+ timestepping.....
+  step=           0  dt=  3.7821522E-03
+Step    1  0.130116D+04  0.638470D+01  0.181013D+03
+Step    6  0.130118D+04  0.503706D+01  0.181010D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2328.h5
+  step=           6  dt=  3.7821522E-03
+Step   11  0.130118D+04  0.502377D+01  0.181012D+03
+ RUNNING deleted !
+ cleanup...
+  sec/step  =    7.195763    
+  CPU time  =            1  mins.
+ ...done!

@@ -27,17 +27,18 @@
    double precision :: mom_ut(i_N,10)
    double precision :: mom_uz(i_N,10)
    double precision :: urf(i_N), utf(i_N), uzf(i_N)
+   double precision :: pfpF(i_N)
    double precision :: or(i_N), ot(i_N), oz(i_N)
    
 
-   double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3)
+   double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3), dzduzsq(i_N), dzduzcub(i_N)
    double precision :: tmpr1(i_N),tmpr2(i_N),tmpt1(i_N),tmpt2(i_N),tmpz1(i_N),tmpz2(i_N)
    double precision :: factor
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
 
-   type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
+   !type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
 
@@ -82,6 +83,9 @@
    call staFFT() ! Compute stdv_[u,t,z]
    call var_coll_dissp() ! Compute dissipation
    call vort()
+   call pressure()
+
+
 
 
 
@@ -123,7 +127,44 @@ end subroutine compute_sta
 
 
 ! !------------------------------------------------------------------------
-! !  Dissipation, % optimization pending
+! !  Pressure field:
+! !      Results: 
+! !      
+! !------------------------------------------------------------------------
+subroutine pressure()
+implicit none
+
+type (coll) :: pfp !pressure field perturbation
+double precision :: factor
+_loop_km_vars
+
+call vel_adjPPE(1) ! compute p'
+pfp = c4
+
+
+! fourier interp
+
+_loop_km_begin
+
+       tmpr1 =  pfp%Re(:,nh)
+       tmpr2 =  pfp%Im(:,nh)
+
+factor = 2d0
+   if (m==0) factor = 1d0
+
+          pfpF(:) = pfpF(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+          
+_loop_km_end
+  
+
+end subroutine pressure
+
+
+
+! !------------------------------------------------------------------------
+! !  Turbulent budgets:
+! !      Dissipation, % optimization pending
+! !      Rest of the derivatives: budgets in postproc
 ! !------------------------------------------------------------------------
  subroutine var_coll_dissp()
     implicit none
@@ -214,7 +255,39 @@ end subroutine compute_sta
    _loop_km_end
 
 
+   !dzduzsq
+
+   call var_coll_copy(vel_uz,c1)
+
+   _loop_km_begin
+   tmpr1 = (c1%Re(:,nh)**2 + c1%Im(:,nh)**2) *ad_k1a1(k)
+   tmpr2 = (2*c1%Re(:,nh)*c1%Im(:,nh)) *ad_k1a1(k)
+
+         factor = 2d0
+      if (m==0) factor = 1d0
+
+      dzduzsq(:) = dzduzsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+
+   _loop_km_end
    
+     !dzduzcub
+
+   call var_coll_copy(vel_uz,c1)
+
+   _loop_km_begin
+   tmpr1 = (c1%Re(:,nh)**3 - 3*c1%Im(:,nh)**2*c1%Re(:,nh)) *ad_k1a1(k)
+   tmpr2 = (3*c1%Im(:,nh)*c1%Re(:,nh)**2 - c1%Im(:,nh)**3) *ad_k1a1(k)
+
+         factor = 2d0
+      if (m==0) factor = 1d0
+
+      dzduzcub(:) = dzduzcub(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+
+   _loop_km_end 
+
+
  end subroutine var_coll_dissp
 
 
@@ -298,10 +371,13 @@ implicit none
    dissr = 0d0
    disst = 0d0
    dissz = 0d0
+
    urf = 0d0
+   pfpF = 0d0
 
    diss = 0d0
-
+   dzduzsq = 0d0
+   dzduzcub = 0d0
 end subroutine initialiseSTD
 
 
@@ -336,6 +412,11 @@ implicit none
     call mpi_reduce(stdv_tz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_tz = d
+    call mpi_reduce(pfpF, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    pfpF = d
+
+   !! Dissipation
        diss(:,1) = dissr(:,1) + disst(:,1) + dissz(:,1)
        diss(:,2) = dissr(:,2) + disst(:,2) + dissz(:,2)
        diss(:,3) = dissr(:,3) + disst(:,3) + dissz(:,3)
@@ -369,6 +450,13 @@ implicit none
    call mpi_reduce(oz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
     oz = d
+
+   call mpi_reduce(dzduzsq, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    dzduzsq = d
+       call mpi_reduce(dzduzcub, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    dzduzcub = d
 
     call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -416,6 +504,7 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_tz",1,hdims,stdv_tz,h5err)
 
        call h5ltmake_dataset_double_f(sta_id,"urf",1,hdims,urf,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"pfpF",1,hdims,pfpF,h5err)
 
        
        call h5ltmake_dataset_double_f(sta_id,"disstt",1,hdims,diss(:,2),h5err)
@@ -426,7 +515,9 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"vortt",1,hdims,ot,h5err)
        call h5ltmake_dataset_double_f(sta_id,"vortz",1,hdims,oz,h5err)  
 
-
+       call h5ltmake_dataset_double_f(sta_id,"dzduzsq",1,hdims,dzduzsq,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"dzduzcub",1,hdims,dzduzcub,h5err)
+         
 
        hdims2 = (/i_N,10/)
 
