@@ -11,6 +11,7 @@
  
  module io
 !**************************************************************************
+   use wksp
    use velocity
    use h5lt
    use hdf5
@@ -28,7 +29,7 @@
    
    double precision, private :: wk(i_N, 0:i_pH1) ! PAsar luego por cabecera a la rutina o a través de un modulo. 
    
-   type (coll), private  :: c1!,c2,c3 ! Three colls are defined here. Why! They are really big. 
+   !type (coll), private  :: c1!,c2,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
                                      ! 

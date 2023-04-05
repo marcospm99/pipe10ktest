@@ -5,6 +5,7 @@
 #include "../parallel.h"
  module velocity
 !*************************************************************************
+   use wksp
    use variables
    use transform
    use timestep
@@ -35,8 +36,8 @@
    type (mesh),   private :: Ltz(0:i_pH1)
    type (coll),   private :: Nr_,Nt_,Nz_,ur_,ut_,uz_
 
-   type (coll), private :: c1,c2,c3
-   ! type (coll) :: c4
+   !type (coll), private :: c1,c2,c3
+   !type (phys) :: c4
    
  contains
 
@@ -183,7 +184,7 @@
       double precision, allocatable, save :: U(:,:,:) !i_N,0:i_pH1,6
       double precision, allocatable, save :: P(:,:)   !i_N,0:i_pH1
       double precision  :: BRe(4,0:i_pH1),BIm(4,0:i_pH1)
-      type (coll), save :: cp
+      !type (coll), save :: cp
       integer :: j
       _loop_km_vars
       
@@ -232,10 +233,10 @@
 
       else if(F==1) then			! get p, project RHS
          call vel_pm2rt(vel_ur,vel_ut, c1,c2)
-         call var_coll_div(c1,c2,vel_uz, cp)
-         call tim_zerobc(cp)
-         call tim_lumesh_invert(1,LNp, cp)
-         call var_coll_grad(cp, c1,c2,c3)
+         call var_coll_div(c1,c2,vel_uz, c4)
+         call tim_zerobc(c4)
+         call tim_lumesh_invert(1,LNp, c4)
+         call var_coll_grad(c4, c1,c2,c3)
          call vel_rt2pm(c1,c2, c1,c2)
          call var_coll_sub(c1, vel_ur)
          call var_coll_sub(c2, vel_ut)
@@ -266,10 +267,10 @@
          if(tim_step==0) stop 'vel_adjPPE err1' ! err: data not available'
          _loop_km_begin
             if(k==0 .and. m==0) cycle
-            cp%Re(:,nh) = cp%Re(:,nh) + aR(4)*P(:,nh)
-            cp%Im(:,nh) = cp%Im(:,nh) + aI(4)*P(:,nh)
+            c4%Re(:,nh) = c4%Re(:,nh) + aR(4)*P(:,nh)
+            c4%Im(:,nh) = c4%Im(:,nh) + aI(4)*P(:,nh)
          _loop_km_end
-         call tra_coll2phys(cp, vel_p)
+         call tra_coll2phys(c4, vel_p)
          vel_p%Re = vel_p%Re - 0.5d0*  &
             (vel_r%Re*vel_r%Re + vel_t%Re*vel_t%Re + vel_z%Re*vel_z%Re)
       end if
@@ -463,12 +464,12 @@
 !  nonlinear terms for velocity
 !------------------------------------------------------------------------
    subroutine vel_nonlinear()
-      type (phys) :: p1,p2,p3
+      !type (phys) :: p1!,p2,p3
          			! advection  u x curlu
       p1%Re = vel_t%Re*vel_curlz%Re - vel_z%Re*vel_curlt%Re
-      p2%Re = vel_z%Re*vel_curlr%Re - vel_r%Re*vel_curlz%Re
-      p3%Re = vel_r%Re*vel_curlt%Re - vel_t%Re*vel_curlr%Re
-      call tra_phys2coll(p1,vel_Nr, p2,vel_Nt, p3,vel_Nz)
+      vel_z%Re = vel_z%Re*vel_curlr%Re - vel_r%Re*vel_curlz%Re
+      vel_curlz%Re = vel_r%Re*vel_curlt%Re - vel_t%Re*vel_curlr%Re
+      call tra_phys2coll(p1,vel_Nr, vel_z,vel_Nt, vel_curlz,vel_Nz)
       
       call vel_addHPF()
 

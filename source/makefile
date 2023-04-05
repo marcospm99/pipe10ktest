@@ -4,7 +4,7 @@ UTILDIR		= ./utils/
 UTIL		= prim2matlab
 
 TRANSFORM	= fftw3
-MODSOBJ		=  iohdf5.o meshs.o mpi.o parameters.o \
+MODSOBJ		=  wksp.o iohdf5.o meshs.o mpi.o parameters.o \
 		  timestep.o transform.o variables.o velocity.o sta.o
 
 #COMPILER	= g95 -C  
@@ -61,6 +61,9 @@ clean :
 	rm -f *.o *.mod *.d *.il core *.out
 
 #------------------------------------------------------------------------
+wksp.o : $(PROGDIR)wksp.f90 variables.o parallel.h
+	$(COMPILER) $(COMPFLAGS) $(PROGDIR)wksp.f90
+
 iohdf5.o : $(PROGDIR)iohdf5.F90 velocity.o parallel.h
 	$(COMPILER) $(COMPFLAGS) $(PROGDIR)iohdf5.F90
 

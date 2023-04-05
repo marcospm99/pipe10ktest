@@ -5,6 +5,7 @@
 #include "../parallel.h"
  module sta
 !**************************************************************************
+   use wksp
    use variables
    use velocity
    use h5lt
@@ -22,23 +23,25 @@
 
    double precision :: mean_ur(i_N), stdv_ur(i_N)
    double precision :: mean_ut(i_N), stdv_ut(i_N)
-   double precision :: mean_uz(i_N), stdv_uz(i_N), stdv_rz(i_N), stdv_rt(i_N), stdv_tz(i_N)
-   double precision :: mom_ur(i_N,10)
-   double precision :: mom_ut(i_N,10)
-   double precision :: mom_uz(i_N,10)
-   double precision :: urf(i_N), utf(i_N), uzf(i_N)
-   double precision :: pfpF(i_N)
-   double precision :: or(i_N), ot(i_N), oz(i_N)
+   double precision :: mean_uz(i_N), stdv_uz(i_N)
+   double precision :: stdv_rz(i_N), stdv_rt(i_N), stdv_tz(i_N)
+   ! double precision :: mom_ur(i_N,10)
+   ! double precision :: mom_ut(i_N,10)
+   ! double precision :: mom_uz(i_N,10)
+   double precision :: mean_p(i_N), stdv_p(i_N)
+
+   !double precision :: pfpF(i_N)
+
    
 
    double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3), dzduzsq(i_N), dzduzcub(i_N)
-   double precision :: tmpr1(i_N),tmpr2(i_N),tmpt1(i_N),tmpt2(i_N),tmpz1(i_N),tmpz2(i_N)
+   ! double precision :: tmpr1(i_N),tmpr2(i_N),tmpt1(i_N),tmpt2(i_N),tmpz1(i_N),tmpz2(i_N)
    double precision :: factor
 
    double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
    integer :: csta
 
-   type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
+   !type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
 
@@ -80,9 +83,9 @@
 
    call vel_sta() ! Compute vel_r
 
-   call staFFT() ! Compute stdv_[u,t,z]
+   !call staFFT() ! Compute stdv_[u,t,z]
    call var_coll_dissp() ! Compute dissipation
-   call vort()
+   !call vort()
    call pressure()
 
 
@@ -102,22 +105,24 @@
       stdv_rz(n_) = stdv_rz(n_) + sum(vel_z%Re(:,:,n)*vel_r%Re(:,:,n))
       stdv_rt(n_) = stdv_rz(n_) + sum(vel_r%Re(:,:,n)*vel_t%Re(:,:,n))
       stdv_tz(n_) = stdv_rz(n_) + sum(vel_t%Re(:,:,n)*vel_z%Re(:,:,n))
+      mean_p(n_)  = mean_p(n_)  + sum(vel_p%Re(:,:,n))
+      stdv_p(n_)  = stdv_p(n_)  + sum(vel_p%Re(:,:,n)**2) 
 
-      do kk =  0,i_Th-1
-         do jj =  0,i_pZ-1
-            aa = 1d0
-            bb = 1d0
-            cc = 1d0
-            do ii = 1,10
-               aa = aa * vel_r%Re(jj,kk,n)
-               bb = bb * vel_t%Re(jj,kk,n)
-               cc = cc * vel_z%Re(jj,kk,n)
-               mom_ur(n_,ii) =  mom_ur(n_,ii) + aa
-               mom_ut(n_,ii) =  mom_ut(n_,ii) + bb
-               mom_uz(n_,ii) =  mom_uz(n_,ii) + cc
-            enddo
-         enddo
-      enddo
+   !    do kk =  0,i_Th-1
+   !       do jj =  0,i_pZ-1
+   !          aa = 1d0
+   !          bb = 1d0
+   !          cc = 1d0
+   !          do ii = 1,10
+   !             aa = aa * vel_r%Re(jj,kk,n)
+   !             bb = bb * vel_t%Re(jj,kk,n)
+   !             cc = cc * vel_z%Re(jj,kk,n)
+   !             mom_ur(n_,ii) =  mom_ur(n_,ii) + aa
+   !             mom_ut(n_,ii) =  mom_ut(n_,ii) + bb
+   !             mom_uz(n_,ii) =  mom_uz(n_,ii) + cc
+   !          enddo
+   !       enddo
+   !    enddo
    end do
    csta = csta + 1
 
@@ -134,27 +139,27 @@ end subroutine compute_sta
 subroutine pressure()
 implicit none
 
-type (coll) :: pfp !pressure field perturbation
-double precision :: factor
-_loop_km_vars
+!type (coll) :: pfp !pressure field perturbation
+!double precision :: factor
+! _loop_km_vars
 
-call vel_adjPPE(3) !call pressure field
-call tra_phys2coll(vel_p, pfp) !from phys2coll
+call vel_adjPPE(3) !call pressure field (physical space)
+! call tra_phys2coll(vel_p, pfp) !from phys2coll
 
 
 ! fourier interp
 
-_loop_km_begin
+! _loop_km_begin
 
-       tmpr1 =  pfp%Re(:,nh)
-       tmpr2 =  pfp%Im(:,nh)
+!        tmpr1 =  pfp%Re(:,nh)
+!        tmpr2 =  pfp%Im(:,nh)
 
-factor = 2d0
-   if (m==0) factor = 1d0
+! factor = 2d0
+!    if (m==0) factor = 1d0
 
-          pfpF(:) = pfpF(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+!           pfpF(:) = pfpF(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
           
-_loop_km_end
+! _loop_km_end
   
 
 end subroutine pressure
@@ -181,21 +186,21 @@ end subroutine pressure
        call var_coll_meshmult(0,mes_D%dr(1),c1, c2) 
 
        _loop_km_begin
-       tmpr1 =  c2%Re(:,nh)
-       tmpr2 =  c2%Im(:,nh)
+      !  tmpr1 =  c2%Re(:,nh)
+      !  tmpr2 =  c2%Im(:,nh)
 
-       tmpz1 = -c1%Im(:,nh)*ad_k1a1(k)
-       tmpz2 =  c1%Re(:,nh)*ad_k1a1(k)
+       c3%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+       c3%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
 
-       tmpt1 = -c1%Im(:,nh)*ad_m1r1(:,m)
-       tmpt2 =  c1%Re(:,nh)*ad_m1r1(:,m)
+       c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)
+       c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)
      
        factor = 2d0
        if (m==0) factor = 1d0
 
-          dissr(:,3) = dissr(:,3) + factor*(tmpr1(:)**2+tmpr2(:)**2)
-          dissz(:,3) = dissz(:,3) + factor*(tmpz1(:)**2+tmpz2(:)**2)
-          disst(:,3) = disst(:,3) + factor*(tmpt1(:)**2+tmpt2(:)**2)
+          dissr(:,3) = dissr(:,3) + factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2)
+          dissz(:,3) = dissz(:,3) + factor*(c3%Re(:,nh)**2+c3%Im(:,nh)**2)
+          disst(:,3) = disst(:,3) + factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2)
      
        _loop_km_end
   
@@ -209,21 +214,21 @@ end subroutine pressure
 
       _loop_km_begin
 
-      tmpr1 =  c2%Re(:,nh)
-      tmpr2 =  c2%Im(:,nh)
+      ! tmpr1 =  c2%Re(:,nh)
+      ! tmpr2 =  c2%Im(:,nh)
 
-      tmpz1 = -c1%Im(:,nh)*ad_k1a1(k)
-      tmpz2 =  c1%Re(:,nh)*ad_k1a1(k)
+      c4%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+      c4%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
 
-      tmpt1 = -c1%Im(:,nh)*ad_m1r1(:,m) + c3%Re(:,nh)*mes_D%r(:,-1) !+
-      tmpt2 =  c1%Re(:,nh)*ad_m1r1(:,m) + c3%Im(:,nh)*mes_D%r(:,-1) !+
+      c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) + c3%Re(:,nh)*mes_D%r(:,-1) !+
+      c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) + c3%Im(:,nh)*mes_D%r(:,-1) !+
 
       factor = 2d0
       if (m==0) factor = 1d0
       
-         dissr(:,2) = dissr(:,2) + factor*(tmpr1(:)**2+tmpr2(:)**2)
-         dissz(:,2) = dissz(:,2) + factor*(tmpz1(:)**2+tmpz2(:)**2)
-         disst(:,2) = disst(:,2) + factor*(tmpt1(:)**2+tmpt2(:)**2)
+         dissr(:,2) = dissr(:,2) + factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2)
+         dissz(:,2) = dissz(:,2) + factor*(c4%Re(:,nh)**2+c4%Im(:,nh)**2)
+         disst(:,2) = disst(:,2) + factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2)
 
       _loop_km_end
 
@@ -235,57 +240,57 @@ end subroutine pressure
       call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
 
       _loop_km_begin
-      tmpr1 =  c2%Re(:,nh)
-      tmpr2 =  c2%Im(:,nh)
+      ! tmpr1 =  c2%Re(:,nh)
+      ! tmpr2 =  c2%Im(:,nh)
 
-      tmpz1 = -c1%Im(:,nh)*ad_k1a1(k)
-      tmpz2 =  c1%Re(:,nh)*ad_k1a1(k)
+      c4%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+      c4%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
 
-      tmpt1 = -c1%Im(:,nh)*ad_m1r1(:,m) - c3%Re(:,nh)*mes_D%r(:,-1) !-
-      tmpt2 =  c1%Re(:,nh)*ad_m1r1(:,m) - c3%Im(:,nh)*mes_D%r(:,-1) !-
+      c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) - c3%Re(:,nh)*mes_D%r(:,-1) !-
+      c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) - c3%Im(:,nh)*mes_D%r(:,-1) !-
 
 
       factor = 2d0
       if (m==0) factor = 1d0
 
-         dissr(:,1) = dissr(:,1) + factor*(tmpr1(:)**2+tmpr2(:)**2)
-         dissz(:,1) = dissz(:,1) + factor*(tmpz1(:)**2+tmpz2(:)**2)
-         disst(:,1) = disst(:,1) + factor*(tmpt1(:)**2+tmpt2(:)**2)
+         dissr(:,1) = dissr(:,1) + factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2)
+         dissz(:,1) = dissz(:,1) + factor*(c4%Re(:,nh)**2+c4%Im(:,nh)**2)
+         disst(:,1) = disst(:,1) + factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2)
 
    _loop_km_end
 
 
-   !dzduzsq
+!    !dzduzsq
 
-   call var_coll_copy(vel_uz,c1)
+!    call var_coll_copy(vel_uz,c1)
 
-   _loop_km_begin
-   tmpr1 = (c1%Re(:,nh)**2 + c1%Im(:,nh)**2) *ad_k1a1(k)
-   tmpr2 = (2*c1%Re(:,nh)*c1%Im(:,nh)) *ad_k1a1(k)
+!    _loop_km_begin
+!    tmpr1 = (c1%Re(:,nh)**2 + c1%Im(:,nh)**2) *ad_k1a1(k)
+!    tmpr2 = (2*c1%Re(:,nh)*c1%Im(:,nh)) *ad_k1a1(k)
 
-         factor = 2d0
-      if (m==0) factor = 1d0
+!          factor = 2d0
+!       if (m==0) factor = 1d0
 
-      dzduzsq(:) = dzduzsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+!       dzduzsq(:) = dzduzsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
 
 
-   _loop_km_end
+!    _loop_km_end
    
-     !dzduzcub
+!      !dzduzcub
 
-   call var_coll_copy(vel_uz,c1)
+!    call var_coll_copy(vel_uz,c1)
 
-   _loop_km_begin
-   tmpr1 = (c1%Re(:,nh)**3 - 3*c1%Im(:,nh)**2*c1%Re(:,nh)) *ad_k1a1(k)
-   tmpr2 = (3*c1%Im(:,nh)*c1%Re(:,nh)**2 - c1%Im(:,nh)**3) *ad_k1a1(k)
+!    _loop_km_begin
+!    tmpr1 = (c1%Re(:,nh)**3 - 3*c1%Im(:,nh)**2*c1%Re(:,nh)) *ad_k1a1(k)
+!    tmpr2 = (3*c1%Im(:,nh)*c1%Re(:,nh)**2 - c1%Im(:,nh)**3) *ad_k1a1(k)
 
-         factor = 2d0
-      if (m==0) factor = 1d0
+!          factor = 2d0
+!       if (m==0) factor = 1d0
 
-      dzduzcub(:) = dzduzcub(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+!       dzduzcub(:) = dzduzcub(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
 
 
-   _loop_km_end 
+!    _loop_km_end 
 
 
  end subroutine var_coll_dissp
@@ -294,53 +299,55 @@ end subroutine pressure
 !------------------------------------------------------------------------
 !  Velocities using fourier, % optimization pending
 !------------------------------------------------------------------------
- subroutine staFFT()
-    implicit none
+!  subroutine staFFT()
+!     implicit none
+!     double precision :: urf(i_N), utf(i_N), uzf(i_N)
+!     double precision :: factor
+!     integer :: n, comp, n_
+!     _loop_km_vars
 
-    double precision :: factor
-    integer :: n, comp, n_
-    _loop_km_vars
+!     !call var_coll_copy(vel_ur,c1)
 
-    !call var_coll_copy(vel_ur,c1)
+!     _loop_km_begin
 
-    _loop_km_begin
+!      factor = 2d0
+!      if (m==0) then;
+!         factor = 1d0
+!      end if
 
-     factor = 2d0
-     if (m==0) then;
-        factor = 1d0
-     end if
+!      urf(:) = urf(:) + factor*(vel_ur%Re(:,nh)**2+vel_ur%Im(:,nh)**2)
+!      utf(:) = utf(:) + factor*(vel_ut%Re(:,nh)**2+vel_ut%Im(:,nh)**2)
+!      uzf(:) = uzf(:) + factor*(vel_uz%Re(:,nh)**2+vel_uz%Im(:,nh)**2)
 
-     urf(:) = urf(:) + factor*(vel_ur%Re(:,nh)**2+vel_ur%Im(:,nh)**2)
-     utf(:) = utf(:) + factor*(vel_ut%Re(:,nh)**2+vel_ut%Im(:,nh)**2)
-     uzf(:) = uzf(:) + factor*(vel_uz%Re(:,nh)**2+vel_uz%Im(:,nh)**2)
+!      _loop_km_end
 
-     _loop_km_end
-
-     end subroutine staFFT
+!      end subroutine staFFT
 
    !!!!!!!!!!!!!
    ! Vorticity !
    !!!!!!!!!!!!!
 
-     subroutine vort()
+   !   subroutine vort()
 
-      implicit none
-       _loop_km_vars
+   !    implicit none
+
+   !    double precision :: or(i_N), ot(i_N), oz(i_N)
+   !     _loop_km_vars
  
-      call var_coll_curl(vel_ur,vel_ut,vel_uz,c1,c2,c3)
+   !    call var_coll_curl(vel_ur,vel_ut,vel_uz,c1,c2,c3)
 
-      _loop_km_begin
+   !    _loop_km_begin
 
-     factor = 2d0
-     if (m==0) factor = 1d0
+   !   factor = 2d0
+   !   if (m==0) factor = 1d0
 
-     or(:) = or(:) + sqrt(factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2))
-     ot(:) = ot(:) + sqrt(factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2))
-     oz(:) = oz(:) + sqrt(factor*(c3%Re(:,nh)**2+c3%Im(:,nh)**2))
+   !   or(:) = or(:) + sqrt(factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2))
+   !   ot(:) = ot(:) + sqrt(factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2))
+   !   oz(:) = oz(:) + sqrt(factor*(c3%Re(:,nh)**2+c3%Im(:,nh)**2))
 
-      _loop_km_end
+   !    _loop_km_end
 
-     end subroutine vort
+   !   end subroutine vort
 
 
 
@@ -364,16 +371,17 @@ implicit none
    stdv_rt = 0d0
    stdv_tz = 0d0
 
-   mom_ur = 0d0
-   mom_uz = 0d0
-   mom_ut = 0d0
+   ! mom_ur = 0d0
+   ! mom_uz = 0d0
+   ! mom_ut = 0d0
 
    dissr = 0d0
    disst = 0d0
    dissz = 0d0
 
-   urf = 0d0
-   pfpF = 0d0
+   !urf = 0d0
+   mean_p = 0d0
+   stdv_p = 0d0
 
    diss = 0d0
    dzduzsq = 0d0
@@ -412,9 +420,13 @@ implicit none
     call mpi_reduce(stdv_tz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
     stdv_tz = d
-    call mpi_reduce(pfpF, d, i_N, mpi_double_precision,  &
+
+    call mpi_reduce(mean_p, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    pfpF = d
+    mean_p = d
+    call mpi_reduce(stdv_p, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    stdv_p = d
 
    !! Dissipation
        diss(:,1) = dissr(:,1) + disst(:,1) + dissz(:,1)
@@ -441,15 +453,15 @@ implicit none
    !  urf = d
 
    ! or, ot, oz: vort's
-   call mpi_reduce(or, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    or = d
-   call mpi_reduce(ot, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    ot = d
-   call mpi_reduce(oz, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    oz = d
+   ! call mpi_reduce(or, d, i_N, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  or = d
+   ! call mpi_reduce(ot, d, i_N, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  ot = d
+   ! call mpi_reduce(oz, d, i_N, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  oz = d
 
    call mpi_reduce(dzduzsq, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -458,15 +470,15 @@ implicit none
        mpi_sum, 0, mpi_comm_world, mpi_er)
     dzduzcub = d
 
-    call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    mom_ur = dd
-    call mpi_reduce(mom_uz, dd, i_N*10, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    mom_uz = dd
-    call mpi_reduce(mom_ut, dd, i_N*10, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    mom_ut = dd
+   !  call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  mom_ur = dd
+   !  call mpi_reduce(mom_uz, dd, i_N*10, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  mom_uz = dd
+   !  call mpi_reduce(mom_ut, dd, i_N*10, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  mom_ut = dd
 
     if(mpi_rnk==0)  then
 
@@ -503,17 +515,18 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_rt",1,hdims,stdv_rt,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_tz",1,hdims,stdv_tz,h5err)
 
-       call h5ltmake_dataset_double_f(sta_id,"urf",1,hdims,urf,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"pressure",1,hdims,pfpF,h5err)
+       !call h5ltmake_dataset_double_f(sta_id,"urf",1,hdims,urf,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"stdv_p",1,hdims,stdv_p,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"mean_p",1,hdims,mean_p,h5err)
 
        
        call h5ltmake_dataset_double_f(sta_id,"disstt",1,hdims,diss(:,2),h5err)
        call h5ltmake_dataset_double_f(sta_id,"dissrr",1,hdims,diss(:,1),h5err)
        call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,diss(:,3),h5err)       
        
-       call h5ltmake_dataset_double_f(sta_id,"vortr",1,hdims,or,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"vortt",1,hdims,ot,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"vortz",1,hdims,oz,h5err)  
+      !  call h5ltmake_dataset_double_f(sta_id,"vortr",1,hdims,or,h5err)
+      !  call h5ltmake_dataset_double_f(sta_id,"vortt",1,hdims,ot,h5err)
+      !  call h5ltmake_dataset_double_f(sta_id,"vortz",1,hdims,oz,h5err)  
 
        call h5ltmake_dataset_double_f(sta_id,"dzduzsq",1,hdims,dzduzsq,h5err)
        call h5ltmake_dataset_double_f(sta_id,"dzduzcub",1,hdims,dzduzcub,h5err)
@@ -521,9 +534,9 @@ implicit none
 
        hdims2 = (/i_N,10/)
 
-       call h5ltmake_dataset_double_f(sta_id,"mom_ur",2,hdims2,mom_ur,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"mom_uz",2,hdims2,mom_uz,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"mom_ut",2,hdims2,mom_ut,h5err)
+      !  call h5ltmake_dataset_double_f(sta_id,"mom_ur",2,hdims2,mom_ur,h5err)
+      !  call h5ltmake_dataset_double_f(sta_id,"mom_uz",2,hdims2,mom_uz,h5err)
+      !  call h5ltmake_dataset_double_f(sta_id,"mom_ut",2,hdims2,mom_ut,h5err)
 
        call h5gclose_f(header_id,h5err)
        call h5gclose_f(sta_id,h5err)
