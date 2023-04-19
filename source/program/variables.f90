@@ -19,34 +19,36 @@
 #include "../parallel.h"
  module variables
 !*************************************************************************
+   !use wksp
+   use type
    use mpif
    use parameters
    use meshs
    implicit none
    save
 
-   type harm
-      integer              :: pH0,pH1, pH0_(0:_Np-1),pH1_(0:_Np-1)
-   end type harm
+!    type harm
+!       integer              :: pH0,pH1, pH0_(0:_Np-1),pH1_(0:_Np-1)
+!    end type harm
 
-   type spec
-      double precision     :: Re(0:_Hs1, i_pN)
-      double precision     :: Im(0:_Hs1, i_pN)
-   end type spec
+!    type spec
+!       double precision     :: Re(0:_Hs1, i_pN)
+!       double precision     :: Im(0:_Hs1, i_pN)
+!    end type spec
 
-!   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
-   type coll
-      double precision     :: Re(i_N, 0:i_pH1)
-      double precision     :: Im(i_N, 0:i_pH1)
-   end type coll
+! !   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
+!    type coll
+!       double precision     :: Re(i_N, 0:i_pH1)
+!       double precision     :: Im(i_N, 0:i_pH1)
+!    end type coll
 
-   type phys
-      double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
-   end type phys
+!    type phys
+!       double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
+!    end type phys
    
 
    type (harm)               :: var_H
-   type (coll) , private              :: c1,c2,c3
+   type (coll), private               :: c1,c2,c3
    double precision, private :: ad_k2a2(-i_K1:i_K1)
    double precision :: ad_k1a1(-i_K1:i_K1)
    double precision :: ad_m1r1(i_N,0:i_M1)

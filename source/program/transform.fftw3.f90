@@ -10,6 +10,7 @@
 #include "../parallel.h"
  module transform
 !*************************************************************************
+   use wksp
    use parameters
    use variables
    implicit none
@@ -18,15 +19,15 @@
    integer, parameter, private :: i_3K = 3*i_K
    integer, parameter, private :: i_3M = 3*i_M
    integer, parameter, private :: i_Ma = (3*i_M)/2
-   double complex,     private :: X(0:i_3K-1, 0:_Ms-1)
-   double complex,     private :: Y(0:i_3K-1, 0:_Ms-1)
-   double complex,     private :: Xs(0:i_pZ-1, 0:i_Ma)
-   double precision,   private :: Ys(0:i_pZ-1, 0:i_3M-1)
+   double complex,     private :: X(0:i_3K-1, 0:_Ms-1) ! Mem = 512*3*128/8/1024**3 no preocupante
+   double complex,     private :: Y(0:i_3K-1, 0:_Ms-1) ! Idem
+   double complex,     private :: Xs(0:i_pZ-1, 0:i_Ma) ! Mem = 3*512/8*3/2*128/1024**3, no preocupante
+   double precision,   private :: Ys(0:i_pZ-1, 0:i_3M-1) ! Mem = 3*512/8*3*128/1024**3, no preocupante
    integer*8,          private :: plan_c2cf, plan_c2cb, plan_r2c, plan_c2r
 
-   double complex,     private :: T(0:i_3K-1, 0:_Ms-1, i_pN)
-   double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
-   type (spec),        private :: s1,s2,s3
+   double complex,     private :: Taux(0:i_3K-1, 0:_Ms-1, i_pN) ! Mem = 3*512*128/8*384/9/1024**3, no preocupante
+   double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN) ! Mem = 3*512/8*128*384/9/1024**3, no preocupante
+   ! type (spec),        private :: s1,s2,s3
 
  contains
 
@@ -131,7 +132,7 @@
 #if _Ns == 1 
          Xs(:,0:i_M1) = Y
 #else
-         T(:,:,n) = Y
+         Taux(:,:,n) = Y
       end do
       call tra_T2Ts()
       do n = 1, mes_D%pN
@@ -166,7 +167,7 @@
       end do
       call tra_Ts2T()
       do n = 1, mes_D%pN
-         Y = T(:,:,n)
+         Y = Taux(:,:,n)
 #endif
          call dfftw_execute(plan_c2cb)
          if(mpi_rnk/_Nr==0) then
@@ -218,8 +219,8 @@
          do n = 1, mes_D%pN
             do m = 0, _Ms1
                do j = jz0, jz0+i_pZ-1
-                  bsend(l,  stp) =  dble(T(j,m,n))
-                  bsend(l+1,stp) = dimag(T(j,m,n))
+                  bsend(l,  stp) =  dble(Taux(j,m,n))
+                  bsend(l+1,stp) = dimag(Taux(j,m,n))
                   l = l + 2
                end do
             end do
@@ -296,7 +297,7 @@
          do n = 1, mes_D%pN
             do m = 0, _Ms1
                do j = jz0, jz0+i_pZ-1
-                  T(j,m,n) = dcmplx(brecv(l,stp),brecv(l+1,stp))
+                  Taux(j,m,n) = dcmplx(brecv(l,stp),brecv(l+1,stp))
                   l = l + 2
                end do
             end do

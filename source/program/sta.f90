@@ -1,3 +1,10 @@
+
+! Memory: initially: 7.55 GB
+! 1) Otf, max = 99.1
+! 2) max = 97.4
+! 3) max = 97.4
+! 4) max = 97.4
+
 !**************************************************************************
 !  IN/OUT 
 !
@@ -30,7 +37,12 @@
    ! double precision :: mom_uz(i_N,10)
    double precision :: mean_p(i_N), stdv_p(i_N)
 
-   !double precision :: pfpF(i_N)
+   !double precision :: pfp(i_N)
+
+   !!!!!!!!!!!!!
+
+type (lumesh), private ::  LNps(0:i_pH1)
+   !!!!!!!!!!!!!
 
    
 
@@ -105,8 +117,8 @@
       stdv_rz(n_) = stdv_rz(n_) + sum(vel_z%Re(:,:,n)*vel_r%Re(:,:,n))
       stdv_rt(n_) = stdv_rz(n_) + sum(vel_r%Re(:,:,n)*vel_t%Re(:,:,n))
       stdv_tz(n_) = stdv_rz(n_) + sum(vel_t%Re(:,:,n)*vel_z%Re(:,:,n))
-      mean_p(n_)  = mean_p(n_)  + sum(vel_p%Re(:,:,n))
-      stdv_p(n_)  = stdv_p(n_)  + sum(vel_p%Re(:,:,n)**2) 
+      ! mean_p(n_)  = mean_p(n_)  + sum(vel_p%Re(:,:,n))
+      ! stdv_p(n_)  = stdv_p(n_)  + sum(vel_p%Re(:,:,n)**2) 
 
    !    do kk =  0,i_Th-1
    !       do jj =  0,i_pZ-1
@@ -130,6 +142,48 @@
 
 end subroutine compute_sta
 
+!------------------------------------------------------------------------
+!  Initialize pressure calculation
+!------------------------------------------------------------------------
+   subroutine p2m_lumesh_inits(PM,BC,c1,c2, A)
+      use timestep
+      integer,          intent(in)  :: PM,BC
+      double precision, intent(in)  :: c1,c2
+      type (lumesh),    intent(out) :: A(0:i_pH1)
+      double precision :: d(i_N)
+      integer :: info, n,j, S
+      _loop_km_vars
+
+      _loop_km_begin
+         d = -mes_D%r(:,-2)*i_Mp*m*i_Mp*m - d_alpha*k*d_alpha*k
+         if(PM/=0) d = d - mes_D%r(:,-2) - 2d0*PM*i_Mp*m*mes_D%r(:,-2)
+         A(nh)%M(i_KL+1:, :) = c2 * mes_D%radLap%M(:,1:)
+         A(nh)%M(2*i_KL+1,:) = A(nh)%M(2*i_KL+1,:) + c2*d + c1
+
+         ! assume symmetry on axis: S==-1 mode odd,  S==1 mode even
+         S = modulo(m*i_Mp+abs(PM),2)
+         S = 1 - 2*S
+         do j = 1, i_KL
+            do n = 1, i_KL+1-j
+               A(nh)%M(2*i_KL+1+n-j, j) = A(nh)%M(2*i_KL+1+n-j, j)  &
+                  + c2 * S * mes_D%radLap%M(i_KL+1+n-(1-j), (1-j))
+            end do
+         end do
+                                        ! boundary condition
+         do j = i_N-i_KL, i_N
+            A(nh)%M(2*i_KL+1+i_N-j,j) = mes_D%dr1(i_KL-i_N+j+1,1)
+         end do
+
+        if(BC==1 .and. k==0 .and. m==0) then
+         do j = i_N-i_KL, i_N
+            A(nh)%M(2*i_KL+1+i_N-j,j) = mes_D%dr1(i_KL-i_N+j+1,0)
+         end do
+         end if
+         call dgbtrf(i_N,i_N,i_KL,i_KL,A(nh)%M,3*i_KL+1,A(nh)%ipiv,info)
+         if(info /= 0) stop 'tim_lumesh_init'
+      _loop_km_end
+
+   end subroutine p2m_lumesh_inits
 
 ! !------------------------------------------------------------------------
 ! !  Pressure field:
@@ -138,28 +192,122 @@ end subroutine compute_sta
 ! !------------------------------------------------------------------------
 subroutine pressure()
 implicit none
-
-!type (coll) :: pfp !pressure field perturbation
-!double precision :: factor
-! _loop_km_vars
-
-call vel_adjPPE(3) !call pressure field (physical space)
-! call tra_phys2coll(vel_p, pfp) !from phys2coll
+_loop_km_vars
+integer:: n, n_
+double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
 
 
-! fourier interp
+         call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
+         call var_coll_curl(c1,c2,c3, c1,c2,c3)
+         _loop_km_begin
+           BCR(nh) = - c1%Re(i_N,nh)/d_Re
+           BCI(nh) = - c1%Im(i_N,nh)/d_Re
+         _loop_km_end
+         ! r equation 
+         !durdr
+         call var_coll_meshmult(1,mes_D%dr(1),vel_ur,c1)
+         call tra_coll2phys(c1,p1)
+         p2%Re=vel_r%Re*p1%Re
+      
+         ! 1/r(durdt-ut)
+         _loop_km_begin
+               c1%Re(:,nh) = mes_D%r(:,-1)*(-vel_ur%Im(:,nh)*m*i_Mp-vel_ut%Re(:,nh))
+               c1%Im(:,nh) = mes_D%r(:,-1)*( vel_ur%Re(:,nh)*m*i_Mp-vel_ut%Im(:,nh))   
+         _loop_km_end
+         call tra_coll2phys(c1,p1)
+         p2%Re=p2%Re+vel_t%Re*p1%Re
+      
+         ! durdz
+         _loop_km_begin
+               c1%Re(:,nh) = -vel_ur%Im(:,nh)*d_alpha*k
+               c1%Im(:,nh) =  vel_ur%Re(:,nh)*d_alpha*k       
+         _loop_km_end
+         call tra_coll2phys(c1,p1)
+         p2%Re=p2%Re+vel_z%Re*p1%Re
+         do n = 1, mes_D%pN
+            n_ = mes_D%pNi + n - 1
+   	    p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)	
+         end do
+         call tra_phys2coll(p2,c1)
 
-! _loop_km_begin
+         ! theta equation
+         ! dutdr
+         call var_coll_meshmult(1,mes_D%dr(1),vel_ut,c2)
+         call tra_coll2phys(c2,p1)
+         p2%Re=vel_r%Re*p1%Re
+      
+         ! 1/r(dutdt+ur)
+         _loop_km_begin   
+               c2%Re(:,nh) = mes_D%r(:,-1)*(-vel_ut%Im(:,nh)*m*i_Mp+vel_ur%Re(:,nh))
+               c2%Im(:,nh) = mes_D%r(:,-1)*( vel_ut%Re(:,nh)*m*i_Mp+vel_ur%Im(:,nh))
+         _loop_km_end
+         call tra_coll2phys(c2,p1)
+         p2%Re=p2%Re+vel_t%Re*p1%Re
+      
+         ! dutdz
+         _loop_km_begin          
+               c2%Re(:,nh) = -vel_ut%Im(:,nh)*d_alpha*k
+               c2%Im(:,nh) =  vel_ut%Re(:,nh)*d_alpha*k          
+         _loop_km_end
+         call tra_coll2phys(c2,p1)
+         p2%Re=p2%Re+vel_z%Re*p1%Re
+         do n = 1, mes_D%pN
+            n_ = mes_D%pNi + n - 1	
+            p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)
+         end do
+         call tra_phys2coll(p2,c2)
 
-!        tmpr1 =  pfp%Re(:,nh)
-!        tmpr2 =  pfp%Im(:,nh)
+         ! z equation
+         ! duzdr 
+         call var_coll_meshmult(0,mes_D%dr(1),vel_uz,c3)
+         call tra_coll2phys(c3,p1)
+         p2%Re=vel_r%Re*p1%Re
+      
+         ! 1/r(duzdt)
+         _loop_km_begin      
+            c3%Re(:,nh) = mes_D%r(:,-1)*(-vel_uz%Im(:,nh)*m*i_Mp)
+            c3%Im(:,nh) = mes_D%r(:,-1)*( vel_uz%Re(:,nh)*m*i_Mp)
+         _loop_km_end
+         call tra_coll2phys(c3,p1)
+         p2%Re=p2%Re+vel_t%Re*p1%Re
+      
+         ! duzdz
+         _loop_km_begin
+            c3%Re(:,nh) = -vel_uz%Im(:,nh)*d_alpha*k
+            c3%Im(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
+        _loop_km_end
+         call tra_coll2phys(c3,p1)
+         p2%Re=p2%Re+vel_z%Re*p1%Re
+         do n = 1, mes_D%pN
+            n_ = mes_D%pNi + n - 1	
+            p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)+vel_r%Re(:,:,n)*vel_Up(n_)	
+         end do
+         call tra_phys2coll(p2,c3)
 
-! factor = 2d0
-!    if (m==0) factor = 1d0
+         _loop_km_begin
+            BCR(nh) = BCR(nh) - c1%Re(i_N,nh)
+            BCI(nh) = BCI(nh) - c1%Im(i_N,nh)
+         _loop_km_end
+         call var_coll_div(c1,c2,c3, c1)
+         c1%Re=-c1%Re;
+         c1%Im=-c1%Im;
+         _loop_km_begin
+            c1%Re(i_N,nh) = BCR(nh)
+            c1%Im(i_N,nh) = BCI(nh)
+         _loop_km_end
 
-!           pfpF(:) = pfpF(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
-          
-! _loop_km_end
+         !call tim_zerobc(c1)
+         call p2m_lumesh_inits( 0,1,0d0,1d0, LNps)
+         call tim_lumesh_invert(0,LNps, c1)
+         call tra_coll2phys(c1,p2) !pressure field
+
+
+   do n = 1, mes_D%pN
+      n_ = mes_D%pNi + n - 1
+      mean_p(n_)  = mean_p(n_)  + sum(p2%Re(:,:,n))
+      stdv_p(n_)  = stdv_p(n_)  + sum(p2%Re(:,:,n)**2) 
+   end do
+
   
 
 end subroutine pressure
@@ -386,6 +534,7 @@ implicit none
    diss = 0d0
    dzduzsq = 0d0
    dzduzcub = 0d0
+
 end subroutine initialiseSTD
 
 
