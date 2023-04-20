@@ -2,7 +2,6 @@
  module wksp
 
 use type
-!use variables
 
 implicit none
 save
@@ -14,9 +13,20 @@ save
                                      ! Remove in future versions. We have to pass the routine some workarray 
    type (phys) :: p1,p2,p3,p4 
   
-  type (coll) :: r,t,z ! SOLO PARA vel_corrector y no sé qué pasa
 
   type (spec) :: s1,s2,s3
 
+  !! Esenciales, no se pueden tocar
+  type (coll) :: r,t,z ! SOLO PARA vel_corrector y no sé qué pasa
+
+   type (phys) :: vel_r
+   type (phys) :: vel_t
+   type (phys) :: vel_z
+   type (coll) :: vel_ur
+   type (coll) :: vel_ut
+   type (coll) :: vel_uz
+   type (coll) :: vel_Nr
+   type (coll) :: vel_Nt
+   type (coll) :: vel_Nz
 
  end module wksp

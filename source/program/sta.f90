@@ -4,6 +4,7 @@
 ! 2) max = 97.4
 ! 3) max = 97.4
 ! 4) max = 97.4
+! 5) max = 96.8
 
 !**************************************************************************
 !  IN/OUT 
@@ -37,7 +38,6 @@
    ! double precision :: mom_uz(i_N,10)
    double precision :: mean_p(i_N), stdv_p(i_N)
 
-   !double precision :: pfp(i_N)
 
    !!!!!!!!!!!!!
 
@@ -117,8 +117,6 @@ type (lumesh), private ::  LNps(0:i_pH1)
       stdv_rz(n_) = stdv_rz(n_) + sum(vel_z%Re(:,:,n)*vel_r%Re(:,:,n))
       stdv_rt(n_) = stdv_rz(n_) + sum(vel_r%Re(:,:,n)*vel_t%Re(:,:,n))
       stdv_tz(n_) = stdv_rz(n_) + sum(vel_t%Re(:,:,n)*vel_z%Re(:,:,n))
-      ! mean_p(n_)  = mean_p(n_)  + sum(vel_p%Re(:,:,n))
-      ! stdv_p(n_)  = stdv_p(n_)  + sum(vel_p%Re(:,:,n)**2) 
 
    !    do kk =  0,i_Th-1
    !       do jj =  0,i_pZ-1

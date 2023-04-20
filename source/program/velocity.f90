@@ -12,15 +12,7 @@
    implicit none
    save
 
-   type (phys) :: vel_r
-   type (phys) :: vel_t
-   type (phys) :: vel_z
-   type (coll) :: vel_ur
-   type (coll) :: vel_ut
-   type (coll) :: vel_uz
-   type (coll) :: vel_Nr
-   type (coll) :: vel_Nt
-   type (coll) :: vel_Nz
+
    double precision :: vel_nu
    double precision :: vel_Pr0
    double precision :: vel_U(i_N)
@@ -32,8 +24,7 @@
    type (mesh),   private :: Ltz(0:i_pH1)
    type (coll),   private :: Nr_,Nt_,Nz_,ur_,ut_,uz_
 
-   !type (coll), private :: c1,c2,c3
-   !type (phys) :: c4
+
    
  contains
 
