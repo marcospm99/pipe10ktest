@@ -19,8 +19,8 @@
 #include "../parallel.h"
  module variables
 !*************************************************************************
-   !use wksp
-   use type
+   ! use wksp
+   !use type
    use mpif
    use parameters
    use meshs
@@ -48,11 +48,14 @@
    
 
    type (harm)               :: var_H
-   type (coll), private               :: c1,c2,c3
+   type (coll), private      :: c1,c2,c3
    double precision, private :: ad_k2a2(-i_K1:i_K1)
    double precision :: ad_k1a1(-i_K1:i_K1)
    double precision :: ad_m1r1(i_N,0:i_M1)
    double precision, private :: ad_m2r2(i_N,0:i_M1)
+
+      double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
 
  contains
 
@@ -205,8 +208,8 @@
       type (spec), intent(out) :: s
       type (coll), intent(in),  optional :: c2,c3
       type (spec), intent(out), optional :: s2,s3
-      double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-      double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
 
       nc = 1
@@ -302,8 +305,8 @@
       type (coll), intent(out) :: c
       type (spec), intent(in),  optional :: s2,s3
       type (coll), intent(out), optional :: c2,c3
-      double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
-      double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+      ! double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+      ! double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
 
       ns = 1

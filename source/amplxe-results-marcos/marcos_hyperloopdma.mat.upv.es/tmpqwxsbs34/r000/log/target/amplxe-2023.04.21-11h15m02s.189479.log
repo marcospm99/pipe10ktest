@@ -1,0 +1,13 @@
+56 [140634857042048] WARN collectunits.pci_devices <> - Driver path does not exist: "/sys/bus/pci/devices/0000:86:00.0/driver", at file: vcs/collectunits1/pci_devices/src/linux/get_gpu_adapters.cpp:356
+128 [140634848044800] WARN perfrun.sdk <> - SEP driver is not available, at file: vcs/perfrun1/plugins/pluginsdk/src/device_mapper.cpp:745
+372 [140634848044800] WARN perfrun.stdsrc <> - Could not open /sys/kernel/debug/tracing/available_tracers: boost::filesystem::symlink_status: Permission denied: "/sys/kernel/debug/tracing/available_tracers", at file: vcs/perfrun1/plugins/stdsrc/src/ftrace/ftrace_access.cpp:76
+372 [140634848044800] WARN perfrun.stdsrc <> - Could not open /sys/kernel/debug/tracing/available_filter_functions: boost::filesystem::symlink_status: Permission denied: "/sys/kernel/debug/tracing/available_filter_functions", at file: vcs/perfrun1/plugins/stdsrc/src/ftrace/ftrace_access.cpp:76
+383 [140634848044800] ERROR perfrun.sepdk <> - fail: sep /tmp/vtune_profiler_2023.1.0.625246/bin64/sep -pmu-types available, at file: vcs/perfrun1/plugins/sepdk/src/sepdk_helper.cpp:721
+383 [140634848044800] ERROR perfrun.sepdk <> - ERROR: Communication with sampling driver failed
+Problem accessing the sampling driver.  The driver may need to be 	(re)installed with appropriate group/file permissions
+
+417 [140634848044800] ERROR perfrun.power <> - Failed to parse SoC Watch help, at file: vcs/perfrun1/plugins/power/src/controller.cpp:175
+457 [140634848044800] ERROR perfrun.os_counters <> - OS counter collection cannot be started: dstat command is not supported., at file: vcs/perfrun1/plugins/os_counters/src/collector.cpp:107
+457 [140634848044800] ERROR perfrun.l0_metrics <> - status == ILevel0LoaderLibBridge::lsLoaded
+vcs/perfrun1/plugins/l0_metrics/src/level0_loader_lib.cpp(49): runtool::l0_metrics::ILevel0LoaderLibBridge::LibStatus runtool::l0_metrics::Level0LoaderLib::init(runtool::l0_metrics::ILevel0LoaderLibBridge *)
+, at file: vcs/perfrun1/plugins/l0_metrics/src/level0_loader_lib.cpp:49

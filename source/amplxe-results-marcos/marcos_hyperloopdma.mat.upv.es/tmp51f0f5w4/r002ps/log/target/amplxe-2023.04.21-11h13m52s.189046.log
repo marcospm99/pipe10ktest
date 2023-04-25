@@ -1,0 +1,2 @@
+57 [140467003814016] WARN collectunits.pci_devices <> - Driver path does not exist: "/sys/bus/pci/devices/0000:86:00.0/driver", at file: vcs/collectunits1/pci_devices/src/linux/get_gpu_adapters.cpp:356
+248 [140467003814016] ERROR perfrun.launcher <> - Messenger::say: Binary `./pipe10k' cannot be executed. Suggestion: Make sure the file exists, specified location is correct, and you have privileges to run the file.

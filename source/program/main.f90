@@ -36,7 +36,7 @@
             call vel_matrices()
       end if        
       call var_null(1)
-
+         
       ! Estadisticas on the fly aquí!!!!
       if (tim_step>1) then
          if (mod(tim_step,s_step)==1) then

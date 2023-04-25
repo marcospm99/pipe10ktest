@@ -27,7 +27,7 @@
    integer               :: io_save2,extn
    integer,     private  :: io_KE, io_ID, io_dt, io_pt, io_fr, io_hre, io_cf
    
-   double precision, private :: wk(i_N, 0:i_pH1) ! PAsar luego por cabecera a la rutina o a través de un modulo. 
+   ! double precision, private :: wk(i_N, 0:i_pH1) ! PAsar luego por cabecera a la rutina o a través de un modulo. 
    
    !type (coll), private  :: c1!,c2,c3 ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
@@ -36,9 +36,9 @@
 
 ! STATS
 
-   double precision :: mean_ur(i_N), stdv_ur(i_N)
-   double precision :: mean_ut(i_N), stdv_ut(i_N)
-   double precision :: mean_uz(i_N), stdv_uz(i_N), stdv_rz(i_N)
+   ! double precision :: mean_ur(i_N), stdv_ur(i_N)
+   ! double precision :: mean_ut(i_N), stdv_ut(i_N)
+   ! double precision :: mean_uz(i_N), stdv_uz(i_N), stdv_rz(i_N)
    double precision :: d1, d(i_N)
    integer :: csta
 
@@ -59,6 +59,8 @@
 ! --------------------- Program -------------------------------------
 
  contains
+
+
  
 !--------------------------------------------------------------------------
 !  initialiser fn

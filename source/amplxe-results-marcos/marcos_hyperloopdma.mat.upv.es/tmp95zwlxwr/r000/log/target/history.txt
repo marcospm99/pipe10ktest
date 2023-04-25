@@ -1,0 +1,7 @@
+Linux Hyper-WS-UPV 5.15.0-69-generic #76~20.04.1-Ubuntu SMP Mon Mar 20 15:54:19 UTC 2023 x86_64
+
+---
+2023-04-21-11-13-25-219831 /tmp/vtune_profiler_2023.1.0.625246/bin64/amplxe-runss --result-dir /data/marcos/pipe10k/source//amplxe-results-marcos/marcos_hyperloopdma.mat.upv.es/tmp95zwlxwr/r000 --tmp-dir /data/marcos/pipe10k/source/tmp95zwlxwr --ui-output-format xml --context-value-list 
+/tmp/vtune_profiler_2023.1.0.625246/bin64
+Product name: Intel VTune Profiler, build 625246 (Release)
+

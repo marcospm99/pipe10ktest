@@ -5,6 +5,9 @@
 ! 3) max = 97.4
 ! 4) max = 97.4
 ! 5) max = 96.8
+! 6) max = 96.7
+! 7) max = 94.5
+! 8) max = 94.9
 
 !**************************************************************************
 !  IN/OUT 
@@ -41,7 +44,7 @@
 
    !!!!!!!!!!!!!
 
-type (lumesh), private ::  LNps(0:i_pH1)
+!type (lumesh), private ::  LNps(0:i_pH1)
    !!!!!!!!!!!!!
 
    
@@ -194,6 +197,8 @@ _loop_km_vars
 integer:: n, n_
 double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
 
+! Necesitamos: 3 colls, 2 phys
+! Primer cambio
 
          call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
          call var_coll_curl(c1,c2,c3, c1,c2,c3)
@@ -295,8 +300,8 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
          _loop_km_end
 
          !call tim_zerobc(c1)
-         call p2m_lumesh_inits( 0,1,0d0,1d0, LNps)
-         call tim_lumesh_invert(0,LNps, c1)
+         call p2m_lumesh_inits( 0,1,0d0,1d0, LNp)
+         call tim_lumesh_invert(0,LNp, c1)
          call tra_coll2phys(c1,p2) !pressure field
 
 
