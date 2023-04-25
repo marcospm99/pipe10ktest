@@ -186,23 +186,23 @@
 !-------------------------------------------------------------------------
 !  convert collocated -> spectral
 !-------------------------------------------------------------------------
-#ifndef _MPI
-   subroutine var_coll2spec(c,s, c2,s2, c3,s3)
-      type (coll), intent(in)  :: c
-      type (spec), intent(out) :: s
-      type (coll), intent(in),  optional :: c2,c3
-      type (spec), intent(out), optional :: s2,s3
-      s%Re = transpose(c%Re)
-      s%Im = transpose(c%Im)
-      if(.not. present(c2)) return
-      s2%Re = transpose(c2%Re)
-      s2%Im = transpose(c2%Im)
-      if(.not. present(c3)) return
-      s3%Re = transpose(c3%Re)
-      s3%Im = transpose(c3%Im)
-   end subroutine var_coll2spec
+! #ifndef _MPI
+!    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
+!       type (coll), intent(in)  :: c
+!       type (spec), intent(out) :: s
+!       type (coll), intent(in),  optional :: c2,c3
+!       type (spec), intent(out), optional :: s2,s3
+!       s%Re = transpose(c%Re)
+!       s%Im = transpose(c%Im)
+!       if(.not. present(c2)) return
+!       s2%Re = transpose(c2%Re)
+!       s2%Im = transpose(c2%Im)
+!       if(.not. present(c3)) return
+!       s3%Re = transpose(c3%Re)
+!       s3%Im = transpose(c3%Im)
+!    end subroutine var_coll2spec
 
-#else
+! #else
    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
       type (coll), intent(in)  :: c
       type (spec), intent(out) :: s
@@ -278,28 +278,28 @@
       end do
 
    end subroutine var_coll2spec
-#endif
+! #endif
    
 !-------------------------------------------------------------------------
 !  convert spectral -> collocated
 !-------------------------------------------------------------------------
-#ifndef _MPI
-   subroutine var_spec2coll(s,c, s2,c2, s3,c3)
-      type (spec), intent(in)  :: s
-      type (coll), intent(out) :: c
-      type (spec), intent(in),  optional :: s2,s3
-      type (coll), intent(out), optional :: c2,c3
-      c%Re = transpose(s%Re)
-      c%Im = transpose(s%Im)
-      if(.not. present(s2)) return
-      c2%Re = transpose(s2%Re)
-      c2%Im = transpose(s2%Im)
-      if(.not. present(s3)) return
-      c3%Re = transpose(s3%Re)
-      c3%Im = transpose(s3%Im)
-   end subroutine var_spec2coll
+! #ifndef _MPI
+!    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
+!       type (spec), intent(in)  :: s
+!       type (coll), intent(out) :: c
+!       type (spec), intent(in),  optional :: s2,s3
+!       type (coll), intent(out), optional :: c2,c3
+!       c%Re = transpose(s%Re)
+!       c%Im = transpose(s%Im)
+!       if(.not. present(s2)) return
+!       c2%Re = transpose(s2%Re)
+!       c2%Im = transpose(s2%Im)
+!       if(.not. present(s3)) return
+!       c3%Re = transpose(s3%Re)
+!       c3%Im = transpose(s3%Im)
+!    end subroutine var_spec2coll
 
-#else
+! #else
    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
       type (spec), intent(in)  :: s
       type (coll), intent(out) :: c
@@ -374,7 +374,7 @@
       end do
 
    end subroutine var_spec2coll
-#endif
+! #endif
 
 
 !------------------------------------------------------------------------
