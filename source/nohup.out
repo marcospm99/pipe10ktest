@@ -2,21 +2,37 @@
  loading state...
  
  Done reading fields
- Time spend reading:     0.117 sc
+ Time spend reading:     0.114 sc
  initialising output files...
  /data/marcos/pipe10k/source/runs/re180sr_wdiss.cf
  timestepping.....
   step=           0  dt=  3.1996521E-03
-Step    1  0.171611D+04  0.634561D+01  0.180697D+03
-Step    6  0.171613D+04  0.492027D+01  0.180703D+03
+Step    1  0.171611D+04  0.633969D+01  0.180697D+03
+Step    6  0.171613D+04  0.489856D+01  0.180703D+03
  Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2359.h5
   step=           6  dt=  3.1996521E-03
-Step   11  0.171615D+04  0.493819D+01  0.180709D+03
+Step   11  0.171615D+04  0.494903D+01  0.180709D+03
  Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2360.h5
   step=          12  dt=  3.1996521E-03
-Step   16  0.171616D+04  0.489313D+01  0.180714D+03
+Step   16  0.171616D+04  0.489670D+01  0.180714D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2361.h5
+  step=          18  dt=  3.1996521E-03
+Step   21  0.171618D+04  0.494078D+01  0.180720D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2362.h5
+  step=          24  dt=  3.1996521E-03
+Step   26  0.171619D+04  0.493013D+01  0.180725D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2363.h5
+  step=          30  dt=  3.1996521E-03
+Step   31  0.171621D+04  0.663048D+01  0.180731D+03
+Step   36  0.171623D+04  0.491251D+01  0.180737D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2364.h5
+  step=          36  dt=  3.1996521E-03
+Step   41  0.171624D+04  0.495236D+01  0.180742D+03
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180.2365.h5
+  step=          42  dt=  3.1996521E-03
+Step   46  0.171626D+04  0.493913D+01  0.180748D+03
  RUNNING deleted !
  cleanup...
-  sec/step  =    5.847147    
-  CPU time  =            1  mins.
+  sec/step  =    5.978886    
+  CPU time  =            4  mins.
  ...done!
