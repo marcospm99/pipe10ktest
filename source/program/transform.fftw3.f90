@@ -26,8 +26,10 @@
    integer*8,          private :: plan_c2cf, plan_c2cb, plan_r2c, plan_c2r
 
    double complex,     allocatable :: Taux(:,:,:) !Taux(0:i_3K-1, 0:_Ms-1, i_pN) ! Mem = 3*512*128/8*72*384/9*16/1024**3, Preocupante, 1.12 GB total
-   double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN) ! Mem = 8*3*512*128*384*72/9/1024**3, Preocupante, 1.12 GB total
-   ! type (spec),        private :: s1,s2,s3
+   
+   
+    double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN) ! Mem = 2*8*154*127*40*80/1024**3, Preocupante, 0.93 GB total
+  
 
  contains
 
@@ -36,6 +38,7 @@
 ! Setup plans for transforms.  
 !------------------------------------------------------------------------
    subroutine tra_precompute()
+      implicit none
       integer, parameter :: flag=32 !=FFTW_PATIENT see fftw3.f
       integer :: sgn, n(1), howmany, inembed(1), onembed(1)
          
@@ -69,53 +72,67 @@
 !  convert collocated -> physical space
 !-------------------------------------------------------------------------
    subroutine tra_coll2phys(c,p, c2,p2, c3,p3)
-      type (coll), intent(in)  :: c
-      type (phys), intent(out) :: p
-      type (coll), intent(in),  optional :: c2,c3
-      type (phys), intent(out), optional :: p2,p3
-      integer :: nc
-      nc = 1
-      if(present(c2)) nc = 2
-      if(present(c3)) nc = 3
-      if(nc==1)  call var_coll2spec(c, s1)
-      if(nc==2)  call var_coll2spec(c,s1, c2,s2)
-      if(nc==3)  call var_coll2spec(c,s1, c2,s2, c3,s3)
-      if(nc>=1)  call tra_spec2phys(s1, p)
-      if(nc>=2)  call tra_spec2phys(s2, p2)
-      if(nc>=3)  call tra_spec2phys(s3, p3)
+   
+      implicit none
+      type (coll), intent(in)  :: c,c2,c3
+      type (phys), intent(out) :: p,p2,p3
+
+      call var_coll2spec(c,s1, c2,s2, c3,s3)
+      call tra_spec2phys(s1, p)
+      call tra_spec2phys(s2, p2)
+      call tra_spec2phys(s3, p3)
+
    end subroutine tra_coll2phys
+
+
+   subroutine tra_coll2phys1d(c,p)
+   type (coll), intent(in)  :: C
+   type (phys), intent(out) :: p
+
+   call var_coll2spec(c,s1)
+   call tra_spec2phys(s1, p)
+
+   end subroutine tra_coll2phys1d
 
 
 !-------------------------------------------------------------------------
 !  convert collocated -> physical space
 !-------------------------------------------------------------------------
    subroutine tra_phys2coll(p,c, p2,c2, p3,c3)
-      type (phys), intent(in)  :: p
-      type (coll), intent(out) :: c
-      type (phys), intent(in),  optional :: p2,p3
-      type (coll), intent(out), optional :: c2,c3
-      integer :: nc
-      nc = 1
-      if(present(c2)) nc = 2
-      if(present(c3)) nc = 3
-      if(nc>=1)  call tra_phys2spec(p,  s1)
-      if(nc>=2)  call tra_phys2spec(p2, s2)
-      if(nc>=3)  call tra_phys2spec(p3, s3)
-      if(nc==1)  call var_spec2coll(s1, c)
-      if(nc==2)  call var_spec2coll(s1,c, s2,c2)
-      if(nc==3)  call var_spec2coll(s1,c, s2,c2, s3,c3)
+   
+      implicit none
+      type (phys), intent(in)  :: p,p2,p3
+      type (coll), intent(out) :: c,c2,c3
+
+      call tra_phys2spec(p,  s1)
+      call tra_phys2spec(p2, s2)
+      call tra_phys2spec(p3, s3)
+      call var_spec2coll(s1,c, s2,c2, s3,c3)
       
    end subroutine tra_phys2coll
+
+   subroutine tra_phys2coll1d(p,c)
+      type (coll), intent(out)  :: C
+      type (phys), intent(in) :: p
+
+      call tra_phys2spec(p,  s1)
+      call var_spec2coll(s1, c)
+
+   end subroutine tra_phys2coll1d
 
 
 !------------------------------------------------------------------------
 !  Convert spectral to real space
 !------------------------------------------------------------------------
    subroutine tra_spec2phys(s, p)
+
+      implicit none
       type (spec), intent(in)  :: s
       type (phys), intent(out) :: p
+
       integer :: nh, n,m,m_
-      				! for each r_n ...      
+      				! for each r_n ...   
+   
 
 
 
@@ -137,9 +154,6 @@
             nh = nh + 2*i_K-1
          end do
          call dfftw_execute(plan_c2cf)
-#if _Ns == 1 
-         Xs(:,0:i_M1) = Y
-#else
          
          Taux(:,:,n) = Y
       end do
@@ -148,7 +162,7 @@
       do n = 1, mes_D%pN
          Xs(:,0:i_M1) = Ts(:,:,n) 
                  
-#endif
+! #endif
          Xs(:,i_M:) = 0d0
          call dfftw_execute(plan_c2r)
          p%Re(:,:,n) = Ys
@@ -161,8 +175,11 @@
 !  Convert real to spectral space
 !------------------------------------------------------------------------
    subroutine tra_phys2spec(p, s)
+
+      implicit none
       type (phys), intent (in)  :: p
       type (spec), intent (out) :: s
+
       integer :: nh, n,m, m_
       double precision :: scale_
          			! scale, FFTW 4.7.2
@@ -172,16 +189,13 @@
       do n = 1, mes_D%pN
          Ys = scale_ * p%Re(:,:,n)
          call dfftw_execute(plan_r2c)
-#if _Ns == 1
-         Y = Xs(:,0:i_M1)
-#else
+
          Ts(:,:,n) = Xs(:,0:i_M1)
       end do
       call tra_Ts2T()
       do n = 1, mes_D%pN
          Y = Taux(:,:,n)
          
-#endif
          call dfftw_execute(plan_c2cb)
          if(mpi_rnk/_Nr==0) then
             s%Re(0:i_K1,n) =  dble(X(0:i_K1,0))
@@ -207,12 +221,14 @@
 !------------------------------------------------------------------------
 ! transposes
 !------------------------------------------------------------------------
-#if _Ns != 1
+! #if _Ns != 1
    subroutine tra_T2Ts()
-      !double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1) ! Mem = 2*44*16*192*8*8*72/1024**3 -> 1.16
-      !double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1) ! Mem = 2*44*16*192*8*8*72/1024**3 -> 1.16
+ 
+           implicit none
+
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
+ 
 
       rnk = mpi_rnk/_Nr
       rko = modulo(mpi_rnk,_Nr)
@@ -271,12 +287,9 @@
 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
    subroutine tra_Ts2T()
-      ! double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
-      ! double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
-
-         
 
       rnk = mpi_rnk/_Nr
       rko = modulo(mpi_rnk,_Nr)
@@ -298,6 +311,7 @@
                do j = 0, i_pZ-1
                   bsend(l,  stp) =  dble(Ts(j,m,n))
                   bsend(l+1,stp) = dimag(Ts(j,m,n))
+
                   l = l + 2
                end do
             end do
@@ -331,8 +345,9 @@
    end subroutine tra_Ts2T
 
 
-#endif
+! #endif
 
 !*************************************************************************
  end module transform
 !*************************************************************************
+

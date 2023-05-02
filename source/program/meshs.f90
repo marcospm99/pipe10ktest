@@ -111,7 +111,7 @@
    subroutine mes_rdom_init(D)
       type (rdom), intent(inout) :: D
       integer, parameter :: lda = 2*i_KL+1
-      double precision   :: A(lda,lda), w(lda), c,e
+      double precision   ::  w(lda), c,e , A(lda,lda)
       double precision   :: r_(1-i_KL:D%N)
       integer :: n,i,j,nn, l,r
          			! distribute radial points over procs

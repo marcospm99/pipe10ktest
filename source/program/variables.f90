@@ -19,43 +19,22 @@
 #include "../parallel.h"
  module variables
 !*************************************************************************
-   ! use wksp
+   use wksp !, only: bsend,brecv,c4, ur_, ut_, uz_
    !use type
    use mpif
    use parameters
    use meshs
    implicit none
    save
-
-!    type harm
-!       integer              :: pH0,pH1, pH0_(0:_Np-1),pH1_(0:_Np-1)
-!    end type harm
-
-!    type spec
-!       double precision     :: Re(0:_Hs1, i_pN)
-!       double precision     :: Im(0:_Hs1, i_pN)
-!    end type spec
-
-! !   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
-!    type coll
-!       double precision     :: Re(i_N, 0:i_pH1)
-!       double precision     :: Im(i_N, 0:i_pH1)
-!    end type coll
-
-!    type phys
-!       double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
-!    end type phys
    
 
    type (harm)               :: var_H
-   type (coll), private      :: c1,c2,c3
-   double precision, private :: ad_k2a2(-i_K1:i_K1)
+
+   ! double precision, private :: ad_k2a2(-i_K1:i_K1)
    double precision :: ad_k1a1(-i_K1:i_K1)
    double precision :: ad_m1r1(i_N,0:i_M1)
-   double precision, private :: ad_m2r2(i_N,0:i_M1)
+   ! double precision, private :: ad_m2r2(i_N,0:i_M1)
 
-      double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-      double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
 
  contains
 
@@ -84,10 +63,10 @@
       
       do n = 0, i_M1
          ad_m1r1(:,n) = mes_D%r(:,-1) * i_Mp*n
-         ad_m2r2(:,n) = mes_D%r(:,-2) * i_Mp*n * i_Mp*n
+         ! ad_m2r2(:,n) = mes_D%r(:,-2) * i_Mp*n * i_Mp*n
       end do
       do n = -i_K1, i_K1
-         ad_k2a2(n) = d_alpha*n * d_alpha*n
+         ! ad_k2a2(n) = d_alpha*n * d_alpha*n
          ad_k1a1(n) = d_alpha*n
       end do
 
@@ -186,30 +165,13 @@
 !-------------------------------------------------------------------------
 !  convert collocated -> spectral
 !-------------------------------------------------------------------------
-! #ifndef _MPI
-!    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
-!       type (coll), intent(in)  :: c
-!       type (spec), intent(out) :: s
-!       type (coll), intent(in),  optional :: c2,c3
-!       type (spec), intent(out), optional :: s2,s3
-!       s%Re = transpose(c%Re)
-!       s%Im = transpose(c%Im)
-!       if(.not. present(c2)) return
-!       s2%Re = transpose(c2%Re)
-!       s2%Im = transpose(c2%Im)
-!       if(.not. present(c3)) return
-!       s3%Re = transpose(c3%Re)
-!       s3%Im = transpose(c3%Im)
-!    end subroutine var_coll2spec
 
-! #else
    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
       type (coll), intent(in)  :: c
       type (spec), intent(out) :: s
       type (coll), intent(in),  optional :: c2,c3
       type (spec), intent(out), optional :: s2,s3
-      ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-      ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
 
       nc = 1
@@ -278,35 +240,18 @@
       end do
 
    end subroutine var_coll2spec
-! #endif
+
    
 !-------------------------------------------------------------------------
 !  convert spectral -> collocated
 !-------------------------------------------------------------------------
-! #ifndef _MPI
-!    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
-!       type (spec), intent(in)  :: s
-!       type (coll), intent(out) :: c
-!       type (spec), intent(in),  optional :: s2,s3
-!       type (coll), intent(out), optional :: c2,c3
-!       c%Re = transpose(s%Re)
-!       c%Im = transpose(s%Im)
-!       if(.not. present(s2)) return
-!       c2%Re = transpose(s2%Re)
-!       c2%Im = transpose(s2%Im)
-!       if(.not. present(s3)) return
-!       c3%Re = transpose(s3%Re)
-!       c3%Im = transpose(s3%Im)
-!    end subroutine var_spec2coll
 
-! #else
    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
       type (spec), intent(in)  :: s
       type (coll), intent(out) :: c
       type (spec), intent(in),  optional :: s2,s3
       type (coll), intent(out), optional :: c2,c3
-      ! double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
-      ! double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
 
       ns = 1
@@ -374,7 +319,7 @@
       end do
 
    end subroutine var_spec2coll
-! #endif
+
 
 
 !------------------------------------------------------------------------
@@ -387,7 +332,7 @@
       type (coll), intent(in)  :: in
       type (coll), intent(out) :: out
       double precision :: inRe(1-i_KL:i_N), inIm(1-i_KL:i_N)
-      double precision :: re(i_N), im(i_N)
+      
       integer :: n,j,l,r
       _loop_km_vars
 
@@ -424,28 +369,24 @@
       type (coll), intent(in)  :: r,t,z
       type (coll), intent(out) :: or,ot,oz
       _loop_km_vars
-
-      call var_coll_copy(r,c1)
-      call var_coll_copy(t,c2)
-      call var_coll_copy(z,c3)
  
       _loop_km_begin
-         or%Re(:,nh) = -c3%Im(:,nh)*ad_m1r1(:,m) + c2%Im(:,nh)*ad_k1a1(k)
-         or%Im(:,nh) =  c3%Re(:,nh)*ad_m1r1(:,m) - c2%Re(:,nh)*ad_k1a1(k)
+         or%Re(:,nh) = -z%Im(:,nh)*ad_m1r1(:,m) + t%Im(:,nh)*ad_k1a1(k)
+         or%Im(:,nh) =  z%Re(:,nh)*ad_m1r1(:,m) - t%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
 
-      call var_coll_meshmult(0,mes_D%dr(1),c3, ot)
+      call var_coll_meshmult(0,mes_D%dr(1),z, ot)
       _loop_km_begin
-         ot%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k) - ot%Re(:,nh)
-         ot%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k) - ot%Im(:,nh)
+         ot%Re(:,nh) = -r%Im(:,nh)*ad_k1a1(k) - ot%Re(:,nh)
+         ot%Im(:,nh) =  r%Re(:,nh)*ad_k1a1(k) - ot%Im(:,nh)
       _loop_km_end
 
-      call var_coll_meshmult(1,mes_D%dr(1),c2, oz)
+      call var_coll_meshmult(1,mes_D%dr(1),t, oz)
       _loop_km_begin
-         oz%Re(:,nh) =  c2%Re(:,nh)*mes_D%r(:,-1) + oz%Re(:,nh)  &
-                       +c1%Im(:,nh)*ad_m1r1(:,m)
-         oz%Im(:,nh) =  c2%Im(:,nh)*mes_D%r(:,-1) + oz%Im(:,nh)  &
-                       -c1%Re(:,nh)*ad_m1r1(:,m)
+         oz%Re(:,nh) =  t%Re(:,nh)*mes_D%r(:,-1) + oz%Re(:,nh)  &
+                       +r%Im(:,nh)*ad_m1r1(:,m)
+         oz%Im(:,nh) =  t%Im(:,nh)*mes_D%r(:,-1) + oz%Im(:,nh)  &
+                       -r%Re(:,nh)*ad_m1r1(:,m)
       _loop_km_end
 
    end subroutine var_coll_curl
@@ -459,16 +400,16 @@
       type (coll), intent(out) :: r,t,z
       _loop_km_vars
 
-      call var_coll_copy(p,c1)
+      call var_coll_copy(p,c4) ! Necesario aunque no lo parezca
 
-      call var_coll_meshmult(0,mes_D%dr(1),c1, r)
+      call var_coll_meshmult(0,mes_D%dr(1),c4, r)
       _loop_km_begin
-         t%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)
-         t%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)
+         t%Re(:,nh) = -c4%Im(:,nh)*ad_m1r1(:,m)
+         t%Im(:,nh) =  c4%Re(:,nh)*ad_m1r1(:,m)
       _loop_km_end
       _loop_km_begin
-         z%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-         z%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+         z%Re(:,nh) = -c4%Im(:,nh)*ad_k1a1(k)
+         z%Im(:,nh) =  c4%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
 
    end subroutine var_coll_grad
@@ -482,16 +423,16 @@
       type (coll), intent(out) :: dv
       _loop_km_vars
 
-      call var_coll_meshmult(1,mes_D%dr(1),r, c1)
+      call var_coll_meshmult(1,mes_D%dr(1),r, c4) ! Funcion mejorada ya
       _loop_km_begin
-         c2%Re(:,nh) =  &
-	    r%Re(:,nh)*mes_D%r(:,-1) + c1%Re(:,nh)  &
+         dv%Re(:,nh) =  &
+	    r%Re(:,nh)*mes_D%r(:,-1) + c4%Re(:,nh)  &
 	  - t%Im(:,nh)*ad_m1r1(:,m) - z%Im(:,nh)*ad_k1a1(k)
-         c2%Im(:,nh) =  &
-	    r%Im(:,nh)*mes_D%r(:,-1) + c1%Im(:,nh)  &
+         dv%Im(:,nh) =  &
+	    r%Im(:,nh)*mes_D%r(:,-1) + c4%Im(:,nh)  &
 	  + t%Re(:,nh)*ad_m1r1(:,m) + z%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
-      call var_coll_copy(c2, dv)
+      
       
    end subroutine var_coll_div
 
@@ -579,7 +520,7 @@
                bsend(:,5) =  z%Re(:,nh) * a
                bsend(:,6) =  z%Im(:,nh) * a * b
             end if
-#ifdef _MPI
+! #ifdef _MPI
             if(p1/=p2) then
                mpi_tg = m*(2*i_K1+1) + k
                if(mpi_rnk==p1)  &
@@ -589,25 +530,25 @@
                   call mpi_recv( bsend, i_N*6, mpi_double_precision,  &
                      p1, mpi_tg, mpi_comm_world, mpi_st, mpi_er)
             end if
-#endif         
+! #endif         
             if(mpi_rnk==p2) then
-               c1%Re(:,nh_) = bsend(:,1)
-               c1%Im(:,nh_) = bsend(:,2)
-               c2%Re(:,nh_) = bsend(:,3)
-               c2%Im(:,nh_) = bsend(:,4)
-               c3%Re(:,nh_) = bsend(:,5)
-               c3%Im(:,nh_) = bsend(:,6)
+               ur_%Re(:,nh_) = bsend(:,1)
+               ur_%Im(:,nh_) = bsend(:,2)
+               ut_%Re(:,nh_) = bsend(:,3)
+               ut_%Im(:,nh_) = bsend(:,4)
+               uz_%Re(:,nh_) = bsend(:,5)
+               uz_%Im(:,nh_) = bsend(:,6)
             end if
          end do
       end do
 
       _loop_km_begin
-         r%Re(:,nh) = ( r%Re(:,nh) + c1%Re(:,nh) ) / 2d0
-         r%Im(:,nh) = ( r%Im(:,nh) + c1%Im(:,nh) ) / 2d0
-         t%Re(:,nh) = ( t%Re(:,nh) + c2%Re(:,nh) ) / 2d0
-         t%Im(:,nh) = ( t%Im(:,nh) + c2%Im(:,nh) ) / 2d0
-         z%Re(:,nh) = ( z%Re(:,nh) + c3%Re(:,nh) ) / 2d0
-         z%Im(:,nh) = ( z%Im(:,nh) + c3%Im(:,nh) ) / 2d0
+         r%Re(:,nh) = ( r%Re(:,nh) + ur_%Re(:,nh) ) / 2d0
+         r%Im(:,nh) = ( r%Im(:,nh) + ur_%Im(:,nh) ) / 2d0
+         t%Re(:,nh) = ( t%Re(:,nh) + ut_%Re(:,nh) ) / 2d0
+         t%Im(:,nh) = ( t%Im(:,nh) + ut_%Im(:,nh) ) / 2d0
+         z%Re(:,nh) = ( z%Re(:,nh) + uz_%Re(:,nh) ) / 2d0
+         z%Im(:,nh) = ( z%Im(:,nh) + uz_%Im(:,nh) ) / 2d0
       _loop_km_end
    end if
    
@@ -639,7 +580,7 @@
    subroutine var_nearestpt(x, ix)
       double precision, intent(in)  :: x(3)
       integer,          intent(out) :: ix(3)
-      double precision, save :: dt,dz, r_(i_N)
+      ! double precision, save :: dt,dz, r_(i_N)
       logical, save :: set = .false.
 
       if(.not.set) then 
@@ -671,7 +612,7 @@
       integer,          intent(in)  :: ix(3)
       type (phys),      intent(in)  :: p
       double precision, intent(out) :: c
-      double precision, save :: dt,dz, r_(i_N)
+      !double precision, save :: dt,dz , r_(i_N)
       logical, save :: set = .false.
       double precision :: rd,td,zd, c00,c10,c01,c11, c0,c1
       integer :: ir0,ir1,it0,it1,iz0,iz1
@@ -733,9 +674,9 @@
    subroutine var_coll_norm(a, E,Ek,Em)
       type (coll),      intent(in)  :: a
       double precision, intent(out) :: E, Ek(0:i_K1), Em(0:i_M1)
-#ifdef _MPI
+! #ifdef _MPI
       double precision :: E_, Ek_(0:i_K1), Em_(0:i_M1)
-#endif
+! #endif
       double precision :: w, b, f(i_N)
       _loop_km_vars
       
@@ -752,14 +693,14 @@
          Ek(abs(k)) = Ek(abs(k)) + b
       _loop_km_end
 
-#ifdef _MPI
+! #ifdef _MPI
       call mpi_allreduce( Ek, Ek_, 1+i_K1, mpi_double_precision,  &
          mpi_sum, mpi_comm_world, mpi_er)
       Ek = Ek_
       call mpi_allreduce( Em, Em_, 1+i_M1, mpi_double_precision,  &
          mpi_sum, mpi_comm_world, mpi_er)
       Em = Em_
-#endif
+! #endif
       
       E = sum(Em)
    

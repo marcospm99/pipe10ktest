@@ -5,6 +5,7 @@
 #include "../parallel.h"
  module timestep
 !*************************************************************************
+   use wksp
    use variables
    implicit none
    save
@@ -47,7 +48,7 @@
       integer,          intent(in)  :: PM
       double precision, intent(in)  :: c1,c2
       type (mesh),      intent(out) :: A(0:i_pH1)
-      double precision :: d(i_N)
+      
       _loop_km_vars
       
       _loop_km_begin
@@ -68,7 +69,7 @@
       integer,          intent(in)  :: PM,BC
       double precision, intent(in)  :: c1,c2
       type (lumesh),    intent(out) :: A(0:i_pH1)
-      double precision :: d(i_N)
+      
       integer :: info, n,j, S
       _loop_km_vars
       
@@ -137,7 +138,6 @@
       type (mesh), intent(in)  :: A(0:i_pH1)
       type (coll), intent(out) :: d
       double precision :: bRe(1-i_KL:i_N), bIm(1-i_KL:i_N)
-      double precision :: re(i_N), im(i_N)
       integer :: j,nl,nr,n
       _loop_km_vars
 

@@ -8,6 +8,10 @@
 ! 6) max = 96.7
 ! 7) max = 94.5
 ! 8) max = 94.9
+! 9) max = 82.7
+! 10) max = 81.9
+! 11) max = 81.3
+! 12) max = 80.6
 
 !**************************************************************************
 !  IN/OUT 
@@ -42,23 +46,15 @@
    double precision :: mean_p(i_N), stdv_p(i_N)
 
 
-   !!!!!!!!!!!!!
 
-!type (lumesh), private ::  LNps(0:i_pH1)
-   !!!!!!!!!!!!!
 
    
 
    double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3), dzduzsq(i_N), dzduzcub(i_N)
-   ! double precision :: tmpr1(i_N),tmpr2(i_N),tmpt1(i_N),tmpt2(i_N),tmpz1(i_N),tmpz2(i_N)
    double precision :: factor
 
-   double precision :: d(i_N),dd(i_n,10) ! auxiliary mem
+   !double precision :: d(i_N) !,dd(i_n,10) ! auxiliary mem
    integer :: csta
-
-   !type (coll), private  :: c1,c2,c3 ! Three colls are defined here. Why! They are really big. 
-                                     ! They are defined as private. They cannot be used anywhere else
-                                     ! Remove in future versions. We have to pass the routine some workarray 
 
 ! ------------------------- HDF5 -------------------------------
 
@@ -151,7 +147,7 @@ end subroutine compute_sta
       integer,          intent(in)  :: PM,BC
       double precision, intent(in)  :: c1,c2
       type (lumesh),    intent(out) :: A(0:i_pH1)
-      double precision :: d(i_N)
+!      double precision :: d(i_N)
       integer :: info, n,j, S
       _loop_km_vars
 
@@ -209,7 +205,7 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
          ! r equation 
          !durdr
          call var_coll_meshmult(1,mes_D%dr(1),vel_ur,c1)
-         call tra_coll2phys(c1,p1)
+         call tra_coll2phys1d(c1,p1)
          p2%Re=vel_r%Re*p1%Re
       
          ! 1/r(durdt-ut)
@@ -217,7 +213,7 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
                c1%Re(:,nh) = mes_D%r(:,-1)*(-vel_ur%Im(:,nh)*m*i_Mp-vel_ut%Re(:,nh))
                c1%Im(:,nh) = mes_D%r(:,-1)*( vel_ur%Re(:,nh)*m*i_Mp-vel_ut%Im(:,nh))   
          _loop_km_end
-         call tra_coll2phys(c1,p1)
+         call tra_coll2phys1d(c1,p1)
          p2%Re=p2%Re+vel_t%Re*p1%Re
       
          ! durdz
@@ -225,18 +221,18 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
                c1%Re(:,nh) = -vel_ur%Im(:,nh)*d_alpha*k
                c1%Im(:,nh) =  vel_ur%Re(:,nh)*d_alpha*k       
          _loop_km_end
-         call tra_coll2phys(c1,p1)
+         call tra_coll2phys1d(c1,p1)
          p2%Re=p2%Re+vel_z%Re*p1%Re
          do n = 1, mes_D%pN
             n_ = mes_D%pNi + n - 1
    	    p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)	
          end do
-         call tra_phys2coll(p2,c1)
+         call tra_phys2coll1d(p2,c1)
 
          ! theta equation
          ! dutdr
          call var_coll_meshmult(1,mes_D%dr(1),vel_ut,c2)
-         call tra_coll2phys(c2,p1)
+         call tra_coll2phys1d(c2,p1)
          p2%Re=vel_r%Re*p1%Re
       
          ! 1/r(dutdt+ur)
@@ -244,7 +240,7 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
                c2%Re(:,nh) = mes_D%r(:,-1)*(-vel_ut%Im(:,nh)*m*i_Mp+vel_ur%Re(:,nh))
                c2%Im(:,nh) = mes_D%r(:,-1)*( vel_ut%Re(:,nh)*m*i_Mp+vel_ur%Im(:,nh))
          _loop_km_end
-         call tra_coll2phys(c2,p1)
+         call tra_coll2phys1d(c2,p1)
          p2%Re=p2%Re+vel_t%Re*p1%Re
       
          ! dutdz
@@ -252,18 +248,18 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
                c2%Re(:,nh) = -vel_ut%Im(:,nh)*d_alpha*k
                c2%Im(:,nh) =  vel_ut%Re(:,nh)*d_alpha*k          
          _loop_km_end
-         call tra_coll2phys(c2,p1)
+         call tra_coll2phys1d(c2,p1)
          p2%Re=p2%Re+vel_z%Re*p1%Re
          do n = 1, mes_D%pN
             n_ = mes_D%pNi + n - 1	
             p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)
          end do
-         call tra_phys2coll(p2,c2)
+         call tra_phys2coll1d(p2,c2)
 
          ! z equation
          ! duzdr 
          call var_coll_meshmult(0,mes_D%dr(1),vel_uz,c3)
-         call tra_coll2phys(c3,p1)
+         call tra_coll2phys1d(c3,p1)
          p2%Re=vel_r%Re*p1%Re
       
          ! 1/r(duzdt)
@@ -271,7 +267,7 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
             c3%Re(:,nh) = mes_D%r(:,-1)*(-vel_uz%Im(:,nh)*m*i_Mp)
             c3%Im(:,nh) = mes_D%r(:,-1)*( vel_uz%Re(:,nh)*m*i_Mp)
          _loop_km_end
-         call tra_coll2phys(c3,p1)
+         call tra_coll2phys1d(c3,p1)
          p2%Re=p2%Re+vel_t%Re*p1%Re
       
          ! duzdz
@@ -279,13 +275,13 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
             c3%Re(:,nh) = -vel_uz%Im(:,nh)*d_alpha*k
             c3%Im(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
         _loop_km_end
-         call tra_coll2phys(c3,p1)
+         call tra_coll2phys1d(c3,p1)
          p2%Re=p2%Re+vel_z%Re*p1%Re
          do n = 1, mes_D%pN
             n_ = mes_D%pNi + n - 1	
             p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)+vel_r%Re(:,:,n)*vel_Up(n_)	
          end do
-         call tra_phys2coll(p2,c3)
+         call tra_phys2coll1d(p2,c3)
 
          _loop_km_begin
             BCR(nh) = BCR(nh) - c1%Re(i_N,nh)
@@ -302,7 +298,7 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
          !call tim_zerobc(c1)
          call p2m_lumesh_inits( 0,1,0d0,1d0, LNp)
          call tim_lumesh_invert(0,LNp, c1)
-         call tra_coll2phys(c1,p2) !pressure field
+         call tra_coll2phys1d(c1,p2) !pressure field
 
 
    do n = 1, mes_D%pN
@@ -337,8 +333,6 @@ end subroutine pressure
        call var_coll_meshmult(0,mes_D%dr(1),c1, c2) 
 
        _loop_km_begin
-      !  tmpr1 =  c2%Re(:,nh)
-      !  tmpr2 =  c2%Im(:,nh)
 
        c3%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
        c3%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
@@ -365,9 +359,6 @@ end subroutine pressure
 
       _loop_km_begin
 
-      ! tmpr1 =  c2%Re(:,nh)
-      ! tmpr2 =  c2%Im(:,nh)
-
       c4%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
       c4%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
 
@@ -391,8 +382,6 @@ end subroutine pressure
       call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
 
       _loop_km_begin
-      ! tmpr1 =  c2%Re(:,nh)
-      ! tmpr2 =  c2%Im(:,nh)
 
       c4%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
       c4%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)

@@ -1,7 +1,7 @@
 INSTDIR		= ./install/
 PROGDIR		= ./program/
 UTILDIR		= ./utils/
-UTIL		= prim2matlab
+UTIL		= none #prim2matlab
 
 TRANSFORM	= fftw3
 MODSOBJ		= type.o wksp.o iohdf5.o meshs.o mpi.o parameters.o \
@@ -52,9 +52,9 @@ install : pipe10k
 	cut -d! -f1 $(PROGDIR)parameters.f90 | grep = | \
 	   cut -d: -f3  >> $(INSTDIR)/main.info
 
-util : 	$(MODSOBJ) $(UTILDIR)/$(UTIL).f90
-	$(COMPILER) $(COMPFLAGS) $(UTILDIR)/$(UTIL).f90
-	$(COMPILER) -o ./$(UTIL).out $(UTIL).o $(MODSOBJ) $(LIBS)
+# util : 	$(MODSOBJ) $(UTILDIR)/$(UTIL).f90
+# 	$(COMPILER) $(COMPFLAGS) $(UTILDIR)/$(UTIL).f90
+# 	$(COMPILER) -o ./$(UTIL).out $(UTIL).o $(MODSOBJ) $(LIBS)
 
 #------------------------------------------------------------------------
 clean :
@@ -67,7 +67,7 @@ type.o : $(PROGDIR)type.f90 parameters.o parallel.h
 wksp.o : $(PROGDIR)wksp.f90 type.o parallel.h
 	$(COMPILER) $(COMPFLAGS) $(PROGDIR)wksp.f90
 
-iohdf5.o : $(PROGDIR)iohdf5.F90 velocity.o parallel.h
+iohdf5.o : $(PROGDIR)iohdf5.F90 velocity.o parallel.h sta.o
 	$(COMPILER) $(COMPFLAGS) $(PROGDIR)iohdf5.F90
 
 meshs.o : $(PROGDIR)meshs.f90 parameters.o mpi.o

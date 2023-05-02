@@ -23,7 +23,7 @@
    end type coll
 
    type phys
-      double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
+      double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN) ! Mem = 8*154*384*40*80/1024**3 -> 1.409 GB
    end type phys
 
 

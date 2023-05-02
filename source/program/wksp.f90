@@ -4,14 +4,14 @@
 use type
 
 implicit none
-save
+! save
 
-
+   
    
     type (coll) :: c1,c2,c3,c4          ! Three colls are defined here. Why! They are really big. 
                                      ! They are defined as private. They cannot be used anywhere else
                                      ! Remove in future versions. We have to pass the routine some workarray 
-   type (phys) :: p1,p2,p3,p4 
+   type (phys) :: p1,p2,p3,p4
   
 ! Velocity
 
@@ -30,7 +30,7 @@ save
   
 
   !! Esenciales, no se pueden tocar
-  type (coll) :: r,t,z ! SOLO PARA vel_corrector y no sé qué pasa
+  !type (coll) :: r,t,z ! SOLO PARA vel_corrector y no sé qué pasa
 
    type (phys) :: vel_r
    type (phys) :: vel_t
@@ -44,7 +44,24 @@ save
 
    !  double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1) ! -> 1.16 GB
    !  double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1) ! -> 1.16 GB
+
+      ! Usar estas, que son más grandes
+
+       double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+       double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+    
     type (spec) :: s1,s2,s3 ! -> 2.3 GB each one
 
-    double precision :: wk(i_N, 0:i_pH1)
+
+   ! Memory chunks, very little BUT
+    double precision :: d(i_N)
+    double precision, save :: dt,dz, r_(i_N)
+    double precision :: re(i_N), im(i_N)
+   !  double precision :: A(2*i_KL+1,2*i_KL+1,i_N)
+
+   !  double precision :: wk(i_N, 0:i_pH1)
+
+
+
+   
  end module wksp

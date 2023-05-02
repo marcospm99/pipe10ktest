@@ -3,11 +3,7 @@
 !
 !**************************************************************************
 #include "../parallel.h"
- !module wkarray
- !implicit none
- ! use velocity
- !double precision :: wk(i_N, 0:i_pH1) 
- !end module
+
  
  module io
 !**************************************************************************
@@ -39,7 +35,7 @@
    ! double precision :: mean_ur(i_N), stdv_ur(i_N)
    ! double precision :: mean_ut(i_N), stdv_ut(i_N)
    ! double precision :: mean_uz(i_N), stdv_uz(i_N), stdv_rz(i_N)
-   double precision :: d1, d(i_N)
+   double precision :: d1 !, d(i_N)
    integer :: csta
 
 ! ------------------------- HDF5 -------------------------------
