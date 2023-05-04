@@ -54,17 +54,15 @@
    subroutine vel_rt2pm(r,t, up,um)
       type (coll), intent(in)  :: r,t
       type (coll), intent(out) :: up,um
-      double precision :: rRe(i_N), rIm(i_N), tRe(i_N), tIm(i_N)
+
       _loop_km_vars
       _loop_km_begin
-         rRe = r%Re(:,nh)
-         rIm = r%Im(:,nh)
-         tRe = t%Re(:,nh)
-         tIm = t%Im(:,nh)
-         up%Re(:,nh) = rRe - tIm
-         up%Im(:,nh) = rIm + tRe
-         um%Re(:,nh) = rRe + tIm
-         um%Im(:,nh) = rIm - tRe
+
+         up%Re(:,nh) = r%Re(:,nh) - t%Im(:,nh)
+         up%Im(:,nh) = r%Im(:,nh) + t%Re(:,nh)
+         um%Re(:,nh) = r%Re(:,nh) + t%Im(:,nh)
+         um%Im(:,nh) = r%Im(:,nh) - t%Re(:,nh)
+
       _loop_km_end
    end subroutine vel_rt2pm
 
@@ -76,6 +74,7 @@
       double precision :: pRe(i_N),mRe(i_N),pIm(i_N),mIm(i_N)
       _loop_km_vars
       _loop_km_begin
+      
          pRe = up%Re(:,nh)
          pIm = up%Im(:,nh)
          mRe = um%Re(:,nh)

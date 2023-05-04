@@ -137,27 +137,27 @@
       type (coll), intent(in)  :: b,c
       type (mesh), intent(in)  :: A(0:i_pH1)
       type (coll), intent(out) :: d
-      double precision :: bRe(1-i_KL:i_N), bIm(1-i_KL:i_N)
+      
       integer :: j,nl,nr,n
       _loop_km_vars
 
       _loop_km_begin
-         bRe(:0) = b%Re(i_KL:1:-1,nh)
-         bIm(:0) = b%Im(i_KL:1:-1,nh)
+         inRe(:0) = b%Re(i_KL:1:-1,nh)
+         inIm(:0) = b%Im(i_KL:1:-1,nh)
          if(modulo(m*i_Mp+S,2)==1) then
-            bRe(:0) = - bRe(:0)
-            bIm(:0) = - bIm(:0)
+            inRe(:0) = - inRe(:0)
+            inIm(:0) = - inIm(:0)
          end if
-         bRe(1:) = b%Re(:,nh)
-         bIm(1:) = b%Im(:,nh)
+         inRe(1:) = b%Re(:,nh)
+         inIm(1:) = b%Im(:,nh)
          re = c%Re(:,nh)
          im = c%Im(:,nh)
          do j = 1-i_KL, i_N
             nl = max(1,j-i_KL)
             nr = min(j+i_KL,i_N)
             do n = nl, nr
-               re(n) = re(n) + A(nh)%M(i_KL+1+n-j,j) * bRe(j)
-               im(n) = im(n) + A(nh)%M(i_KL+1+n-j,j) * bIm(j)
+               re(n) = re(n) + A(nh)%M(i_KL+1+n-j,j) * inRe(j)
+               im(n) = im(n) + A(nh)%M(i_KL+1+n-j,j) * inIm(j)
             end do
          end do
          d%Re(:,nh) = re

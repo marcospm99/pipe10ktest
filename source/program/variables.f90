@@ -27,12 +27,14 @@
    implicit none
    save
    
-
    type (harm)               :: var_H
-
-   ! double precision, private :: ad_k2a2(-i_K1:i_K1)
+   
    double precision :: ad_k1a1(-i_K1:i_K1)
    double precision :: ad_m1r1(i_N,0:i_M1)
+
+   ! No borrar
+
+   ! double precision, private :: ad_k2a2(-i_K1:i_K1)
    ! double precision, private :: ad_m2r2(i_N,0:i_M1)
 
 
@@ -331,7 +333,6 @@
       type (mesh), intent(in)  :: A
       type (coll), intent(in)  :: in
       type (coll), intent(out) :: out
-      double precision :: inRe(1-i_KL:i_N), inIm(1-i_KL:i_N)
       
       integer :: n,j,l,r
       _loop_km_vars
@@ -446,7 +447,7 @@
       type (coll),      intent(out) :: b
       double precision, save :: sink(-i_K1:i_K1), sinm(0:i_M1), dz_=1d8
       double precision, save :: cosk(-i_K1:i_K1), cosm(0:i_M1), dt_=1d8
-      double precision :: dRe(i_N)
+      
       _loop_km_vars
       
       call var_coll_copy(a, b)
@@ -460,9 +461,9 @@
             end do 
          end if
          _loop_km_begin
-            dRe = b%Re(:,nh)
-            b%Re(:,nh) = dRe*cosk(k) + b%Im(:,nh)*sink(k)
-            b%Im(:,nh) = b%Im(:,nh)*cosk(k) - dRe*sink(k)
+            d = b%Re(:,nh)
+            b%Re(:,nh) = d*cosk(k) + b%Im(:,nh)*sink(k)
+            b%Im(:,nh) = b%Im(:,nh)*cosk(k) - d*sink(k)
          _loop_km_end
       end if
       
@@ -475,9 +476,9 @@
             end do 
          end if
          _loop_km_begin
-            dRe = b%Re(:,nh)
-            b%Re(:,nh) = dRe*cosm(m) + b%Im(:,nh)*sinm(m)
-            b%Im(:,nh) = b%Im(:,nh)*cosm(m) - dRe*sinm(m)
+            d = b%Re(:,nh)
+            b%Re(:,nh) = d*cosm(m) + b%Im(:,nh)*sinm(m)
+            b%Im(:,nh) = b%Im(:,nh)*cosm(m) - d*sinm(m)
          _loop_km_end
       end if
    
@@ -674,10 +675,10 @@
    subroutine var_coll_norm(a, E,Ek,Em)
       type (coll),      intent(in)  :: a
       double precision, intent(out) :: E, Ek(0:i_K1), Em(0:i_M1)
-! #ifdef _MPI
+
       double precision :: E_, Ek_(0:i_K1), Em_(0:i_M1)
-! #endif
-      double precision :: w, b, f(i_N)
+
+      double precision :: w, b
       _loop_km_vars
       
       Ek = 0d0
@@ -685,9 +686,9 @@
       w  = 4d0 * d_PI*d_PI / d_alpha
       if(d_alpha==0d0) stop 'var_coll_norm: alpha=0'
       _loop_km_begin
-         f =  w * ( a%Re(:,nh)*a%Re(:,nh)  &
+         d =  w * ( a%Re(:,nh)*a%Re(:,nh)  &
                   + a%Im(:,nh)*a%Im(:,nh) )
-         b = dot_product(f,mes_D%intrdr )
+         b = dot_product(d,mes_D%intrdr )
          if(k==0 .and. m==0) b = 0.5d0*b 
          Em(m)      = Em(m)      + b
          Ek(abs(k)) = Ek(abs(k)) + b

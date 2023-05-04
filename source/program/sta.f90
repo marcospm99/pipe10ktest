@@ -12,6 +12,7 @@
 ! 10) max = 81.9
 ! 11) max = 81.3
 ! 12) max = 80.6
+! 13) max = 75.0 GB
 
 !**************************************************************************
 !  IN/OUT 
@@ -147,7 +148,7 @@ end subroutine compute_sta
       integer,          intent(in)  :: PM,BC
       double precision, intent(in)  :: c1,c2
       type (lumesh),    intent(out) :: A(0:i_pH1)
-!      double precision :: d(i_N)
+
       integer :: info, n,j, S
       _loop_km_vars
 

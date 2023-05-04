@@ -77,10 +77,14 @@
       type (coll), intent(in)  :: c,c2,c3
       type (phys), intent(out) :: p,p2,p3
 
-      call var_coll2spec(c,s1, c2,s2, c3,s3)
-      call tra_spec2phys(s1, p)
-      call tra_spec2phys(s2, p2)
-      call tra_spec2phys(s3, p3)
+      call var_coll2spec(c,s1)
+      call tra_spec2phys(s1,p)
+
+      call var_coll2spec(c2,s1)
+      call tra_spec2phys(s1,p2)
+
+      call var_coll2spec(c3,s1)
+      call tra_spec2phys(s1,p3)
 
    end subroutine tra_coll2phys
 
@@ -104,10 +108,16 @@
       type (phys), intent(in)  :: p,p2,p3
       type (coll), intent(out) :: c,c2,c3
 
-      call tra_phys2spec(p,  s1)
-      call tra_phys2spec(p2, s2)
-      call tra_phys2spec(p3, s3)
-      call var_spec2coll(s1,c, s2,c2, s3,c3)
+
+      call tra_phys2spec(p,s1)
+      call var_spec2coll(s1,c)
+
+      call tra_phys2spec(p2,s1)
+      call var_spec2coll(s1,c2)
+
+      call tra_phys2spec(p3, s1)
+      call var_spec2coll(s1,c3)
+
       
    end subroutine tra_phys2coll
 
