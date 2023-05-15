@@ -7,6 +7,7 @@
 !*************************
 #include "../parallel.h"
  module mpif
+ 
  use mpi
 !*************************
    implicit none
@@ -21,10 +22,12 @@
 !  initialise 
 !------------------------------------------------------------------------
    subroutine mpi_precompute()
+      
       call mpi_init(mpi_er)
       call mpi_comm_rank(mpi_comm_world, mpi_rnk, mpi_er)
       call mpi_comm_size(mpi_comm_world, mpi_sze, mpi_er)
       if(mpi_sze /= _Np) stop 'mpi_precompute: incorrect num procs'
+      
    end subroutine mpi_precompute
 
 !*************************

@@ -136,7 +136,7 @@
       integer,     intent(in)  :: S
       type (coll), intent(in)  :: b,c
       type (mesh), intent(in)  :: A(0:i_pH1)
-      type (coll), intent(out) :: d
+      type (coll), intent(inout) :: d
       
       integer :: j,nl,nr,n
       _loop_km_vars
@@ -171,7 +171,7 @@
 !  set the RHS for the boundary condition = 0
 !-------------------------------------------------------------------------
    subroutine tim_zerobc(a)
-      type (coll), intent(out) :: a
+      type (coll), intent(inout) :: a
       integer :: n
       do n = 0, var_H%pH1
          a%Re(i_N, n ) = 0d0

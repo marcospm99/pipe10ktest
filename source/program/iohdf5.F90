@@ -51,7 +51,7 @@
    integer(size_t)::siever
    parameter (siever = 4*1024*1024)
 
-
+   
 ! --------------------- Program -------------------------------------
 
  contains
@@ -103,6 +103,7 @@
    subroutine io_openfiles()
       implicit none
       character(10), save :: a = 'sequential'
+
 
       if(mpi_rnk/=0) return
       
@@ -189,9 +190,11 @@
       ! ------------------------------------------------------------------------
       
       commu = MPI_COMM_WORLD ! HF5 needs an integer here
-      
+
       if(mpi_rnk==0) writetimer=MPI_Wtime()-writetimer
       filename=trim(dirinp)//'/'//trim(filinp)//'.'//extc//'.h5'
+
+      
 
       call H5Fopen_f(trim(filename),H5F_ACC_RDONLY_F,fid,h5err) ! Salida: fid
 
@@ -304,6 +307,7 @@
       endif
 
       call mpi_barrier(MPI_COMM_WORLD, mpi_er)
+      
    end subroutine io_load_state
 
 !--------------------------------------------------------------------------

@@ -103,10 +103,16 @@
 !  initialise collocated variable
 !-------------------------------------------------------------------------
    subroutine var_coll_init(a)
-      type (coll), intent(out) :: a
+      type (coll), intent(inout) :: a
       a%Re = 0d0
       a%Im = 0d0
    end subroutine var_coll_init
+
+   subroutine var_spec_init(a)
+      type (spec), intent(out) :: a
+      a%Re = 0d0
+      a%Im = 0d0
+   end subroutine var_spec_init
 
 
 !-------------------------------------------------------------------------
@@ -114,7 +120,7 @@
 !-------------------------------------------------------------------------
    subroutine var_coll_copy(in, out)
       type (coll), intent(in)  :: in
-      type (coll), intent(out) :: out
+      type (coll), intent(inout) :: out
       out%Re(:,0:var_H%pH1) = in%Re(:,0:var_H%pH1)
       out%Im(:,0:var_H%pH1) = in%Im(:,0:var_H%pH1)
    end subroutine var_coll_copy
@@ -168,17 +174,14 @@
 !  convert collocated -> spectral
 !-------------------------------------------------------------------------
 
-   subroutine var_coll2spec(c,s, c2,s2, c3,s3)
+   subroutine var_coll2spec(c,s1)
       type (coll), intent(in)  :: c
-      type (spec), intent(out) :: s
-      type (coll), intent(in),  optional :: c2,c3
-      type (spec), intent(out), optional :: s2,s3
+      type (spec), intent(inout) :: s1
       
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
 
       nc = 1
-      if(present(c2)) nc = 2
-      if(present(c3)) nc = 3
+      
   
       rko = (mpi_rnk/_Nr)*_Nr
       nho = var_H%pH0_(rko)
@@ -222,21 +225,22 @@
          do n = 1, mes_D%pN
             do nh =  &
                   var_H%pH0_(src)-nho, var_H%pH0_(src)+var_H%pH1_(src)-nho
-               s%Re(nh,n) = brecv(l,  stp)
-               s%Im(nh,n) = brecv(l+1,stp)
+               
+               s1%Re(nh,n) = brecv(l,  stp)
+               s1%Im(nh,n) = brecv(l+1,stp)
                l = l + 2
                if(nc<2) cycle
-               s2%Re(nh,n) = brecv(l,  stp)
-               s2%Im(nh,n) = brecv(l+1,stp)
+               ! s2%Re(nh,n) = brecv(l,  stp)
+               ! s2%Im(nh,n) = brecv(l+1,stp)
                l = l + 2
                if(nc<3) cycle
-               s3%Re(nh,n) = brecv(l,  stp)
-               s3%Im(nh,n) = brecv(l+1,stp)
+               ! s3%Re(nh,n) = brecv(l,  stp)
+               ! s3%Im(nh,n) = brecv(l+1,stp)
                l = l + 2
             end do
          end do
       end do
-
+      
       do stp = 0, _Nr-1
          call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
       end do
@@ -248,17 +252,15 @@
 !  convert spectral -> collocated
 !-------------------------------------------------------------------------
 
-   subroutine var_spec2coll(s,c, s2,c2, s3,c3)
-      type (spec), intent(in)  :: s
-      type (coll), intent(out) :: c
-      type (spec), intent(in),  optional :: s2,s3
-      type (coll), intent(out), optional :: c2,c3
+   subroutine var_spec2coll(s1,c)
+      type (spec), intent(in)  :: s1
+      type (coll), intent(inout) :: c
+
 
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
 
       ns = 1
-      if(present(s2)) ns = 2
-      if(present(s3)) ns = 3
+
 
       rko = (mpi_rnk/_Nr)*_Nr
       nho = var_H%pH0_(rko)
@@ -276,16 +278,16 @@
          l = 1
          do nh = var_H%pH0_(dst)-nho, var_H%pH0_(dst)+var_H%pH1_(dst)-nho
             do n = 1, mes_D%pN
-               bsend(l,  stp) = s%Re(nh,n)
-               bsend(l+1,stp) = s%Im(nh,n)
+               bsend(l,  stp) = s1%Re(nh,n)
+               bsend(l+1,stp) = s1%Im(nh,n)
                l = l + 2
                if(ns<2) cycle
-               bsend(l,  stp) = s2%Re(nh,n)
-               bsend(l+1,stp) = s2%Im(nh,n)
+               ! bsend(l,  stp) = s2%Re(nh,n)
+               ! bsend(l+1,stp) = s2%Im(nh,n)
                l = l + 2
                if(ns<3) cycle
-               bsend(l,  stp) = s3%Re(nh,n)
-               bsend(l+1,stp) = s3%Im(nh,n)
+               ! bsend(l,  stp) = s3%Re(nh,n)
+               ! bsend(l+1,stp) = s3%Im(nh,n)
                l = l + 2
             end do
          end do
@@ -332,7 +334,7 @@
       integer,     intent(in)  :: S
       type (mesh), intent(in)  :: A
       type (coll), intent(in)  :: in
-      type (coll), intent(out) :: out
+      type (coll), intent(inout) :: out
       
       integer :: n,j,l,r
       _loop_km_vars
@@ -368,7 +370,7 @@
 !------------------------------------------------------------------------
    subroutine var_coll_curl(r,t,z, or,ot,oz)
       type (coll), intent(in)  :: r,t,z
-      type (coll), intent(out) :: or,ot,oz
+      type (coll), intent(inout) :: or,ot,oz
       _loop_km_vars
  
       _loop_km_begin
@@ -398,7 +400,7 @@
 !------------------------------------------------------------------------
    subroutine var_coll_grad(p, r,t,z)
       type (coll), intent(in)  :: p
-      type (coll), intent(out) :: r,t,z
+      type (coll), intent(inout) :: r,t,z
       _loop_km_vars
 
       call var_coll_copy(p,c4) ! Necesario aunque no lo parezca
@@ -421,7 +423,7 @@
 !------------------------------------------------------------------------
    subroutine var_coll_div(r,t,z, dv)
       type (coll), intent(in)  :: r,t,z
-      type (coll), intent(out) :: dv
+      type (coll), intent(inout) :: dv
       _loop_km_vars
 
       call var_coll_meshmult(1,mes_D%dr(1),r, c4) ! Funcion mejorada ya
@@ -444,7 +446,7 @@
    subroutine var_coll_shift(dt,dz,a, b)
       double precision, intent(in)  :: dt,dz
       type (coll),      intent(in)  :: a
-      type (coll),      intent(out) :: b
+      type (coll),      intent(inout) :: b
       double precision, save :: sink(-i_K1:i_K1), sinm(0:i_M1), dz_=1d8
       double precision, save :: cosk(-i_K1:i_K1), cosm(0:i_M1), dt_=1d8
       

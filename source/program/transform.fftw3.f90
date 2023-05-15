@@ -10,9 +10,11 @@
 #include "../parallel.h"
  module transform
 !*************************************************************************
+   
    use wksp
    use parameters
    use variables
+   
    implicit none
    save
 
@@ -24,11 +26,14 @@
    double complex,     private :: Xs(0:i_pZ-1, 0:i_Ma)   ! Mem = 3*512/8*3/2*128*16*72/1024**3, no preocupante, 0.038 GB
    double precision,   private :: Ys(0:i_pZ-1, 0:i_3M-1) ! Mem = 3*512/8*3*128*8*72/1024**3, no preocupante, 0.038 GB
    integer*8,          private :: plan_c2cf, plan_c2cb, plan_r2c, plan_c2r
+      integer :: nh, n,m, m_
+      double precision :: scale_
+   
 
    double complex,     allocatable :: Taux(:,:,:) !Taux(0:i_3K-1, 0:_Ms-1, i_pN) ! Mem = 3*512*128/8*72*384/9*16/1024**3, Preocupante, 1.12 GB total
    
    
-    double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN) ! Mem = 2*8*154*127*40*80/1024**3, Preocupante, 0.93 GB total
+   !  double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN) ! Mem = 2*8*154*127*40*80/1024**3, Preocupante, 0.93 GB total
   
 
  contains
@@ -41,9 +46,12 @@
       implicit none
       integer, parameter :: flag=32 !=FFTW_PATIENT see fftw3.f
       integer :: sgn, n(1), howmany, inembed(1), onembed(1)
-         
-         
+
+         ! if(.not.allocated(s1%Re))  allocate(s1%Re(0:_Hs1, i_pN))
+         ! if(.not.allocated(s1%Im))  allocate(s1%Im(0:_Hs1, i_pN))
+
          if(.not.allocated(Taux))  allocate(Taux(0:i_3K-1, 0:_Ms-1, i_pN))
+
       
       n = (/i_3K/)            
       howmany = _Ms
@@ -74,10 +82,12 @@
    subroutine tra_coll2phys(c,p, c2,p2, c3,p3)
    
       implicit none
+      
       type (coll), intent(in)  :: c,c2,c3
-      type (phys), intent(out) :: p,p2,p3
+      type (phys), intent(inout) :: p,p2,p3
 
-      call var_coll2spec(c,s1)
+      call var_coll2spec(c,s1) 
+        
       call tra_spec2phys(s1,p)
 
       call var_coll2spec(c2,s1)
@@ -85,13 +95,13 @@
 
       call var_coll2spec(c3,s1)
       call tra_spec2phys(s1,p3)
-
+      
    end subroutine tra_coll2phys
 
 
    subroutine tra_coll2phys1d(c,p)
    type (coll), intent(in)  :: C
-   type (phys), intent(out) :: p
+   type (phys), intent(inout) :: p
 
    call var_coll2spec(c,s1)
    call tra_spec2phys(s1, p)
@@ -106,8 +116,7 @@
    
       implicit none
       type (phys), intent(in)  :: p,p2,p3
-      type (coll), intent(out) :: c,c2,c3
-
+      type (coll), intent(inout) :: c,c2,c3
 
       call tra_phys2spec(p,s1)
       call var_spec2coll(s1,c)
@@ -122,10 +131,11 @@
    end subroutine tra_phys2coll
 
    subroutine tra_phys2coll1d(p,c)
-      type (coll), intent(out)  :: C
+      type (coll), intent(inout)  :: C
       type (phys), intent(in) :: p
 
       call tra_phys2spec(p,  s1)
+      
       call var_spec2coll(s1, c)
 
    end subroutine tra_phys2coll1d
@@ -134,11 +144,11 @@
 !------------------------------------------------------------------------
 !  Convert spectral to real space
 !------------------------------------------------------------------------
-   subroutine tra_spec2phys(s, p)
+   subroutine tra_spec2phys(s1, p)
 
       implicit none
-      type (spec), intent(in)  :: s
-      type (phys), intent(out) :: p
+      type (spec), intent(in)  :: s1
+      type (phys), intent(inout) :: p
 
       integer :: nh, n,m,m_
       				! for each r_n ...   
@@ -148,9 +158,9 @@
 
       do n = 1, mes_D%pN
          if(mpi_rnk/_Nr==0) then
-            X(0:i_K1,   0) = dcmplx(s%Re(0:i_K1,n),s%Im(0:i_K1,n))
+            X(0:i_K1,   0) = dcmplx(s1%Re(0:i_K1,n),s1%Im(0:i_K1,n))
             X(i_K:2*i_K,0) = 0d0
-            X(2*i_K+1:, 0) = dcmplx(s%Re(i_K1:1:-1,n),-s%Im(i_K1:1:-1,n))
+            X(2*i_K+1:, 0) = dcmplx(s1%Re(i_K1:1:-1,n),-s1%Im(i_K1:1:-1,n))
             m_ = 1
             nh = 2*i_K-1
          else
@@ -158,9 +168,9 @@
             nh = i_K1
          end if
          do m = m_, _Ms1
-            X(0:i_K1,   m) = dcmplx(s%Re(nh:nh+i_K1,n),s%Im(nh:nh+i_K1,n))
+            X(0:i_K1,   m) = dcmplx(s1%Re(nh:nh+i_K1,n),s1%Im(nh:nh+i_K1,n))
             X(i_K:2*i_K,m) = 0d0
-            X(2*i_K+1:, m) = dcmplx(s%Re(nh-i_K1:nh-1,n),s%Im(nh-i_K1:nh-1,n))
+            X(2*i_K+1:, m) = dcmplx(s1%Re(nh-i_K1:nh-1,n),s1%Im(nh-i_K1:nh-1,n))
             nh = nh + 2*i_K-1
          end do
          call dfftw_execute(plan_c2cf)
@@ -184,47 +194,78 @@
 !------------------------------------------------------------------------
 !  Convert real to spectral space
 !------------------------------------------------------------------------
-   subroutine tra_phys2spec(p, s)
+   subroutine tra_phys2spec(p, s1)
 
       implicit none
       type (phys), intent (in)  :: p
-      type (spec), intent (out) :: s
-
+      type (spec), intent (inout) :: s1 ! Había que ponerlo en inout
       integer :: nh, n,m, m_
       double precision :: scale_
+
+
+      ! if(mpi_rnk==0) write(*,*) 'master: el tamaño es ', size(s1%Re,1),  'x', size(s1%Re,2)
          			! scale, FFTW 4.7.2
       scale_ = 1d0 / dble(i_3K*i_3M)
 
-
+      
+      
       do n = 1, mes_D%pN
          Ys = scale_ * p%Re(:,:,n)
          call dfftw_execute(plan_r2c)
 
          Ts(:,:,n) = Xs(:,0:i_M1)
       end do
+      
+      
       call tra_Ts2T()
+      
+      
       do n = 1, mes_D%pN
          Y = Taux(:,:,n)
          
          call dfftw_execute(plan_c2cb)
          if(mpi_rnk/_Nr==0) then
-            s%Re(0:i_K1,n) =  dble(X(0:i_K1,0))
-            s%Im(0:i_K1,n) = dimag(X(0:i_K1,0))
+            
+            s1%Re(0:i_K1,n) =  dble(X(0:i_K1,0))
+            s1%Im(0:i_K1,n) = dimag(X(0:i_K1,0))
             m_ = 1
             nh = 2*i_K-1
+            
+            ! write(*,*) 'master: el tamaño es ', size(s1%Re,1),  'x', size(s1%Re,2)
+            
+            
          else
+            
             m_ = 0
             nh = i_K1
+            ! if (nh > size(s1%Re, 1) .or. nh > size(s1%Im, 1)) write(*,*) 'Error: nh out of bounds'
+            !  write(*,*) 'slave: el tamaño es ', size(s1%Re,1),  'x', size(s1%Re,2)
          end if
-         do m = m_, _Ms1
-            s%Re(nh:nh+i_K1,n) =  dble(X(0:i_K1,m))
-            s%Im(nh:nh+i_K1,n) = dimag(X(0:i_K1,m))
-            s%Re(nh-i_K1:nh-1,n) =  dble(X(2*i_K+1:,m))
-            s%Im(nh-i_K1:nh-1,n) = dimag(X(2*i_K+1:,m))
+
+         
+         
+         do m = m_,_Ms1
+            ! if (m==m_+1) write(*,*) 'hasta aquí' ! No llega a la segunda iteración de m, problema en nh
+            ! if (m==m_) write(*,*) 'hola'  
+
+            s1%Re(nh:nh+i_K1,n) =  dble(X(0:i_K1,m))
+            s1%Im(nh:nh+i_K1,n) = dimag(X(0:i_K1,m))
+            s1%Re(nh-i_K1:nh-1,n) =  dble(X(2*i_K+1:,m))
+            s1%Im(nh-i_K1:nh-1,n) = dimag(X(2*i_K+1:,m))
+            
+            
             nh = nh + 2*i_K-1
+
+            
+            
+
          end do
+         
+
       end do
 
+      
+         
    end subroutine tra_phys2spec
 
 

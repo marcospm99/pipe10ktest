@@ -61,7 +61,7 @@ clean :
 	rm -f *.o *.mod *.d *.il core *.out
 
 #------------------------------------------------------------------------
-type.o : $(PROGDIR)type.f90 parameters.o parallel.h
+type.o : $(PROGDIR)type.f90 mpi.o parameters.o parallel.h
 	$(COMPILER) $(COMPFLAGS) $(PROGDIR)type.f90
 
 wksp.o : $(PROGDIR)wksp.f90 type.o parallel.h

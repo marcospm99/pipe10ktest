@@ -7,26 +7,34 @@
 #include "../parallel.h"
  PROGRAM MAIN
 !*************************************************************************
+   
+   
+   
    use velocity
    use io
    use sta, only:compute_sta, initialisestd, savestats
    use parameters
+   use wksp
    implicit none
    real :: d_start, d_stop
    double precision :: steptimer = 0d0, retau
 
+   
    call h5open_f(h5err)
+
    call initialise()
 
-   
+
    do while(.not.terminate())
       
 
        if(mpi_rnk==0) steptimer=MPI_Wtime()
 
+
       call vel_imposesym()
       call vel_transform()
       call vel_nonlinear()
+      ! write(*,*) 'hasta aquí'
       call var_null(2)
       
       if(d_timestep<0d0) then
@@ -60,6 +68,8 @@
       tim_t    = tim_t    + tim_dt
       tim_step = tim_step + 1
 
+      
+
       if (mod(tim_step,s_step)==1) then
          steptimer = MPI_Wtime()-steptimer
          call io_write_friction(tim_step,tim_t,steptimer,retau)
@@ -69,13 +79,14 @@
          endif
       endif
       if (tim_step>f_step) exit
-         
 
    end do
    ! end main loop   
 
    call cleanup()
+   
    stop
+   
 
  contains
 
@@ -114,11 +125,13 @@
          end if
       end if
 
-#ifdef _MPI
+
       call mpi_bcast(terminate,1,mpi_logical, 0,mpi_comm_world,mpi_er)
-#endif
+      
 
    end function terminate
+
+
 
 
 !-------------------------------------------------------------------------
@@ -127,15 +140,27 @@
    subroutine initialise()
       logical :: file_exist
 
+      
+      
       call mpi_precompute()
+      
+      call allospec()
+
       if(mpi_rnk==0) then
          call system('touch PRECOMPUTING')
          call system('echo $HOSTNAME > HOST')
       end if
 
-      if(mpi_rnk==0)  print*, 'precomputing function requisites...'
+
+      
 
 
+      if(mpi_rnk==0) then
+       print*, 'precomputing function requisites...'
+      endif
+
+      
+      
       call par_precompute()
       call mes_precompute()
       call var_precompute()
@@ -144,10 +169,16 @@
       call vel_precompute()
       call  io_precompute()
       call  initialiseSTD()
-   
+      
+      
       if(mpi_rnk==0)  print*, 'loading state...'
+      
+      
       tim_dt = 1d99
       call io_load_state()
+
+      
+
       call vel_matrices()
       
       if(mpi_rnk==0)  print*, 'initialising output files...'
@@ -164,6 +195,8 @@
       end if
       
       call clk_time(d_start)
+
+      
    
    end subroutine initialise
 
@@ -197,7 +230,10 @@
       call mpi_barrier(mpi_comm_world, mpi_er)
       call mpi_finalize(mpi_er)
 #endif
-      if(mpi_rnk==0) print*, '...done!'
+      if(mpi_rnk==0) then
+       print*, '...done!'
+       call deallospec()
+      endif
 
    end subroutine cleanup
 

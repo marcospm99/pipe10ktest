@@ -19,6 +19,7 @@
 !  initialise velocity/pressure field
 !------------------------------------------------------------------------
    subroutine vel_precompute()
+      
       call var_coll_init(vel_ur)
       call var_coll_init(vel_ut)
       call var_coll_init(vel_uz)
@@ -53,7 +54,7 @@
 !------------------------------------------------------------------------
    subroutine vel_rt2pm(r,t, up,um)
       type (coll), intent(in)  :: r,t
-      type (coll), intent(out) :: up,um
+      type (coll), intent(inout) :: up,um
 
       _loop_km_vars
       _loop_km_begin
@@ -70,7 +71,7 @@
    subroutine vel_pm2rt(up,um, r,t)
       implicit none
       type (coll), intent(in)  :: up,um
-      type (coll), intent(out) :: r,t
+      type (coll), intent(inout) :: r,t
       double precision :: pRe(i_N),mRe(i_N),pIm(i_N),mIm(i_N)
       _loop_km_vars
       _loop_km_begin
@@ -297,9 +298,11 @@
       
       
       call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
-
+      
       call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
+      
       call tra_coll2phys(c1,p2, c2,p3, c3,p4)
+      
 
    end subroutine vel_transform
 
@@ -310,10 +313,13 @@
    subroutine vel_nonlinear()
       !type (phys) :: p1!,p2,p3
          			! advection  u x curlu
+
+      
       p1%Re = vel_t%Re*p4%Re - vel_z%Re*p3%Re
       vel_z%Re = vel_z%Re*p2%Re - vel_r%Re*p4%Re
       p4%Re = vel_r%Re*p3%Re - vel_t%Re*p2%Re
       call tra_phys2coll(p1,vel_Nr, vel_z,vel_Nt, p4,vel_Nz)
+      
       
       call vel_addHPF()
 

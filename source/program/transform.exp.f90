@@ -75,7 +75,7 @@
    use wksp, only: p4
       implicit none
       type (coll), intent(in)  :: c,c2,c3
-      type (phys), intent(out) :: p,p2,p3
+      type (phys), intent(inout) :: p,p2,p3
 
       call var_coll2spec(c,s1, c2,s2, c3,s3)
       call tra_spec2phys(s1, p, p4%Re)
@@ -87,7 +87,7 @@
 
    subroutine tra_coll2phys1d(c,p)
    type (coll), intent(in)  :: C
-   type (phys), intent(out) :: p
+   type (phys), intent(inout) :: p
 
    call var_coll2spec(c,s1)
    call tra_spec2phys(s1, p, p4%Re)
@@ -102,7 +102,7 @@
    use wksp, only: p4
       implicit none
       type (phys), intent(in)  :: p,p2,p3
-      type (coll), intent(out) :: c,c2,c3
+      type (coll), intent(inout) :: c,c2,c3
 
       call tra_phys2spec(p,  s1,p4%Re)
       call tra_phys2spec(p2, s2,p4%Re)
@@ -112,7 +112,7 @@
    end subroutine tra_phys2coll
 
    subroutine tra_phys2coll1d(p,c)
-      type (coll), intent(out)  :: C
+      type (coll), intent(inout)  :: C
       type (phys), intent(in) :: p
 
       call tra_phys2spec(p,  s1,p4%Re)
@@ -128,10 +128,10 @@
    use wksp, only: p4
       implicit none
       type (spec), intent(in)  :: s
-      type (phys), intent(out) :: p
+      type (phys), intent(inout) :: p
       double precision, intent(inout)           :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
       integer :: nh, n,m,m_
-      				! for each r_n ...   
+      	! for each r_n ...   
    
 
 
