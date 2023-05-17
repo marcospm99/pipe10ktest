@@ -53,7 +53,7 @@
 !  convert 
 !------------------------------------------------------------------------
    subroutine vel_rt2pm(r,t, up,um)
-      type (coll), intent(in)  :: r,t
+      type (coll), intent(inout)  :: r,t
       type (coll), intent(inout) :: up,um
 
       _loop_km_vars
@@ -70,7 +70,7 @@
 
    subroutine vel_pm2rt(up,um, r,t)
       implicit none
-      type (coll), intent(in)  :: up,um
+      type (coll), intent(inout)  :: up,um
       type (coll), intent(inout) :: r,t
       double precision :: pRe(i_N),mRe(i_N),pIm(i_N),mIm(i_N)
       _loop_km_vars
@@ -197,7 +197,7 @@
                call tim_lumesh_invert(0,LDz, c3)
                U(:,:,4) = c1%Re
                U(:,:,5) = c2%Re
-               U(:,:,6) = c3%Im
+               U(:,:,6) = c3%Im 
             end if
             
             call vel_evalBC(c1,c2,c3, BRe,BIm)
@@ -245,7 +245,7 @@
 
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
    subroutine vel_evalBC(up,um,uz, BRe,BIm)
-      type (coll),      intent(in)  :: up,um,uz
+      type (coll),      intent(inout)  :: up,um,uz
       double precision, intent(out) :: BRe(4,0:i_pH1), BIm(4,0:i_pH1)
       double precision :: drRe,drIm, urRe,urIm, utRe,utIm, uzRe,uzIm
       double precision :: d, s, a_, b(0:i_M*i_Mp)
@@ -285,8 +285,10 @@
 !  Evaluate in physical space  u 
 !------------------------------------------------------------------------
    subroutine vel_sta()
-      
-      call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
+      ! call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
+      call tra_coll2phys1d(vel_ur,vel_r)
+      call tra_coll2phys1d(vel_ut,vel_t)
+      call tra_coll2phys1d(vel_uz,vel_z)
    end subroutine
 
 

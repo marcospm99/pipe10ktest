@@ -178,7 +178,7 @@
    use wksp, only: p4
       implicit none
       type (phys), intent (in)  :: p
-      type (spec), intent (out) :: s
+      type (spec), intent (inout) :: s
       double precision, intent(inout)       :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
 
       integer :: nh, n,m, m_

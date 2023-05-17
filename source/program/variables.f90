@@ -109,17 +109,23 @@
    end subroutine var_coll_init
 
    subroutine var_spec_init(a)
-      type (spec), intent(out) :: a
+      type (spec), intent(inout) :: a
       a%Re = 0d0
       a%Im = 0d0
    end subroutine var_spec_init
+
+      subroutine var_phys_init(a)
+      type (phys), intent(inout) :: a
+      a%Re = 0d0
+      
+   end subroutine var_phys_init
 
 
 !-------------------------------------------------------------------------
 !  Copy a collocated variable
 !-------------------------------------------------------------------------
    subroutine var_coll_copy(in, out)
-      type (coll), intent(in)  :: in
+      type (coll), intent(inout)  :: in
       type (coll), intent(inout) :: out
       out%Re(:,0:var_H%pH1) = in%Re(:,0:var_H%pH1)
       out%Im(:,0:var_H%pH1) = in%Im(:,0:var_H%pH1)
@@ -141,7 +147,7 @@
 !     out := out - in
 !------------------------------------------------------------------------
    subroutine var_coll_sub(ac, a)
-      type (coll), intent(in)    :: ac
+      type (coll), intent(inout)    :: ac
       type (coll), intent(inout) :: a
       a%Re(:,0:var_H%pH1) = a%Re(:,0:var_H%pH1) - ac%Re(:,0:var_H%pH1)
       a%Im(:,0:var_H%pH1) = a%Im(:,0:var_H%pH1) - ac%Im(:,0:var_H%pH1)
@@ -330,12 +336,48 @@
 !  Multiply a collocated variable by a mesh-type
 !     out = A.in
 !------------------------------------------------------------------------
+   ! subroutine var_coll_meshmult(S,A,in, out)
+   !    integer,     intent(in)  :: S
+   !    type (mesh), intent(in)  :: A
+   !    type (coll), intent(inout)  :: in
+   !    type (coll), intent(inout) :: out
+      
+   !    integer :: n,j,l,r
+   !    _loop_km_vars
+
+   !    _loop_km_begin
+   !       inRe(:0) = in%Re(i_KL:1:-1,nh)
+   !       inIm(:0) = in%Im(i_KL:1:-1,nh)
+   !       if(modulo(m*i_Mp+S,2)==1) then
+   !          inRe(:0) = - inRe(:0)
+   !          inIm(:0) = - inIm(:0)
+   !       end if
+   !       inRe(1:) = in%Re(:,nh)
+   !       inIm(1:) = in%Im(:,nh)
+   !       re = 0d0
+   !       im = 0d0
+   !       do j = 1-i_KL, i_N
+   !          l = max(1,j-i_KL)
+   !          r = min(j+i_KL,i_N)
+   !          do n = l, r
+   !             re(n) = re(n) + A%M(i_KL+1+n-j,j) * inRe(j)
+   !             im(n) = im(n) + A%M(i_KL+1+n-j,j) * inIm(j)
+   !          end do
+   !       end do
+   !       out%Re(:,nh) = re
+   !       out%Im(:,nh) = im
+   !    _loop_km_end
+
+   ! end subroutine var_coll_meshmult
+
+
    subroutine var_coll_meshmult(S,A,in, out)
       integer,     intent(in)  :: S
       type (mesh), intent(in)  :: A
       type (coll), intent(in)  :: in
       type (coll), intent(inout) :: out
-      
+      double precision :: inRe(1-i_KL:i_N), inIm(1-i_KL:i_N)
+      double precision :: re(i_N), im(i_N)
       integer :: n,j,l,r
       _loop_km_vars
 
@@ -365,11 +407,14 @@
    end subroutine var_coll_meshmult
 
 
+
+
+
 !------------------------------------------------------------------------
 !  take the curl of a vector
 !------------------------------------------------------------------------
    subroutine var_coll_curl(r,t,z, or,ot,oz)
-      type (coll), intent(in)  :: r,t,z
+      type (coll), intent(inout)  :: r,t,z
       type (coll), intent(inout) :: or,ot,oz
       _loop_km_vars
  
@@ -399,7 +444,7 @@
 !  take the gradient of a scalar
 !------------------------------------------------------------------------
    subroutine var_coll_grad(p, r,t,z)
-      type (coll), intent(in)  :: p
+      type (coll), intent(inout)  :: p
       type (coll), intent(inout) :: r,t,z
       _loop_km_vars
 
@@ -422,7 +467,7 @@
 !  find the divergence of a vector
 !------------------------------------------------------------------------
    subroutine var_coll_div(r,t,z, dv)
-      type (coll), intent(in)  :: r,t,z
+      type (coll), intent(inout)  :: r,t,z
       type (coll), intent(inout) :: dv
       _loop_km_vars
 
@@ -445,7 +490,7 @@
 !------------------------------------------------------------------------
    subroutine var_coll_shift(dt,dz,a, b)
       double precision, intent(in)  :: dt,dz
-      type (coll),      intent(in)  :: a
+      type (coll),      intent(inout)  :: a
       type (coll),      intent(inout) :: b
       double precision, save :: sink(-i_K1:i_K1), sinm(0:i_M1), dz_=1d8
       double precision, save :: cosk(-i_K1:i_K1), cosm(0:i_M1), dt_=1d8

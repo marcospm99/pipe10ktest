@@ -93,18 +93,19 @@
    endif
 
 
-   call vel_sta() ! Compute vel_r
+
 
    !call staFFT() ! Compute stdv_[u,t,z]
-   call var_coll_dissp() ! Compute dissipation
+! Compute dissipation
+    ! Compute vel_r
    !call vort()
-   call pressure()
 
-   
+      call pressure(c1,c2,c3,p1,p2)
+      call var_coll_dissp(c1,c2,c3,c4)
+      call vel_sta()  
 
 
-
-
+         ! En físico
 
       
 
@@ -145,11 +146,11 @@ end subroutine compute_sta
 !------------------------------------------------------------------------
 !  Initialize pressure calculation
 !------------------------------------------------------------------------
-   subroutine p2m_lumesh_inits(PM,BC,c1,c2, A)
+   subroutine p2m_lumesh_inits(PM,BC,c11,c21, A)
       use timestep
       integer,          intent(in)  :: PM,BC
-      double precision, intent(in)  :: c1,c2
-      type (lumesh),    intent(out) :: A(0:i_pH1)
+      double precision, intent(in)  :: c11,c21
+      type (lumesh),    intent(inout) :: A(0:i_pH1)
 
       integer :: info, n,j, S
       _loop_km_vars
@@ -157,8 +158,8 @@ end subroutine compute_sta
       _loop_km_begin
          d = -mes_D%r(:,-2)*i_Mp*m*i_Mp*m - d_alpha*k*d_alpha*k
          if(PM/=0) d = d - mes_D%r(:,-2) - 2d0*PM*i_Mp*m*mes_D%r(:,-2)
-         A(nh)%M(i_KL+1:, :) = c2 * mes_D%radLap%M(:,1:)
-         A(nh)%M(2*i_KL+1,:) = A(nh)%M(2*i_KL+1,:) + c2*d + c1
+         A(nh)%M(i_KL+1:, :) = c21 * mes_D%radLap%M(:,1:)
+         A(nh)%M(2*i_KL+1,:) = A(nh)%M(2*i_KL+1,:) + c21*d + c11
 
          ! assume symmetry on axis: S==-1 mode odd,  S==1 mode even
          S = modulo(m*i_Mp+abs(PM),2)
@@ -166,7 +167,7 @@ end subroutine compute_sta
          do j = 1, i_KL
             do n = 1, i_KL+1-j
                A(nh)%M(2*i_KL+1+n-j, j) = A(nh)%M(2*i_KL+1+n-j, j)  &
-                  + c2 * S * mes_D%radLap%M(i_KL+1+n-(1-j), (1-j))
+                  + c21 * S * mes_D%radLap%M(i_KL+1+n-(1-j), (1-j))
             end do
          end do
                                         ! boundary condition
@@ -190,14 +191,18 @@ end subroutine compute_sta
 ! !      Results: 
 ! !      
 ! !------------------------------------------------------------------------
-subroutine pressure()
+subroutine pressure(c1,c2,c3,p1,p2)
 implicit none
 _loop_km_vars
 integer:: n, n_
 double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
+type (colla), intent(inout)    :: c1,c2,c3
+type (phys), intent(inout)    :: p1,p2
 
 ! Necesitamos: 3 colls, 2 phys
 ! Primer cambio
+
+
 
          call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
          call var_coll_curl(c1,c2,c3, c1,c2,c3)
@@ -298,7 +303,7 @@ double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
             c1%Im(i_N,nh) = BCI(nh)
          _loop_km_end
 
-         !call tim_zerobc(c1)
+         ! call tim_zerobc(c1)
          call p2m_lumesh_inits( 0,1,0d0,1d0, LNp)
          call tim_lumesh_invert(0,LNp, c1)
          call tra_coll2phys1d(c1,p2) !pressure field
@@ -321,8 +326,9 @@ end subroutine pressure
 ! !      Dissipation, % optimization pending
 ! !      Rest of the derivatives: budgets in postproc
 ! !------------------------------------------------------------------------
- subroutine var_coll_dissp()
+ subroutine var_coll_dissp(c1,c2,c3,c4)
     implicit none
+   type(coll), intent(inout)  :: c1,c2,c3,c4
 
        double precision :: factor
        integer :: n
@@ -332,17 +338,29 @@ end subroutine pressure
        !!! Empezamos para uz !!!
 
 
-       call var_coll_copy(vel_uz,c1)
-       call var_coll_meshmult(0,mes_D%dr(1),c1, c2) 
+      !  call var_coll_copy(vel_uz,c1)
+      !  call var_coll_meshmult(0,mes_D%dr(1),c1, c2) 
+
+      !  _loop_km_begin
+
+      !  c3%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
+      !  c3%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+
+      !  c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)
+      !  c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       call var_coll_meshmult(0,mes_D%dr(1),vel_uz, c2) 
 
        _loop_km_begin
 
-       c3%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-       c3%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+       c3%Im(:,nh) = -vel_uz%Im(:,nh)*ad_k1a1(k)
+       c3%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)
 
-       c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)
-       c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)
-     
+       c1%Im(:,nh) = -vel_uz%Im(:,nh)*ad_m1r1(:,m)
+       c1%Re(:,nh) =  vel_uz%Re(:,nh)*ad_m1r1(:,m)
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
        factor = 2d0
        if (m==0) factor = 1d0
 
@@ -356,17 +374,16 @@ end subroutine pressure
 
 !       ! Lo mismo para theta
 
-      call var_coll_copy(vel_ut,c1)
-      call var_coll_copy(vel_ur,c3)
-      call var_coll_meshmult(1,mes_D%dr(1),c1, c2) 
+
+      call var_coll_meshmult(1,mes_D%dr(1),vel_ut, c2) 
 
       _loop_km_begin
 
-      c4%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-      c4%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+      c4%Re(:,nh) = -vel_ut%Im(:,nh)*ad_k1a1(k)
+      c4%Im(:,nh) =  vel_ut%Re(:,nh)*ad_k1a1(k)
 
-      c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) + c3%Re(:,nh)*mes_D%r(:,-1) !+
-      c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) + c3%Im(:,nh)*mes_D%r(:,-1) !+
+      c1%Im(:,nh) = -vel_ut%Im(:,nh)*ad_m1r1(:,m) + vel_ur%Re(:,nh)*mes_D%r(:,-1) !+
+      c1%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m) + vel_ur%Im(:,nh)*mes_D%r(:,-1) !+
 
       factor = 2d0
       if (m==0) factor = 1d0
@@ -380,17 +397,16 @@ end subroutine pressure
       
       ! Lo mismo para r
 
-      call var_coll_copy(vel_ur,c1)
-      call var_coll_copy(vel_ut,c3)
-      call var_coll_meshmult(1,mes_D%dr(1),c1, c2)
+
+      call var_coll_meshmult(1,mes_D%dr(1),vel_ur, c2)
 
       _loop_km_begin
 
-      c4%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-      c4%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+      c4%Im(:,nh) = -vel_ur%Im(:,nh)*ad_k1a1(k)
+      c4%Re(:,nh) =  vel_ur%Re(:,nh)*ad_k1a1(k)
 
-      c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m) - c3%Re(:,nh)*mes_D%r(:,-1) !-
-      c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m) - c3%Im(:,nh)*mes_D%r(:,-1) !-
+      c1%Im(:,nh) = -vel_ur%Im(:,nh)*ad_m1r1(:,m) - vel_ut%Re(:,nh)*mes_D%r(:,-1) !-
+      c1%Re(:,nh) =  vel_ur%Re(:,nh)*ad_m1r1(:,m) - vel_ut%Im(:,nh)*mes_D%r(:,-1) !-
 
 
       factor = 2d0

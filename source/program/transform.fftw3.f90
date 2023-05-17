@@ -83,12 +83,12 @@
    
       implicit none
       
-      type (coll), intent(in)  :: c,c2,c3
-      type (phys), intent(inout) :: p,p2,p3
+      type (coll), intent(inout)  :: c1,c2,c3
+      type (phys), intent(inout) :: p1,p2,p3
 
-      call var_coll2spec(c,s1) 
-        
-      call tra_spec2phys(s1,p)
+      call var_coll2spec(c1,s1) 
+
+      call tra_spec2phys(s1,p1)
 
       call var_coll2spec(c2,s1)
       call tra_spec2phys(s1,p2)
@@ -100,11 +100,11 @@
 
 
    subroutine tra_coll2phys1d(c,p)
-   type (coll), intent(in)  :: C
+   type (coll), intent(inout)  :: c
    type (phys), intent(inout) :: p
 
    call var_coll2spec(c,s1)
-   call tra_spec2phys(s1, p)
+   call tra_spec2phys(s1,p)
 
    end subroutine tra_coll2phys1d
 
@@ -144,10 +144,10 @@
 !------------------------------------------------------------------------
 !  Convert spectral to real space
 !------------------------------------------------------------------------
-   subroutine tra_spec2phys(s1, p)
+   subroutine tra_spec2phys(s, p)
 
       implicit none
-      type (spec), intent(in)  :: s1
+      type (spec), intent(in)  :: s
       type (phys), intent(inout) :: p
 
       integer :: nh, n,m,m_
@@ -158,9 +158,9 @@
 
       do n = 1, mes_D%pN
          if(mpi_rnk/_Nr==0) then
-            X(0:i_K1,   0) = dcmplx(s1%Re(0:i_K1,n),s1%Im(0:i_K1,n))
+            X(0:i_K1,   0) = dcmplx(s%Re(0:i_K1,n),s%Im(0:i_K1,n))
             X(i_K:2*i_K,0) = 0d0
-            X(2*i_K+1:, 0) = dcmplx(s1%Re(i_K1:1:-1,n),-s1%Im(i_K1:1:-1,n))
+            X(2*i_K+1:, 0) = dcmplx(s%Re(i_K1:1:-1,n),-s%Im(i_K1:1:-1,n))
             m_ = 1
             nh = 2*i_K-1
          else
@@ -168,9 +168,9 @@
             nh = i_K1
          end if
          do m = m_, _Ms1
-            X(0:i_K1,   m) = dcmplx(s1%Re(nh:nh+i_K1,n),s1%Im(nh:nh+i_K1,n))
+            X(0:i_K1,   m) = dcmplx(s%Re(nh:nh+i_K1,n),s%Im(nh:nh+i_K1,n))
             X(i_K:2*i_K,m) = 0d0
-            X(2*i_K+1:, m) = dcmplx(s1%Re(nh-i_K1:nh-1,n),s1%Im(nh-i_K1:nh-1,n))
+            X(2*i_K+1:, m) = dcmplx(s%Re(nh-i_K1:nh-1,n),s%Im(nh-i_K1:nh-1,n))
             nh = nh + 2*i_K-1
          end do
          call dfftw_execute(plan_c2cf)
@@ -194,11 +194,11 @@
 !------------------------------------------------------------------------
 !  Convert real to spectral space
 !------------------------------------------------------------------------
-   subroutine tra_phys2spec(p, s1)
+   subroutine tra_phys2spec(p, s)
 
       implicit none
       type (phys), intent (in)  :: p
-      type (spec), intent (inout) :: s1 ! Había que ponerlo en inout
+      type (spec), intent (inout) :: s ! Había que ponerlo en inout
       integer :: nh, n,m, m_
       double precision :: scale_
 
@@ -226,8 +226,8 @@
          call dfftw_execute(plan_c2cb)
          if(mpi_rnk/_Nr==0) then
             
-            s1%Re(0:i_K1,n) =  dble(X(0:i_K1,0))
-            s1%Im(0:i_K1,n) = dimag(X(0:i_K1,0))
+            s%Re(0:i_K1,n) =  dble(X(0:i_K1,0))
+            s%Im(0:i_K1,n) = dimag(X(0:i_K1,0))
             m_ = 1
             nh = 2*i_K-1
             
@@ -248,10 +248,10 @@
             ! if (m==m_+1) write(*,*) 'hasta aquí' ! No llega a la segunda iteración de m, problema en nh
             ! if (m==m_) write(*,*) 'hola'  
 
-            s1%Re(nh:nh+i_K1,n) =  dble(X(0:i_K1,m))
-            s1%Im(nh:nh+i_K1,n) = dimag(X(0:i_K1,m))
-            s1%Re(nh-i_K1:nh-1,n) =  dble(X(2*i_K+1:,m))
-            s1%Im(nh-i_K1:nh-1,n) = dimag(X(2*i_K+1:,m))
+            s%Re(nh:nh+i_K1,n) =  dble(X(0:i_K1,m))
+            s%Im(nh:nh+i_K1,n) = dimag(X(0:i_K1,m))
+            s%Re(nh-i_K1:nh-1,n) =  dble(X(2*i_K+1:,m))
+            s%Im(nh-i_K1:nh-1,n) = dimag(X(2*i_K+1:,m))
             
             
             nh = nh + 2*i_K-1

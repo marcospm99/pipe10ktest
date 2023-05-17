@@ -47,7 +47,7 @@
    subroutine tim_mesh_init(PM,c1,c2, A)
       integer,          intent(in)  :: PM
       double precision, intent(in)  :: c1,c2
-      type (mesh),      intent(out) :: A(0:i_pH1)
+      type (mesh),      intent(inout) :: A(0:i_pH1)
       
       _loop_km_vars
       
@@ -68,7 +68,7 @@
    subroutine tim_lumesh_init(PM,BC,c1,c2, A)
       integer,          intent(in)  :: PM,BC
       double precision, intent(in)  :: c1,c2
-      type (lumesh),    intent(out) :: A(0:i_pH1)
+      type (lumesh),    intent(inout) :: A(0:i_pH1)
       
       integer :: info, n,j, S
       _loop_km_vars
@@ -132,32 +132,67 @@
 !  multiply  d = A b + c
 !  S=0, b even for m even; S=1, b odd for m even
 !------------------------------------------------------------------------
+   ! subroutine tim_meshmult(S,A,b,c, d)
+   !    integer,     intent(in)  :: S
+   !    type (coll), intent(inout)  :: b,c
+   !    type (mesh), intent(inout)  :: A(0:i_pH1)
+   !    type (coll), intent(inout) :: d
+      
+   !    integer :: j,nl,nr,n
+   !    _loop_km_vars
+
+   !    _loop_km_begin
+   !       inRe(:0) = b%Re(i_KL:1:-1,nh)
+   !       inIm(:0) = b%Im(i_KL:1:-1,nh)
+   !       if(modulo(m*i_Mp+S,2)==1) then
+   !          inRe(:0) = - inRe(:0)
+   !          inIm(:0) = - inIm(:0)
+   !       end if
+   !       inRe(1:) = b%Re(:,nh)
+   !       inIm(1:) = b%Im(:,nh)
+   !       re = c%Re(:,nh)
+   !       im = c%Im(:,nh)
+   !       do j = 1-i_KL, i_N
+   !          nl = max(1,j-i_KL)
+   !          nr = min(j+i_KL,i_N)
+   !          do n = nl, nr
+   !             re(n) = re(n) + A(nh)%M(i_KL+1+n-j,j) * inRe(j)
+   !             im(n) = im(n) + A(nh)%M(i_KL+1+n-j,j) * inIm(j)
+   !          end do
+   !       end do
+   !       d%Re(:,nh) = re
+   !       d%Im(:,nh) = im
+   !    _loop_km_end
+ 
+   ! end subroutine tim_meshmult
+
    subroutine tim_meshmult(S,A,b,c, d)
       integer,     intent(in)  :: S
-      type (coll), intent(in)  :: b,c
-      type (mesh), intent(in)  :: A(0:i_pH1)
+      type (coll), intent(inout)  :: b,c
+      type (mesh), intent(inout)  :: A(0:i_pH1)
       type (coll), intent(inout) :: d
-      
+      double precision :: bRe(1-i_KL:i_N), bIm(1-i_KL:i_N)
+      double precision :: re(i_N), im(i_N)
       integer :: j,nl,nr,n
       _loop_km_vars
 
       _loop_km_begin
-         inRe(:0) = b%Re(i_KL:1:-1,nh)
-         inIm(:0) = b%Im(i_KL:1:-1,nh)
+         bRe(:0) = b%Re(i_KL:1:-1,nh)
+         bIm(:0) = b%Im(i_KL:1:-1,nh)
          if(modulo(m*i_Mp+S,2)==1) then
-            inRe(:0) = - inRe(:0)
-            inIm(:0) = - inIm(:0)
+            bRe(:0) = - bRe(:0)
+            bIm(:0) = - bIm(:0)
          end if
-         inRe(1:) = b%Re(:,nh)
-         inIm(1:) = b%Im(:,nh)
+         bRe(1:) = b%Re(:,nh)
+         bIm(1:) = b%Im(:,nh)
          re = c%Re(:,nh)
          im = c%Im(:,nh)
          do j = 1-i_KL, i_N
             nl = max(1,j-i_KL)
             nr = min(j+i_KL,i_N)
             do n = nl, nr
-               re(n) = re(n) + A(nh)%M(i_KL+1+n-j,j) * inRe(j)
-               im(n) = im(n) + A(nh)%M(i_KL+1+n-j,j) * inIm(j)
+               re(n) = re(n) + A(nh)%M(i_KL+1+n-j,j) * bRe(j)
+               im(n) = im(n) + A(nh)%M(i_KL+1+n-j,j) * bIm(j)
             end do
          end do
          d%Re(:,nh) = re
@@ -174,8 +209,8 @@
       type (coll), intent(inout) :: a
       integer :: n
       do n = 0, var_H%pH1
-         a%Re(i_N, n ) = 0d0
-         a%Im(i_N, n ) = 0d0
+         a%Re(i_N, n) = 0d0
+         a%Im(i_N, n) = 0d0
       end do
    end subroutine tim_zerobc
 

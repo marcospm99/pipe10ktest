@@ -21,6 +21,7 @@
 
    
    call h5open_f(h5err)
+   
 
    call initialise()
 
@@ -227,12 +228,13 @@
       end if      
 
 #ifdef _MPI
+      call deallospec()
       call mpi_barrier(mpi_comm_world, mpi_er)
       call mpi_finalize(mpi_er)
 #endif
       if(mpi_rnk==0) then
        print*, '...done!'
-       call deallospec()
+       
       endif
 
    end subroutine cleanup
