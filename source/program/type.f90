@@ -34,10 +34,10 @@
       double precision, allocatable, dimension(:,:)    :: Im
    end type coll
 
-   type colla
-      double precision    :: Re(i_N, 0:i_pH1)
-      double precision    :: Im(i_N, 0:i_pH1)
-   end type colla
+   ! type colla
+   !    double precision    :: Re(i_N, 0:i_pH1)
+   !    double precision    :: Im(i_N, 0:i_pH1)
+   ! end type colla
 
    ! type colla
       ! double precision, allocatable, dimension(:,:)    :: Re
