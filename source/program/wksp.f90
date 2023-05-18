@@ -7,7 +7,9 @@ implicit none
 ! save
    
 
-   double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN) 
+   double complex, allocatable, dimension(:,:,:) :: Ts
+   ! double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN) 
+   
 
 ! Velocity
 
@@ -44,9 +46,13 @@ implicit none
 
       ! Usar estas, que son más grandes
 
-       double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-       double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+       double precision, allocatable, dimension(:,:) :: bsend
+       double precision, allocatable, dimension(:,:) :: brecv
+
+      ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
     
+
        type (spec)      :: s1 !-> 2.3 GB each one
 
 
@@ -69,16 +75,23 @@ implicit none
    implicit none
    integer :: dimension, ii
 
+   ! chunks
+
+      allocate(Ts(0:i_pZ-1, 0:i_M1, i_pN)) 
+      allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+
+
    ! spec
       if(.not.allocated(s1%Re))   allocate(s1%Re(0:_Hs1, i_pN))
       if(.not.allocated(s1%Im))   allocate(s1%Im(0:_Hs1, i_pN))
 
 
    ! ! phys
-      if(.not.allocated(p1%Re))   allocate(p1%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
-      if(.not.allocated(p2%Re))   allocate(p2%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
-      if(.not.allocated(p3%Re))   allocate(p3%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
-      if(.not.allocated(p4%Re))   allocate(p4%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
+      if(.not.allocated(p1%Re))      allocate(p1%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
+      if(.not.allocated(p2%Re))      allocate(p2%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
+      if(.not.allocated(p3%Re))      allocate(p3%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
+      if(.not.allocated(p4%Re))      allocate(p4%Re   (0:i_pZ-1, 0:i_Th-1, i_pN))
       if(.not.allocated(vel_r%Re))   allocate(vel_r%Re(0:i_pZ-1, 0:i_Th-1, i_pN))
       if(.not.allocated(vel_t%Re))   allocate(vel_t%Re(0:i_pZ-1, 0:i_Th-1, i_pN))
       if(.not.allocated(vel_z%Re))   allocate(vel_z%Re(0:i_pZ-1, 0:i_Th-1, i_pN))
@@ -93,6 +106,7 @@ implicit none
 ! if(.not.allocated(c3%Im))       allocate(c3%Im(i_N, 0:i_pH1))
 ! if(.not.allocated(c4%Re))       allocate(c4%Re(i_N, 0:i_pH1))
 ! if(.not.allocated(c4%Im))       allocate(c4%Im(i_N, 0:i_pH1))
+
 ! if(.not.allocated(Nr_%Re))      allocate(Nr_%Re(i_N, 0:i_pH1))
 ! if(.not.allocated(Nr_%Im))      allocate(Nr_%Im(i_N, 0:i_pH1))
 ! if(.not.allocated(Nt_%Re))      allocate(Nt_%Re(i_N, 0:i_pH1))
@@ -199,6 +213,10 @@ enddo
    implicit none
    integer :: ii
 
+   ! memory chunks
+      deallocate(Ts) 
+      deallocate(bsend)
+      deallocate(brecv) 
    ! spec
    deallocate(s1%Re,s1%Im)
 
@@ -211,6 +229,7 @@ enddo
 
 
    ! ! phys
+
    deallocate(p1%Re,p2%Re,p3%Re,p4%Re,vel_r%Re,vel_t%Re,vel_z%Re)
 
    !lumesh y mesh

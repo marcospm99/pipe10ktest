@@ -79,7 +79,7 @@
 !-------------------------------------------------------------------------
 !  convert collocated -> physical space
 !-------------------------------------------------------------------------
-   subroutine tra_coll2phys(c,p, c2,p2, c3,p3)
+   subroutine tra_coll2phys(c1,p1, c2,p2, c3,p3)
    
       implicit none
       

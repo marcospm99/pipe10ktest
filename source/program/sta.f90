@@ -196,7 +196,7 @@ implicit none
 _loop_km_vars
 integer:: n, n_
 double precision :: BCR(0:i_pH1), BCI(0:i_pH1)
-type (colla), intent(inout)    :: c1,c2,c3
+type (coll), intent(inout)    :: c1,c2,c3
 type (phys), intent(inout)    :: p1,p2
 
 ! Necesitamos: 3 colls, 2 phys
