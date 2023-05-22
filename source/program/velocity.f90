@@ -156,6 +156,7 @@
       integer, intent(in) :: F
       double precision, save :: A(4,4,0:i_pH1), aR(4),aI(4)    ! Mem = 4*4*1819*8*72/1024**3
       double precision, allocatable, save :: U(:,:,:) !i_N,0:i_pH1,6   ! Mem = 384*6*1819*8*72/1024**3 ---> 2.25 GB 
+      ! double precision, allocatable, save :: P(:,:)   !i_N,0:i_pH1
       double precision :: BRe(4,0:i_pH1),BIm(4,0:i_pH1)                 ! Mem = 2*4*1819*8*72/1024**3
       integer :: j
       _loop_km_vars
@@ -166,7 +167,7 @@
       
       if(F==0) then                             ! precompute, get U
           if(.not.allocated(U))  &
-            allocate( U(i_N,0:i_pH1,6))!, P(i_N,0:i_pH1) )
+            allocate( U(i_N,0:i_pH1,6))!, P(i_N,0:i_pH1)) 
          do j = 1, 4
             call var_coll_init(c1)
             call var_coll_init(c2)
@@ -186,7 +187,7 @@
             else
                c1%Re(i_N,:) = -1d0
                call tim_lumesh_invert(1,LNp, c1)
-               !P(:,:) = -c1%Re
+               ! P(:,:) = -c1%Re
                call var_coll_grad(c1, c1,c2,c3)
                call vel_rt2pm(c1,c2, c1,c2)
                call tim_zerobc(c1)
@@ -239,7 +240,35 @@
             vel_uz%Re(:,nh) = vel_uz%Re(:,nh) - aI(4)*U(:,nh,6)
             vel_uz%Im(:,nh) = vel_uz%Im(:,nh) + aR(4)*U(:,nh,6)
          _loop_km_end
+         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			! To get pressure field, *after* first time step:
+			! call vel_adjPPE(3).  Result in type(phys)::vel_p.
+      ! else if(F==3) then
+      !    if(tim_step==0) stop 'vel_adjPPE err1' ! err: data not available'
+         
+      !    c4%Re = 0d0
+      !    c4%Im = 0d0
+
+      !    _loop_km_begin
+      !       if(k==0 .and. m==0) cycle
+      !       c4%Re(:,nh) = c4%Re(:,nh) + aR(4)*P(:,nh)
+      !       c4%Im(:,nh) = c4%Im(:,nh) + aI(4)*P(:,nh)
+      !    _loop_km_end
+      !    call tra_coll2phys1d(c4, p2)
+      !    call vel_sta()
+      !    p2%Re = p2%Re - 0.5d0*  &
+      !       (vel_r%Re*vel_r%Re + vel_t%Re*vel_t%Re + vel_z%Re*vel_z%Re)
       end if
+
+
+
+
+
+
+
+
+         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! end if
          
    end subroutine vel_adjPPE
 

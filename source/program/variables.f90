@@ -127,8 +127,12 @@
    subroutine var_coll_copy(in, out)
       type (coll), intent(inout)  :: in
       type (coll), intent(inout) :: out
-      out%Re(:,0:var_H%pH1) = in%Re(:,0:var_H%pH1)
-      out%Im(:,0:var_H%pH1) = in%Im(:,0:var_H%pH1)
+      ! out%Re(:,0:var_H%pH1) = in%Re(:,0:var_H%pH1)
+      ! out%Im(:,0:var_H%pH1) = in%Im(:,0:var_H%pH1)
+
+      out%Re = in%Re
+      out%Im = in%Im  
+
    end subroutine var_coll_copy
 
 
@@ -185,6 +189,9 @@
       type (spec), intent(inout) :: s1
       
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
+
+      ! allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      ! allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
 
       nc = 1
       
@@ -264,6 +271,9 @@
 
 
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
+
+      ! allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      ! allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
 
       ns = 1
 
@@ -542,9 +552,12 @@
  subroutine var_imposesym(i, r,t,z)   
    integer,    intent(in)    :: i
    type(coll), intent(inout) :: r,t,z
-   double precision :: a, b, bsend(i_N,6)
+   double precision :: a, b
    integer :: nh_,p1,p2
    _loop_km_vars
+
+   double precision :: bsend(i_N,6) 
+   ! allocate(bsend(i_N,6))
 
    if(i==1 .or. i==2) then
       do m = 0, i_M1

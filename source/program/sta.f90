@@ -99,9 +99,14 @@
 ! Compute dissipation
     ! Compute vel_r
    !call vort()
-      call vel_sta()  
+
+      call vel_sta()
+      ! call vel_adjPPE(3)
+
       call pressure(c1,c2,c3,p1,p2)
+
       call var_coll_dissp(c1,c2,c3,c4)
+      !  call pressure(c1,c2,c3,p1,p2)
       ! call vel_sta()  
 
 
@@ -120,6 +125,7 @@
       stdv_rz(n_) = stdv_rz(n_) + sum(vel_z%Re(:,:,n)*vel_r%Re(:,:,n))
       stdv_rt(n_) = stdv_rz(n_) + sum(vel_r%Re(:,:,n)*vel_t%Re(:,:,n))
       stdv_tz(n_) = stdv_rz(n_) + sum(vel_t%Re(:,:,n)*vel_z%Re(:,:,n))
+
 
    !    do kk =  0,i_Th-1
    !       do jj =  0,i_pZ-1
@@ -206,10 +212,12 @@ type (phys), intent(inout)    :: p1,p2
 
          call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
          call var_coll_curl(c1,c2,c3, c1,c2,c3)
+         
          _loop_km_begin
            BCR(nh) = - c1%Re(i_N,nh)/d_Re
            BCI(nh) = - c1%Im(i_N,nh)/d_Re
          _loop_km_end
+
          ! r equation 
          !durdr
          call var_coll_meshmult(1,mes_D%dr(1),vel_ur,c1)
@@ -235,6 +243,7 @@ type (phys), intent(inout)    :: p1,p2
             n_ = mes_D%pNi + n - 1
    	    p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)	
          end do
+
          call tra_phys2coll1d(p2,c1)
 
          ! theta equation
@@ -290,6 +299,7 @@ type (phys), intent(inout)    :: p1,p2
             p2%Re(:,:,n)=p2%Re(:,:,n)+p1%Re(:,:,n)*vel_U(n_)+vel_r%Re(:,:,n)*vel_Up(n_)	
          end do
          call tra_phys2coll1d(p2,c3)
+
 
          _loop_km_begin
             BCR(nh) = BCR(nh) - c1%Re(i_N,nh)

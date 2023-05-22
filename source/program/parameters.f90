@@ -45,8 +45,8 @@
    double precision, parameter :: d_minE3d      = 1d-5
    
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-   integer,          parameter :: i_save_rate1  = 1000
-   integer,          parameter :: i_save_rate2  = 1000
+   integer,          parameter :: i_save_rate1  = 3
+   integer,          parameter :: i_save_rate2  = 3
    integer,          parameter :: i_maxtstep    = -1 
    integer,          parameter :: s_step        = 2 ! interval to take statistics. 
    integer,          parameter :: f_step        = 1d8 ! Steps

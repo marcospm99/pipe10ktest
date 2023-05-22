@@ -46,11 +46,11 @@ implicit none
 
       ! Usar estas, que son más grandes
 
-       double precision, allocatable, dimension(:,:) :: bsend
-       double precision, allocatable, dimension(:,:) :: brecv
+      !  double precision, allocatable, dimension(:,:) :: bsend
+      !  double precision, allocatable, dimension(:,:) :: brecv
 
-      ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-      ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
     
 
        type (spec)      :: s1 !-> 2.3 GB each one
@@ -78,8 +78,8 @@ implicit none
    ! chunks
 
       allocate(Ts(0:i_pZ-1, 0:i_M1, i_pN)) 
-      allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
-      allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      ! allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      ! allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
 
 
    ! spec
@@ -98,39 +98,39 @@ implicit none
 
    ! colls 
 
-! if(.not.allocated(c1%Re))       allocate(c1%Re(i_N, 0:i_pH1))
-! if(.not.allocated(c1%Im))       allocate(c1%Im(i_N, 0:i_pH1))
-! if(.not.allocated(c2%Re))       allocate(c2%Re(i_N, 0:i_pH1))
-! if(.not.allocated(c2%Im))       allocate(c2%Im(i_N, 0:i_pH1))
-! if(.not.allocated(c3%Re))       allocate(c3%Re(i_N, 0:i_pH1))
-! if(.not.allocated(c3%Im))       allocate(c3%Im(i_N, 0:i_pH1))
-! if(.not.allocated(c4%Re))       allocate(c4%Re(i_N, 0:i_pH1))
-! if(.not.allocated(c4%Im))       allocate(c4%Im(i_N, 0:i_pH1))
+if(.not.allocated(c1%Re))       allocate(c1%Re(i_N, 0:i_pH1))
+if(.not.allocated(c1%Im))       allocate(c1%Im(i_N, 0:i_pH1))
+if(.not.allocated(c2%Re))       allocate(c2%Re(i_N, 0:i_pH1))
+if(.not.allocated(c2%Im))       allocate(c2%Im(i_N, 0:i_pH1))
+if(.not.allocated(c3%Re))       allocate(c3%Re(i_N, 0:i_pH1))
+if(.not.allocated(c3%Im))       allocate(c3%Im(i_N, 0:i_pH1))
+if(.not.allocated(c4%Re))       allocate(c4%Re(i_N, 0:i_pH1))
+if(.not.allocated(c4%Im))       allocate(c4%Im(i_N, 0:i_pH1))
 
-! if(.not.allocated(Nr_%Re))      allocate(Nr_%Re(i_N, 0:i_pH1))
-! if(.not.allocated(Nr_%Im))      allocate(Nr_%Im(i_N, 0:i_pH1))
-! if(.not.allocated(Nt_%Re))      allocate(Nt_%Re(i_N, 0:i_pH1))
-! if(.not.allocated(Nt_%Im))      allocate(Nt_%Im(i_N, 0:i_pH1))
-! if(.not.allocated(Nz_%Re))      allocate(Nz_%Re(i_N, 0:i_pH1))
-! if(.not.allocated(Nz_%Im))      allocate(Nz_%Im(i_N, 0:i_pH1))
-! if(.not.allocated(ur_%Re))      allocate(ur_%Re(i_N, 0:i_pH1))
-! if(.not.allocated(ur_%Im))      allocate(ur_%Im(i_N, 0:i_pH1))
-! if(.not.allocated(ut_%Re))      allocate(ut_%Re(i_N, 0:i_pH1))
-! if(.not.allocated(ut_%Im))      allocate(ut_%Im(i_N, 0:i_pH1))
-! if(.not.allocated(uz_%Re))      allocate(uz_%Re(i_N, 0:i_pH1))
-! if(.not.allocated(uz_%Im))      allocate(uz_%Im(i_N, 0:i_pH1))
-! if(.not.allocated(vel_Nr%Re))   allocate(vel_Nr%Re(i_N, 0:i_pH1))
-! if(.not.allocated(vel_Nr%Im))   allocate(vel_Nr%Im(i_N, 0:i_pH1))
-! if(.not.allocated(vel_Nt%Re))   allocate(vel_Nt%Re(i_N, 0:i_pH1))
-! if(.not.allocated(vel_Nt%Im))   allocate(vel_Nt%Im(i_N, 0:i_pH1))
-! if(.not.allocated(vel_Nz%Re))   allocate(vel_Nz%Re(i_N, 0:i_pH1))
-! if(.not.allocated(vel_Nz%Im))   allocate(vel_Nz%Im(i_N, 0:i_pH1))
-! if(.not.allocated(vel_ur%Re))   allocate(vel_ur%Re(i_N, 0:i_pH1))
-! if(.not.allocated(vel_ur%Im))   allocate(vel_ur%Im(i_N, 0:i_pH1))
-! if(.not.allocated(vel_ut%Re))   allocate(vel_ut%Re(i_N, 0:i_pH1))
-! if(.not.allocated(vel_ut%Im))   allocate(vel_ut%Im(i_N, 0:i_pH1))
-! if(.not.allocated(vel_uz%Re))   allocate(vel_uz%Re(i_N, 0:i_pH1))
-! if(.not.allocated(vel_uz%Im))   allocate(vel_uz%Im(i_N, 0:i_pH1))
+if(.not.allocated(Nr_%Re))      allocate(Nr_%Re(i_N, 0:i_pH1))
+if(.not.allocated(Nr_%Im))      allocate(Nr_%Im(i_N, 0:i_pH1))
+if(.not.allocated(Nt_%Re))      allocate(Nt_%Re(i_N, 0:i_pH1))
+if(.not.allocated(Nt_%Im))      allocate(Nt_%Im(i_N, 0:i_pH1))
+if(.not.allocated(Nz_%Re))      allocate(Nz_%Re(i_N, 0:i_pH1))
+if(.not.allocated(Nz_%Im))      allocate(Nz_%Im(i_N, 0:i_pH1))
+if(.not.allocated(ur_%Re))      allocate(ur_%Re(i_N, 0:i_pH1))
+if(.not.allocated(ur_%Im))      allocate(ur_%Im(i_N, 0:i_pH1))
+if(.not.allocated(ut_%Re))      allocate(ut_%Re(i_N, 0:i_pH1))
+if(.not.allocated(ut_%Im))      allocate(ut_%Im(i_N, 0:i_pH1))
+if(.not.allocated(uz_%Re))      allocate(uz_%Re(i_N, 0:i_pH1))
+if(.not.allocated(uz_%Im))      allocate(uz_%Im(i_N, 0:i_pH1))
+if(.not.allocated(vel_Nr%Re))   allocate(vel_Nr%Re(i_N, 0:i_pH1))
+if(.not.allocated(vel_Nr%Im))   allocate(vel_Nr%Im(i_N, 0:i_pH1))
+if(.not.allocated(vel_Nt%Re))   allocate(vel_Nt%Re(i_N, 0:i_pH1))
+if(.not.allocated(vel_Nt%Im))   allocate(vel_Nt%Im(i_N, 0:i_pH1))
+if(.not.allocated(vel_Nz%Re))   allocate(vel_Nz%Re(i_N, 0:i_pH1))
+if(.not.allocated(vel_Nz%Im))   allocate(vel_Nz%Im(i_N, 0:i_pH1))
+if(.not.allocated(vel_ur%Re))   allocate(vel_ur%Re(i_N, 0:i_pH1))
+if(.not.allocated(vel_ur%Im))   allocate(vel_ur%Im(i_N, 0:i_pH1))
+if(.not.allocated(vel_ut%Re))   allocate(vel_ut%Re(i_N, 0:i_pH1))
+if(.not.allocated(vel_ut%Im))   allocate(vel_ut%Im(i_N, 0:i_pH1))
+if(.not.allocated(vel_uz%Re))   allocate(vel_uz%Re(i_N, 0:i_pH1))
+if(.not.allocated(vel_uz%Im))   allocate(vel_uz%Im(i_N, 0:i_pH1))
 
    !  c1%Re(:,:)=0d0
    !  c1%Im(:,:)=0d0
@@ -215,17 +215,17 @@ enddo
 
    ! memory chunks
       deallocate(Ts) 
-      deallocate(bsend)
-      deallocate(brecv) 
+      ! deallocate(bsend)
+      ! deallocate(brecv) 
    ! spec
    deallocate(s1%Re,s1%Im)
 
    ! colls
-   ! deallocate(c1%Re,c1%Im,c2%Re,c2%Im,c3%Re,c3%Im,c4%Re,c4%Im)
-   ! deallocate(Nr_%Re,Nr_%Im,Nt_%Re,Nt_%Im,Nz_%Re,Nz_%Im)
-   ! deallocate(ur_%Re,ur_%Im,ut_%Re,ut_%Im,uz_%Re,uz_%Im)
-   ! deallocate(vel_Nr%Re,vel_Nr%Im,vel_Nt%Re,vel_Nt%Im,vel_Nz%Re,vel_Nz%Im)
-   ! deallocate(vel_ur%Re,vel_ur%Im,vel_ut%Re,vel_ut%Im,vel_uz%Re,vel_uz%Im)
+   deallocate(c1%Re,c1%Im,c2%Re,c2%Im,c3%Re,c3%Im,c4%Re,c4%Im)
+   deallocate(Nr_%Re,Nr_%Im,Nt_%Re,Nt_%Im,Nz_%Re,Nz_%Im)
+   deallocate(ur_%Re,ur_%Im,ut_%Re,ut_%Im,uz_%Re,uz_%Im)
+   deallocate(vel_Nr%Re,vel_Nr%Im,vel_Nt%Re,vel_Nt%Im,vel_Nz%Re,vel_Nz%Im)
+   deallocate(vel_ur%Re,vel_ur%Im,vel_ut%Re,vel_ut%Im,vel_uz%Re,vel_uz%Im)
 
 
    ! ! phys

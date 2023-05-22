@@ -279,6 +279,9 @@
 
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
+
+      ! allocate(bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1))
+      ! allocate(brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1))
  
 
       rnk = mpi_rnk/_Nr
@@ -339,8 +342,13 @@
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
    subroutine tra_Ts2T()
 
+
+
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
+
+      ! allocate(bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1))
+      ! allocate(brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1))
 
       rnk = mpi_rnk/_Nr
       rko = modulo(mpi_rnk,_Nr)
