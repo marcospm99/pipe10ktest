@@ -29,15 +29,15 @@
 !   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   type coll
-      double precision, allocatable, dimension(:,:)    :: Re
-      double precision, allocatable, dimension(:,:)    :: Im
-   end type coll
-
    ! type coll
-   !    double precision    :: Re(i_N, 0:i_pH1)
-   !    double precision    :: Im(i_N, 0:i_pH1)
+   !    double precision, allocatable, dimension(:,:)    :: Re
+   !    double precision, allocatable, dimension(:,:)    :: Im
    ! end type coll
+
+   type coll
+      double precision    :: Re(i_N, 0:i_pH1)
+      double precision    :: Im(i_N, 0:i_pH1)
+   end type coll
 
    ! type colla
    !    double precision, allocatable, dimension(:,:)    :: Re
