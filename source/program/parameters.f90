@@ -36,7 +36,7 @@
    integer,          parameter :: i_Mp          = 1  ! Siempre 1. 
 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-   double precision            :: d_Re          = 19000d0
+   double precision            :: d_Re          = 5300d0
    double precision            :: d_alpha       = 0.2d0
    logical,          parameter :: b_const_flux  = .true.
    logical,          parameter :: b_mirrorsym   = .false.
@@ -45,8 +45,8 @@
    double precision, parameter :: d_minE3d      = 1d-5
    
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-   integer,          parameter :: i_save_rate1  = 100
-   integer,          parameter :: i_save_rate2  = 100
+   integer,          parameter :: i_save_rate1  = 1002
+   integer,          parameter :: i_save_rate2  = 1002
    integer,          parameter :: i_maxtstep    = -1 
    integer,          parameter :: s_step        = 2 ! interval to take statistics. 
    integer,          parameter :: f_step        = 1d8 ! Steps
