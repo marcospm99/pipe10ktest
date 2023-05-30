@@ -65,7 +65,7 @@
          call io_write_friction(tim_step,tim_t,steptimer,retau)
          if (mpi_rnk==0) then 
 325         format(a4,i5,3(d14.6))
-            write(*,325) 'Step',tim_step,tim_t,steptimer, retau
+            write(*,325) 'Step',tim_step,tim_dt,tim_t,steptimer, retau
          endif
       endif
       if (tim_step>f_step) exit

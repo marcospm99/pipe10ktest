@@ -80,10 +80,10 @@
 
    call vel_sta() ! Compute vel_r
 
-   call staFFT() ! Compute stdv_[u,t,z]
-   call var_coll_dissp() ! Compute dissipation
-   call vort()
-   call pressure()
+   ! call staFFT() ! Compute stdv_[u,t,z]
+   ! call var_coll_dissp() ! Compute dissipation
+   ! call vort()
+   ! call pressure()
 
 
 

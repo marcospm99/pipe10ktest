@@ -490,7 +490,7 @@
       
       if(mpi_rnk/=0) return
 324   format(3(i5),6(d14.6))
-      write(io_cf,324) st, _Nr, _Ns, t0, timr, Ub, Uc, Ufr, retau
+      write(io_cf,324) st, _Nr, _Ns, t0, timr, tim_dt, Ub, Uc, Ufr, retau
       call flush(io_cf)
       
    end subroutine io_write_friction
