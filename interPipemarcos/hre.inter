@@ -1,0 +1,18 @@
+CC Root to the input file
+/home/marcos/CFD-TFM Dropbox/pipe10k/interPipe/mallas/
+CC Input file
+pipe180.3000.h5
+CC Root of the output file and output file
+pipe180.3550.h5
+CC mx 8192
+192
+CC my 3101
+512
+CC mz 8191
+128
+CC Restart time (0=No, 1=yes)
+1
+CC Command to run the code: h5pfc theinterp.f90 -o interpthe.out && ./interpthe.out
+CC h5pfc -lhdf5 $HDF5_F90_LIB interpVel.f90 -o ~/bin/interpVel
+CC HDF5_F90_LIB='-L/dss/dsshome1/lrz/sys/spack/release/22.2.1/opt/skylake_avx512/hdf5/1.10.7-intel-v7t5g3t/lib/ -lhdf5_hl_fortran -lhdf5_fortran -lhdf5_hl -lhdf5'
+

@@ -30,9 +30,9 @@
    implicit none
    save
 
-   integer,          parameter :: i_N           = 192 ! n in [1,N] radial r_n
+   integer,          parameter :: i_N           = 384 ! n in [1,N] radial r_n
    integer,          parameter :: i_K           = 512 ! ! Este tiene que ser potencia de 2 y 3 y grande!!
-   integer,          parameter :: i_M           = 256 ! azimutal 
+   integer,          parameter :: i_M           = 128 ! azimutal 
    integer,          parameter :: i_Mp          = 1  ! Siempre 1. 
 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -45,8 +45,8 @@
    double precision, parameter :: d_minE3d      = 1d-5
    
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-   integer,          parameter :: i_save_rate1  = 1000
-   integer,          parameter :: i_save_rate2  = 1000
+   integer,          parameter :: i_save_rate1  = 100
+   integer,          parameter :: i_save_rate2  = 100
    integer,          parameter :: i_maxtstep    = -1 
    integer,          parameter :: s_step        = 2 ! interval to take statistics. 
    integer,          parameter :: f_step        = 1d8 ! Steps

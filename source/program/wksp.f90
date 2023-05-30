@@ -46,11 +46,11 @@ implicit none
 
       ! Usar estas, que son más grandes
 
-      !  double precision, allocatable, dimension(:,:) :: bsend
-      !  double precision, allocatable, dimension(:,:) :: brecv
+       double precision, allocatable, dimension(:,:) :: bsend
+       double precision, allocatable, dimension(:,:) :: brecv
 
-      double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-      double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
     
 
        type (spec)      :: s1 !-> 2.3 GB each one
@@ -78,8 +78,8 @@ implicit none
    ! chunks
 
       allocate(Ts(0:i_pZ-1, 0:i_M1, i_pN)) 
-      ! allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
-      ! allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      allocate(bsend(max(2*i_pN*(i_pH1+1)*3,2*i_pN*_Ms*i_pZ),0:max(_Nr-1,_Ns-1)))
+      allocate(brecv(max(2*i_pN*(i_pH1+1)*3,2*i_pN*_Ms*i_pZ),0:max(_Nr-1,_Ns-1)))
 
 
    ! spec
@@ -215,8 +215,8 @@ enddo
 
    ! memory chunks
       deallocate(Ts) 
-      ! deallocate(bsend)
-      ! deallocate(brecv) 
+      deallocate(bsend)
+      deallocate(brecv) 
    ! spec
    deallocate(s1%Re,s1%Im)
 
