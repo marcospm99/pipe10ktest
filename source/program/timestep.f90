@@ -272,11 +272,12 @@
       integer, save :: i = 0
 
       dt = min(tim_dt*1.11d0, d_maxdt)
+         if(mpi_rnk==0) write(*,*) 'dt antes', tim_dt
       if(tim_step==0d0 .and. tim_corr_dt==0d0)  &
                            dt = min(dt, tim_cfl_dt*0.1d0)
       if(tim_cfl_dt >0d0)  dt = min(dt, tim_cfl_dt*d_courant)
       if(tim_corr_dt>0d0)  dt = min(dt, tim_corr_dt*0.95d0)
-      
+         if(mpi_rnk==0) write(*,*) 'dt despues', tim_dt
       i = i - 1
       tim_new_dt = ( dt<tim_dt*0.95d0  &
               .or.  (dt>tim_dt*1.10d0 .and. i<0)  &
