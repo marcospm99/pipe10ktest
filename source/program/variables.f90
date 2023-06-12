@@ -19,39 +19,40 @@
 #include "../parallel.h"
  module variables
 !*************************************************************************
+   use type
+   ! use wksp
    use mpif
    use parameters
    use meshs
    implicit none
    save
 
-   type harm
-      integer              :: pH0,pH1, pH0_(0:_Np-1),pH1_(0:_Np-1)
-   end type harm
+!    type harm
+!       integer              :: pH0,pH1, pH0_(0:_Np-1),pH1_(0:_Np-1)
+!    end type harm
 
-   type spec
-      double precision     :: Re(0:_Hs1, i_pN)
-      double precision     :: Im(0:_Hs1, i_pN)
-   end type spec
+!    type spec
+!       double precision     :: Re(0:_Hs1, i_pN)
+!       double precision     :: Im(0:_Hs1, i_pN)
+!    end type spec
 
-!   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
-   type coll
-      double precision     :: Re(i_N, 0:i_pH1)
-      double precision     :: Im(i_N, 0:i_pH1)
-   end type coll
+! !   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
+!    type coll
+!       double precision     :: Re(i_N, 0:i_pH1)
+!       double precision     :: Im(i_N, 0:i_pH1)
+!    end type coll
 
-   type phys
-      double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
-   end type phys
+!    type phys
+!       double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
+!    end type phys
    
 
    type (harm)               :: var_H
    type (coll),      private :: c1,c2,c3
-   double precision, private :: ad_k2a2(-i_K1:i_K1)
    double precision :: ad_k1a1(-i_K1:i_K1)
    double precision :: ad_m1r1(i_N,0:i_M1)
    double precision, private :: ad_m2r2(i_N,0:i_M1)
-
+   double precision, private :: ad_k2a2(-i_K1:i_K1)
  contains
 
 
@@ -61,6 +62,8 @@
    subroutine var_precompute()
       integer :: n,r, ms,H1
          			! distribute modes accross processors
+      
+      
       var_H%pH1_ = -1
       do ms = 0, _Ns-1
          H1 = _Hs1
@@ -668,7 +671,7 @@
       double precision, intent(out) :: c
       double precision, save :: dt,dz, r_(i_N)
       logical, save :: set = .false.
-      double precision :: rd,td,zd, c00,c10,c01,c11, c0,c1
+      double precision :: rd,td,zd, c00,c10,c01,c11, c0,c1bis
       integer :: ir0,ir1,it0,it1,iz0,iz1
 
       if(.not.set) then 
@@ -716,8 +719,8 @@
       c01 = p%Re(iz1,it0,ir0)*(1d0-rd) + p%Re(iz1,it0,ir1)*rd
       c11 = p%Re(iz1,it1,ir0)*(1d0-rd) + p%Re(iz1,it1,ir1)*rd
       c0 = c00*(1d0-td) + c10*td
-      c1 = c01*(1d0-td) + c11*td
-      c = c0*(1d0-zd) + c1*zd      
+      c1bis = c01*(1d0-td) + c11*td
+      c = c0*(1d0-zd) + c1bis*zd      
       
  end subroutine var_interpnearpt
 

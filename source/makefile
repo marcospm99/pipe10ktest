@@ -1,10 +1,10 @@
 INSTDIR		= ./install/
 PROGDIR		= ./program/
 UTILDIR		= ./utils/
-UTIL		= prim2matlab
+UTIL		= none #prim2matlab
 
 TRANSFORM	= fftw3
-MODSOBJ		=  iohdf5.o meshs.o mpi.o parameters.o \
+MODSOBJ		= type.o wksp.o iohdf5.o meshs.o mpi.o parameters.o \
 		  timestep.o transform.o variables.o velocity.o sta.o
 
 #COMPILER	= g95 -C  
@@ -25,7 +25,8 @@ COMPILER	= h5pfc
 ### -mcmodel=medium seems to be neeessary because all the memory is static! 
 ### DBFLAGS = -g -warn unused -debug extended -check all -fPIC -fpe0 
 
-FLAGS           = -mcmodel=medium -cpp -O3 -qmkl
+FLAGS           = -g -cpp -O3 -qmkl 
+##FLAGS           = -g -mcmodel=medium -cpp -O3 -qmkl 
 ##LIBRARYF  =  -I/usr/include/ -qmkl -I$(MKLROOT)/include/fftw
 ##HDF5_LINK=-I/dss/dsshome1/lrz/sys/spack/release/22.2.1/opt/skylake_avx512/hdf5/1.10.7-intel-v7t5g3t/include
 ##HDF5_F90_LIB = -L/dss/dsshome1/lrz/sys/spack/release/22.2.1/opt/skylake_avx512/hdf5/1.10.7-intel-v7t5g3t/lib/ -lhdf5_hl_fortran -lhdf5_fortran -lhdf5_hl -lhdf5
@@ -52,16 +53,22 @@ install : pipe10k
 	cut -d! -f1 $(PROGDIR)parameters.f90 | grep = | \
 	   cut -d: -f3  >> $(INSTDIR)/main.info
 
-util : 	$(MODSOBJ) $(UTILDIR)/$(UTIL).f90
-	$(COMPILER) $(COMPFLAGS) $(UTILDIR)/$(UTIL).f90
-	$(COMPILER) -o ./$(UTIL).out $(UTIL).o $(MODSOBJ) $(LIBS)
+# util : 	$(MODSOBJ) $(UTILDIR)/$(UTIL).f90
+# 	$(COMPILER) $(COMPFLAGS) $(UTILDIR)/$(UTIL).f90
+# 	$(COMPILER) -o ./$(UTIL).out $(UTIL).o $(MODSOBJ) $(LIBS)
 
 #------------------------------------------------------------------------
 clean :
 	rm -f *.o *.mod *.d *.il core *.out
 
 #------------------------------------------------------------------------
-iohdf5.o : $(PROGDIR)iohdf5.F90 velocity.o parallel.h
+type.o : $(PROGDIR)type.f90 mpi.o parameters.o parallel.h
+	$(COMPILER) $(COMPFLAGS) $(PROGDIR)type.f90
+
+wksp.o : $(PROGDIR)wksp.f90 type.o parallel.h
+	$(COMPILER) $(COMPFLAGS) $(PROGDIR)wksp.f90
+
+iohdf5.o : $(PROGDIR)iohdf5.F90 velocity.o parallel.h sta.o
 	$(COMPILER) $(COMPFLAGS) $(PROGDIR)iohdf5.F90
 
 meshs.o : $(PROGDIR)meshs.f90 parameters.o mpi.o
@@ -81,7 +88,7 @@ transform.o : $(PROGDIR)transform.$(TRANSFORM).f90 variables.o
 	$(COMPILER) $(COMPFLAGS) -o transform.o \
 	$(PROGDIR)transform.$(TRANSFORM).f90
 
-variables.o : $(PROGDIR)variables.f90 meshs.o
+variables.o : $(PROGDIR)variables.f90 wksp.o meshs.o
 	$(COMPILER) $(COMPFLAGS) $(PROGDIR)variables.f90
 
 velocity.o : $(PROGDIR)velocity.f90 timestep.o transform.o

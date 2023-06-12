@@ -72,6 +72,10 @@
    integer,          parameter :: i_pZ  = i_Z/_Ns
    double precision, parameter :: d_PI  = 3.1415926535897931d0
 
+!---------------------------------------------------------------------------
+   integer, parameter          :: i_3K = 3*i_K
+   integer, parameter          :: i_3M = 3*i_M
+
  contains
 
 !---------------------------------------------------------------------------

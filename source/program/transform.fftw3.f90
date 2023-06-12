@@ -10,13 +10,12 @@
 #include "../parallel.h"
  module transform
 !*************************************************************************
+   use wksp
    use parameters
    use variables
    implicit none
    save
 
-   integer, parameter, private :: i_3K = 3*i_K
-   integer, parameter, private :: i_3M = 3*i_M
    integer, parameter, private :: i_Ma = (3*i_M)/2
    double complex,     private :: X(0:i_3K-1, 0:_Ms-1)
    double complex,     private :: Y(0:i_3K-1, 0:_Ms-1)
@@ -24,9 +23,6 @@
    double precision,   private :: Ys(0:i_pZ-1, 0:i_3M-1)
    integer*8,          private :: plan_c2cf, plan_c2cb, plan_r2c, plan_c2r
 
-   double complex,     private :: T(0:i_3K-1, 0:_Ms-1, i_pN)
-   double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
-   type (spec),        private :: s1,s2,s3
 
  contains
 
@@ -128,15 +124,15 @@
             nh = nh + 2*i_K-1
          end do
          call dfftw_execute(plan_c2cf)
-#if _Ns == 1 
-         Xs(:,0:i_M1) = Y
-#else
+! #if _Ns == 1 
+!          Xs(:,0:i_M1) = Y
+! #else
          T(:,:,n) = Y
       end do
       call tra_T2Ts()
       do n = 1, mes_D%pN
          Xs(:,0:i_M1) = Ts(:,:,n)         
-#endif
+! #endif
          Xs(:,i_M:) = 0d0
          call dfftw_execute(plan_c2r)
          p%Re(:,:,n) = Ys
@@ -159,15 +155,15 @@
       do n = 1, mes_D%pN
          Ys = scale_ * p%Re(:,:,n)
          call dfftw_execute(plan_r2c)
-#if _Ns == 1
-         Y = Xs(:,0:i_M1)
-#else
+! #if _Ns == 1
+!          Y = Xs(:,0:i_M1)
+! #else
          Ts(:,:,n) = Xs(:,0:i_M1)
       end do
       call tra_Ts2T()
       do n = 1, mes_D%pN
          Y = T(:,:,n)
-#endif
+! #endif
          call dfftw_execute(plan_c2cb)
          if(mpi_rnk/_Nr==0) then
             s%Re(0:i_K1,n) =  dble(X(0:i_K1,0))

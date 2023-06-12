@@ -29,33 +29,34 @@
 #include "../parallel.h"
  module meshs
 !**************************************************************************
+   use type
    use mpif
    use parameters
    implicit none
    save
-                                ! M(KL+1+n-j, j) = A(n,j)
-   type mesh
-      double precision :: M(2*i_KL+1, 1-i_KL:i_N)
-   end type mesh
-                                ! M(2*KL+1+n-j, j) = A(n,j)
-                                ! see lapack dgbtrf
-   type lumesh
-      integer          :: ipiv(i_N)
-      double precision :: M(3*i_KL+1, i_N)
-   end type lumesh
+   !                              ! M(KL+1+n-j, j) = A(n,j)
+   ! type mesh
+   !    double precision :: M(2*i_KL+1, 1-i_KL:i_N)
+   ! end type mesh
+   !                              ! M(2*KL+1+n-j, j) = A(n,j)
+   !                              ! see lapack dgbtrf
+   ! type lumesh
+   !    integer          :: ipiv(i_N)
+   !    double precision :: M(3*i_KL+1, i_N)
+   ! end type lumesh
 
 
-   type rdom
-      integer          :: N, pNi,pN, pNi_(0:_Np-1),pN_(0:_Np-1)
-      double precision :: r(i_N,-3:3)
-      double precision :: intrdr(i_N)
-      double precision :: dr0(1:1+i_KL,0:i_KL), dr1(1:1+i_KL,0:i_KL)
-      type (mesh)      :: dr(i_KL)
-      type (mesh)      :: radLap
-   end type rdom
+   ! type rdom
+   !    integer          :: N, pNi,pN, pNi_(0:_Np-1),pN_(0:_Np-1)
+   !    double precision :: r(i_N,-3:3)
+   !    double precision :: intrdr(i_N)
+   !    double precision :: dr0(1:1+i_KL,0:i_KL), dr1(1:1+i_KL,0:i_KL)
+   !    type (mesh)      :: dr(i_KL)
+   !    type (mesh)      :: radLap
+   ! end type rdom
 
 
-   type (rdom) :: mes_D
+   ! type (rdom) :: mes_D
 
  contains
 

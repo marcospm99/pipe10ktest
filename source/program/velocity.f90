@@ -5,37 +5,38 @@
 #include "../parallel.h"
  module velocity
 !*************************************************************************
+   use wksp
    use variables
    use transform
    use timestep
    implicit none
    save
 
-   type (phys) :: vel_r
-   type (phys) :: vel_t
-   type (phys) :: vel_z
-   type (phys) :: vel_p
-   type (phys) :: vel_curlr
-   type (phys) :: vel_curlt
-   type (phys) :: vel_curlz
-   type (coll) :: vel_ur
-   type (coll) :: vel_ut
-   type (coll) :: vel_uz
-   type (coll) :: vel_Nr
-   type (coll) :: vel_Nt
-   type (coll) :: vel_Nz
-   double precision :: vel_nu
-   double precision :: vel_Pr0
-   double precision :: vel_U(i_N)
-   double precision :: vel_Up(i_N)
+   ! type (phys) :: vel_r
+   ! type (phys) :: vel_t
+   ! type (phys) :: vel_z
+   ! type (phys) :: vel_p
+   ! type (phys) :: vel_curlr
+   ! type (phys) :: vel_curlt
+   ! type (phys) :: vel_curlz
+   ! type (coll) :: vel_ur
+   ! type (coll) :: vel_ut
+   ! type (coll) :: vel_uz
+   ! type (coll) :: vel_Nr
+   ! type (coll) :: vel_Nt
+   ! type (coll) :: vel_Nz
+   ! double precision :: vel_nu
+   ! double precision :: vel_Pr0
+   ! double precision :: vel_U(i_N)
+   ! double precision :: vel_Up(i_N)
 
-   type (lumesh), private :: LDp(0:i_pH1), LDm(0:i_pH1)
-   type (lumesh), private :: LDz(0:i_pH1), LNp(0:i_pH1)
-   type (mesh),   private :: Ltp(0:i_pH1), Ltm(0:i_pH1)
-   type (mesh),   private :: Ltz(0:i_pH1)
-   type (coll),   private :: Nr_,Nt_,Nz_,ur_,ut_,uz_
+   ! type (lumesh), private :: LDp(0:i_pH1), LDm(0:i_pH1)
+   ! type (lumesh), private :: LDz(0:i_pH1), LNp(0:i_pH1)
+   ! type (mesh),   private :: Ltp(0:i_pH1), Ltm(0:i_pH1)
+   ! type (mesh),   private :: Ltz(0:i_pH1)
+   ! type (coll),   private :: Nr_,Nt_,Nz_,ur_,ut_,uz_
 
-   type (coll), private :: c1,c2,c3
+   ! type (coll), private :: c1,c2,c3
    ! type (coll) :: c4
    
  contains

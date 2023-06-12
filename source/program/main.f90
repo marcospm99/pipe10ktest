@@ -7,6 +7,8 @@
 #include "../parallel.h"
  PROGRAM MAIN
 !*************************************************************************
+   ! use type
+   use wksp
    use velocity
    use io
    use sta, only:compute_sta, initialisestd, savestats
