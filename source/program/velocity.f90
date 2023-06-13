@@ -11,33 +11,6 @@
    use timestep
    implicit none
    save
-
-   ! type (phys) :: vel_r
-   ! type (phys) :: vel_t
-   ! type (phys) :: vel_z
-   ! type (phys) :: vel_p
-   ! type (phys) :: vel_curlr
-   ! type (phys) :: vel_curlt
-   ! type (phys) :: vel_curlz
-   ! type (coll) :: vel_ur
-   ! type (coll) :: vel_ut
-   ! type (coll) :: vel_uz
-   ! type (coll) :: vel_Nr
-   ! type (coll) :: vel_Nt
-   ! type (coll) :: vel_Nz
-   ! double precision :: vel_nu
-   ! double precision :: vel_Pr0
-   ! double precision :: vel_U(i_N)
-   ! double precision :: vel_Up(i_N)
-
-   ! type (lumesh), private :: LDp(0:i_pH1), LDm(0:i_pH1)
-   ! type (lumesh), private :: LDz(0:i_pH1), LNp(0:i_pH1)
-   ! type (mesh),   private :: Ltp(0:i_pH1), Ltm(0:i_pH1)
-   ! type (mesh),   private :: Ltz(0:i_pH1)
-   ! type (coll),   private :: Nr_,Nt_,Nz_,ur_,ut_,uz_
-
-   ! type (coll), private :: c1,c2,c3
-   ! type (coll) :: c4
    
  contains
 
@@ -182,7 +155,6 @@
       integer, intent(in) :: F
       double precision, save :: A(4,4,0:i_pH1), aR(4),aI(4)
       double precision, allocatable, save :: U(:,:,:) !i_N,0:i_pH1,6
-      double precision, allocatable, save :: P(:,:)   !i_N,0:i_pH1
       double precision  :: BRe(4,0:i_pH1),BIm(4,0:i_pH1)
       type (coll), save :: cp
       integer :: j
@@ -190,7 +162,7 @@
       
       if(F==0) then                             ! precompute, get U
          if(.not.allocated(U))  &
-            allocate( U(i_N,0:i_pH1,6), P(i_N,0:i_pH1) )
+            allocate( U(i_N,0:i_pH1,6)) !, P(i_N,0:i_pH1) )
          do j = 1, 4
             call var_coll_init(c1)
             call var_coll_init(c2)
@@ -210,7 +182,6 @@
             else
                c1%Re(i_N,:) = -1d0
                call tim_lumesh_invert(1,LNp, c1)
-               P(:,:) = -c1%Re
                call var_coll_grad(c1, c1,c2,c3)
                call vel_rt2pm(c1,c2, c1,c2)
                call tim_zerobc(c1)
@@ -261,144 +232,11 @@
             vel_uz%Re(:,nh) = vel_uz%Re(:,nh) - aI(4)*U(:,nh,6)
             vel_uz%Im(:,nh) = vel_uz%Im(:,nh) + aR(4)*U(:,nh,6)
          _loop_km_end
-			! To get pressure field, *after* first time step:
-			! call vel_adjPPE(3).  Result in type(phys)::vel_p.
-      else if(F==3) then
-         if(tim_step==0) stop 'vel_adjPPE err1' ! err: data not available'
-         _loop_km_begin
-            if(k==0 .and. m==0) cycle
-            cp%Re(:,nh) = cp%Re(:,nh) + aR(4)*P(:,nh)
-            cp%Im(:,nh) = cp%Im(:,nh) + aI(4)*P(:,nh)
-         _loop_km_end
-         call tra_coll2phys(cp, vel_p)
-         vel_p%Re = vel_p%Re - 0.5d0*  &
-            (vel_r%Re*vel_r%Re + vel_t%Re*vel_t%Re + vel_z%Re*vel_z%Re)
+
       end if
 
    end subroutine vel_adjPPE
 
-! !------------------------------------------------------------------------
-! !  PPE formulation + influence matrix adjusts to correct bcs.
-! !------------------------------------------------------------------------
-!    subroutine vel_adjPPE(F)
-!       integer, intent(in) :: F
-!       double precision, save :: A(4,4,0:i_pH1), aR(4),aI(4)
-!       double precision, allocatable, save :: U(:,:,:) !i_N,0:i_pH1,6
-!       double precision, allocatable, save :: P(:,:)   !i_N,0:i_pH1
-!       double precision :: BRe(4,0:i_pH1),BIm(4,0:i_pH1)
-!       type (coll), save :: cp
-!       integer :: j
-!       _loop_km_vars
-      
-!       if(F==0) then                             ! precompute, get U
-!          if(.not.allocated(U))  &
-!             allocate( U(i_N,0:i_pH1,6) )
-!          do j = 1, 4
-!             call var_coll_init(c1)
-!             call var_coll_init(c2)
-!             call var_coll_init(c3)
-!             if(j==1) then
-!                c1%Re(i_N,:) = 1d0
-!                call tim_lumesh_invert(0,LDp, c1) ! Solve the systems, but what systems?
-!                U(:,:,1) = c1%Re
-!             else if(j==2) then
-!                c2%Re(i_N,:) = 1d0
-!                call tim_lumesh_invert(0,LDm, c2)
-!                U(:,:,2) = c2%Re
-!             else if(j==3) then
-!                c3%Im(i_N,:) = 1d0
-!                call tim_lumesh_invert(0,LDz, c3)
-!                U(:,:,3) = c3%Im
-!             else
-!                c1%Re(i_N,:) = -1d0
-!                call tim_lumesh_invert(1,LNp, c1)
-!                call var_coll_grad(c1, c1,c2,c3)
-!                call vel_rt2pm(c1,c2, c1,c2)
-!                U(:,:,4) = c1%Re
-!                U(:,:,5) = c2%Re
-!                U(:,:,6) = c3%Im
-!             end if
-!             call vel_evalBC(c1,c2,c3, BRe,BIm)
-!             A(:,j,:) =  BRe
-!          end do
-!          _loop_km_begin
-!             if(k==0 .and. m==0) cycle
-!             call mes_mat_invert(4,A(1,1,nh),4)
-!          _loop_km_end
-
-!       else if(F==1) then			! get p, project RHS -> Hint, Right Hand Side (?) of the PPE (?)
-!          call vel_pm2rt(vel_ur,vel_ut, c1,c2)
-!          call var_coll_div(c1,c2,vel_uz, c1)
-!          call tim_zerobc(c1) !c1 is set to 0 (wall BC)
-!          call tim_lumesh_invert(1,LNp,c1) ! c1 (inout). System is solved and c1 stores presumably the pressure perturbation (??)
-!          P(:,:) = -c1%Re
-!           !copio la presión
-!          call var_coll_grad(c1, c1,c2,c3) !grad to c1 -> velocities
-!          call vel_rt2pm(c1,c2, c1,c2)
-!          call var_coll_sub(c1, vel_ur)
-!          call var_coll_sub(c2, vel_ut)
-!          call var_coll_sub(c3, vel_uz)
-
-!          ! Explanation
-
-! ! This block of code appears to be calculating the pressure field given
-! ! the velocity field, using the Laplace-Neumann pressure operator (LNp) -> Not quite sure BUT originally 
-! ! there is a comment: pressure matrix, so presumably we could have reached the pressure matrix. 
-
-! ! Breakdown:
-
-! !     1) call vel_pm2rt(vel_ur,vel_ut, c1,c2) converts the input velocity field (vel_ur and vel_ut)
-! !        to u+ and u- (see literature)
-! !     2) call var_coll_div(c1,c2,vel_uz, c1) computes the divergence of the input velocity field 
-! !        in the axial direction (vel_uz) and stores the result in c1.
-! !     3) call tim_zerobc(c1) applies boundary conditions to the c1 variable. -> No more details by the moment
-
-! !     4) call tim_lumesh_invert(1,LNp, c1) solves the Laplace equation with the Neumann boundary condition
-! !        to obtain the pressure field (c1).
-
-! !     5) call var_coll_grad(c1, c1,c2,c3) computes the gradient of the pressure field (c1) in the radial (c1),
-! !        tangential (c2), and axial (c3) directions.
-! !     6) call vel_rt2pm(c1,c2, c1,c2) converts the pressure gradient field (c1 and c2) back to Cartesian coordinates.
-! !     7) call var_coll_sub(c1, vel_ur), call var_coll_sub(c2, vel_ut), and call var_coll_sub(c3, vel_uz) subtract
-! !        the pressure gradient field from the input velocity field to obtain the corrected velocity field.
-
-!       else if(F==2) then                        ! correct the BCs
-!          call vel_evalBC(vel_ur,vel_ut,vel_uz, BRe,BIm)
-!          _loop_km_begin
-!             if(k==0 .and. m==0) cycle
-!             aR = -matmul(A(:,:,nh),BRe(:,nh))
-!             aI = -matmul(A(:,:,nh),BIm(:,nh))
-!             vel_ur%Re(:,nh) = vel_ur%Re(:,nh) + aR(1)*U(:,nh,1)
-!             vel_ur%Im(:,nh) = vel_ur%Im(:,nh) + aI(1)*U(:,nh,1)
-!             vel_ut%Re(:,nh) = vel_ut%Re(:,nh) + aR(2)*U(:,nh,2)
-!             vel_ut%Im(:,nh) = vel_ut%Im(:,nh) + aI(2)*U(:,nh,2)
-!             vel_uz%Re(:,nh) = vel_uz%Re(:,nh) - aI(3)*U(:,nh,3)
-!             vel_uz%Im(:,nh) = vel_uz%Im(:,nh) + aR(3)*U(:,nh,3)
-!             vel_ur%Re(:,nh) = vel_ur%Re(:,nh) + aR(4)*U(:,nh,4)
-!             vel_ur%Im(:,nh) = vel_ur%Im(:,nh) + aI(4)*U(:,nh,4)
-!             vel_ut%Re(:,nh) = vel_ut%Re(:,nh) + aR(4)*U(:,nh,5)
-!             vel_ut%Im(:,nh) = vel_ut%Im(:,nh) + aI(4)*U(:,nh,5)
-!             vel_uz%Re(:,nh) = vel_uz%Re(:,nh) - aI(4)*U(:,nh,6)
-!             vel_uz%Im(:,nh) = vel_uz%Im(:,nh) + aR(4)*U(:,nh,6)
-!          _loop_km_end
-
-!          		! To get pressure field, *after* first time step:
-! 			! call vel_adjPPE(3).  Result in type(phys)::vel_p.
-!       else if(F==3) then
-!          if(tim_step==0) stop 'vel_adjPPE err1' ! err: data not available'
-!          _loop_km_begin
-!             if(k==0 .and. m==0) cycle
-!             cp%Re(:,nh) = cp%Re(:,nh) + aR(4)*P(:,nh)
-!             cp%Im(:,nh) = cp%Im(:,nh) + aI(4)*P(:,nh)
-!          _loop_km_end
-!          call tra_coll2phys(cp, vel_p)
-!          vel_p%Re = vel_p%Re - 0.5d0*  &
-!             (vel_r%Re*vel_r%Re + vel_t%Re*vel_t%Re + vel_z%Re*vel_z%Re)
-!       end if
-
-!    end subroutine vel_adjPPE
-
-!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
    subroutine vel_evalBC(up,um,uz, BRe,BIm)
       type (coll),      intent(in)  :: up,um,uz
       double precision, intent(out) :: BRe(4,0:i_pH1), BIm(4,0:i_pH1)
@@ -440,7 +278,6 @@
 !  Evaluate in physical space  u 
 !------------------------------------------------------------------------
    subroutine vel_sta()
-      
       call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
    end subroutine
 
@@ -450,10 +287,7 @@
 !  Evaluate in physical space  u  and  curl(u)
 !------------------------------------------------------------------------
    subroutine vel_transform()
-      
-      
       call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
-
       call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
       call tra_coll2phys(c1,vel_curlr, c2,vel_curlt, c3,vel_curlz)
 
@@ -464,7 +298,6 @@
 !  nonlinear terms for velocity
 !------------------------------------------------------------------------
    subroutine vel_nonlinear()
-      type (phys) :: p1,p2,p3
          			! advection  u x curlu
       p1%Re = vel_t%Re*vel_curlz%Re - vel_z%Re*vel_curlt%Re
       p2%Re = vel_z%Re*vel_curlr%Re - vel_r%Re*vel_curlz%Re
@@ -554,21 +387,21 @@
 !------------------------------------------------------------------------
 !  corrector iteration with Crank-Nicolson non-lin term
 !------------------------------------------------------------------------
-   subroutine vel_corrector()
-      type (coll) :: r,t,z
+         subroutine vel_corrector()
 
-      call var_coll_copy(vel_ur, r)
-      call var_coll_copy(vel_ut, t)
-      call var_coll_copy(vel_uz, z)
-      call tim_nlincorr(Nr_, vel_Nr)
+      call tim_nlincorr(Nr_, vel_Nr) ! no usa r,t o z
       call tim_nlincorr(Nt_, vel_Nt)
       call tim_nlincorr(Nz_, vel_Nz)
-      call vel_step()
 
-      call var_coll_sub(vel_ur, r)
-      call var_coll_sub(vel_ut, t)
-      call var_coll_sub(vel_uz, z)
-      call tim_measurecorr(r,t,z)
+      call var_coll_copy(vel_ur, Nr_) ! copia simple
+      call var_coll_copy(vel_ut, Nt_)
+      call var_coll_copy(vel_uz, Nz_)
+      call vel_step() ! no usa r,t o z
+
+      call var_coll_sub(vel_ur, Nr_)
+      call var_coll_sub(vel_ut, Nt_)
+      call var_coll_sub(vel_uz, Nz_)
+      call tim_measurecorr(Nr_,Nt_,Nz_)
 
    end subroutine vel_corrector
 
@@ -605,11 +438,10 @@
          if(mx/=0d0) dt(3) = min( dt(3), d/mx )
       end do
 
-#ifdef _MPI
       call mpi_allreduce(dt, dt_, 3, mpi_double_precision,  &
          mpi_min, mpi_comm_world, mpi_er)
       dt = dt_
-#endif
+
       tim_cfl_dt = minval(dt)
       if(tim_cfl_dt==dt(1)) tim_cfl_dir=1
       if(tim_cfl_dt==dt(2)) tim_cfl_dir=2

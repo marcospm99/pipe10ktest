@@ -2,14 +2,14 @@
  loading state...
  
  Done reading fields
- Time spend reading:     0.084 sc
+ Time spend reading:     0.483 sc
  initialising output files...
  /data/marcos/pipe10k/source/runs/re180dt.cf
  timestepping.....
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
   step=           0  dt=  9.9732196E-03
-Step    1  0.796898D+04  0.353694D+01  0.180678D+03
+Step    1  0.796898D+04  0.702968D+01  0.180678D+03
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
  dt antes  9.973219928416785E-003
@@ -20,7 +20,7 @@ Step    1  0.796898D+04  0.353694D+01  0.180678D+03
  dt despues  9.973219928416785E-003
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
-Step    6  0.796903D+04  0.263478D+01  0.180676D+03
+Step    6  0.796903D+04  0.562192D+01  0.180676D+03
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
  Writing the file .../data/marcos/pipe10k/source/runs/pipe180lr.7461.h5
@@ -33,11 +33,26 @@ Step    6  0.796903D+04  0.263478D+01  0.180676D+03
  dt despues  9.973219928416785E-003
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
-Step   11  0.796908D+04  0.267583D+01  0.180674D+03
+Step   11  0.796908D+04  0.446366D+01  0.180674D+03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180lr.7462.h5
+  step=          12  dt=  9.9732196E-03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+Step   16  0.796913D+04  0.514993D+01  0.180673D+03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
  RUNNING deleted !
  cleanup...
-  sec/step  =    2.921716    
-  CPU time  =            0  mins.
+  sec/step  =    6.611930    
+  CPU time  =            1  mins.
  ...done!
