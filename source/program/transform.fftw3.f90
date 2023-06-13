@@ -18,8 +18,6 @@
    implicit none
    save
 
-   ! integer, parameter :: i_3K = 3*i_K
-   ! integer, parameter :: i_3M = 3*i_M
    integer, parameter, private :: i_Ma = (3*i_M)/2
    double complex,     private :: X(0:i_3K-1, 0:_Ms-1)   ! Mem = 512*3*128/8*72*16/1024**3 no preocupante, 0.026 GB
    double complex,     private :: Y(0:i_3K-1, 0:_Ms-1)   ! Idem
@@ -30,10 +28,7 @@
       double precision :: scale_
    
 
-   double complex,     allocatable :: Taux(:,:,:) !Taux(0:i_3K-1, 0:_Ms-1, i_pN) ! Mem = 3*512*128/8*72*384/9*16/1024**3, Preocupante, 1.12 GB total
-   
-   
-   !  double complex,     private :: Ts(0:i_pZ-1, 0:i_M1, i_pN) ! Mem = 2*8*154*127*40*80/1024**3, Preocupante, 0.93 GB total
+   double complex,     allocatable :: T1(:,:,:) !T1(0:i_3K-1, 0:_Ms-1, i_pN) ! Mem = 3*512*128/8*72*384/9*16/1024**3, Preocupante, 1.12 GB total
   
 
  contains
@@ -50,7 +45,7 @@
          ! if(.not.allocated(s1%Re))  allocate(s1%Re(0:_Hs1, i_pN))
          ! if(.not.allocated(s1%Im))  allocate(s1%Im(0:_Hs1, i_pN))
 
-         if(.not.allocated(Taux))  allocate(Taux(0:i_3K-1, 0:_Ms-1, i_pN))
+         if(.not.allocated(T1))  allocate(T1(0:i_3K-1, 0:_Ms-1, i_pN))
 
       
       n = (/i_3K/)            
@@ -175,7 +170,7 @@
          end do
          call dfftw_execute(plan_c2cf)
          
-         Taux(:,:,n) = Y
+         T1(:,:,n) = Y
       end do
       call tra_T2Ts()
       
@@ -221,7 +216,7 @@
       
       
       do n = 1, mes_D%pN
-         Y = Taux(:,:,n)
+         Y = T1(:,:,n)
          
          call dfftw_execute(plan_c2cb)
          if(mpi_rnk/_Nr==0) then
@@ -304,8 +299,8 @@
          do n = 1, mes_D%pN
             do m = 0, _Ms1
                do j = jz0, jz0+i_pZ-1
-                  bsend(l,  stp) =  dble(Taux(j,m,n))
-                  bsend(l+1,stp) = dimag(Taux(j,m,n))
+                  bsend(l,  stp) =  dble(T1(j,m,n))
+                  bsend(l+1,stp) = dimag(T1(j,m,n))
                   l = l + 2
                end do
             end do
@@ -390,7 +385,7 @@
          do n = 1, mes_D%pN
             do m = 0, _Ms1
                do j = jz0, jz0+i_pZ-1
-                  Taux(j,m,n) = dcmplx(brecv(l,stp),brecv(l+1,stp))
+                  T1(j,m,n) = dcmplx(brecv(l,stp),brecv(l+1,stp))
                   l = l + 2
                end do
             end do

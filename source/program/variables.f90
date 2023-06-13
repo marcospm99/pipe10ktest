@@ -166,23 +166,6 @@
 !-------------------------------------------------------------------------
 !  convert collocated -> spectral
 !-------------------------------------------------------------------------
-! #ifndef _MPI
-!    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
-!       type (coll), intent(in)  :: c
-!       type (spec), intent(out) :: s
-!       ! type (coll), intent(in),  optional :: c2,c3
-!       ! type (spec), intent(out), optional :: s2,s3
-!       s%Re = transpose(c%Re)
-!       s%Im = transpose(c%Im)
-!       ! if(.not. present(c2)) return
-!       ! s2%Re = transpose(c2%Re)
-!       ! s2%Im = transpose(c2%Im)
-!       ! if(.not. present(c3)) return
-!       ! s3%Re = transpose(c3%Re)
-!       ! s3%Im = transpose(c3%Im)
-!    end subroutine var_coll2spec
-
-! #else
    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
       type (coll), intent(in)  :: c
       type (spec), intent(out) :: s
@@ -258,28 +241,10 @@
       end do
 
    end subroutine var_coll2spec
-! #endif
    
 !-------------------------------------------------------------------------
 !  convert spectral -> collocated
 !-------------------------------------------------------------------------
-! #ifndef _MPI
-!    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
-!       type (spec), intent(in)  :: s
-!       type (coll), intent(out) :: c
-!       type (spec), intent(in),  optional :: s2,s3
-!       type (coll), intent(out), optional :: c2,c3
-!       c%Re = transpose(s%Re)
-!       c%Im = transpose(s%Im)
-!       if(.not. present(s2)) return
-!       c2%Re = transpose(s2%Re)
-!       c2%Im = transpose(s2%Im)
-!       if(.not. present(s3)) return
-!       c3%Re = transpose(s3%Re)
-!       c3%Im = transpose(s3%Im)
-!    end subroutine var_spec2coll
-
-! #else
    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
       type (spec), intent(in)  :: s
       type (coll), intent(out) :: c
@@ -354,7 +319,6 @@
       end do
 
    end subroutine var_spec2coll
-! #endif
 
 
 !------------------------------------------------------------------------
@@ -559,7 +523,7 @@
                bsend(:,5) =  z%Re(:,nh) * a
                bsend(:,6) =  z%Im(:,nh) * a * b
             end if
-! #ifdef _MPI
+
             if(p1/=p2) then
                mpi_tg = m*(2*i_K1+1) + k
                if(mpi_rnk==p1)  &
@@ -569,7 +533,7 @@
                   call mpi_recv( bsend, i_N*6, mpi_double_precision,  &
                      p1, mpi_tg, mpi_comm_world, mpi_st, mpi_er)
             end if
-! #endif         
+
             if(mpi_rnk==p2) then
                c1%Re(:,nh_) = bsend(:,1)
                c1%Im(:,nh_) = bsend(:,2)
@@ -713,9 +677,7 @@
    subroutine var_coll_norm(a, E,Ek,Em)
       type (coll),      intent(in)  :: a
       double precision, intent(out) :: E, Ek(0:i_K1), Em(0:i_M1)
-! #ifdef _MPI
       double precision :: E_, Ek_(0:i_K1), Em_(0:i_M1)
-! #endif
       double precision :: w, b, f(i_N)
       _loop_km_vars
       
@@ -732,14 +694,12 @@
          Ek(abs(k)) = Ek(abs(k)) + b
       _loop_km_end
 
-! #ifdef _MPI
       call mpi_allreduce( Ek, Ek_, 1+i_K1, mpi_double_precision,  &
          mpi_sum, mpi_comm_world, mpi_er)
       Ek = Ek_
       call mpi_allreduce( Em, Em_, 1+i_M1, mpi_double_precision,  &
          mpi_sum, mpi_comm_world, mpi_er)
       Em = Em_
-! #endif
       
       E = sum(Em)
    

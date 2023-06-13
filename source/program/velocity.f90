@@ -12,6 +12,11 @@
    implicit none
    save
    
+   double precision :: vel_nu
+   double precision :: vel_Pr0
+   double precision :: vel_U(i_N)
+   double precision :: vel_Up(i_N)
+
  contains
 
 !------------------------------------------------------------------------
@@ -289,7 +294,8 @@
    subroutine vel_transform()
       call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
       call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
-      call tra_coll2phys(c1,vel_curlr, c2,vel_curlt, c3,vel_curlz)
+      ! call tra_coll2phys(c1,vel_curlr, c2,vel_curlt, c3,vel_curlz)
+      call tra_coll2phys(c1,p4, c2,p3, c3,p2)
 
    end subroutine vel_transform
 
@@ -299,9 +305,9 @@
 !------------------------------------------------------------------------
    subroutine vel_nonlinear()
          			! advection  u x curlu
-      p1%Re = vel_t%Re*vel_curlz%Re - vel_z%Re*vel_curlt%Re
-      p2%Re = vel_z%Re*vel_curlr%Re - vel_r%Re*vel_curlz%Re
-      p3%Re = vel_r%Re*vel_curlt%Re - vel_t%Re*vel_curlr%Re
+      p1%Re = vel_t%Re*p2%Re - vel_z%Re*p3%Re
+      p2%Re = vel_z%Re*p4%Re - vel_r%Re*p2%Re
+      p3%Re = vel_r%Re*p3%Re - vel_t%Re*p4%Re
       call tra_phys2coll(p1,vel_Nr, p2,vel_Nt, p3,vel_Nz)
       
       call vel_addHPF()
