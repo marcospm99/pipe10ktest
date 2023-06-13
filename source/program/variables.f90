@@ -105,7 +105,7 @@
 !  initialise collocated variable
 !-------------------------------------------------------------------------
    subroutine var_coll_init(a)
-      type (coll), intent(out) :: a
+      type (coll), intent(inout) :: a
       a%Re = 0d0
       a%Im = 0d0
    end subroutine var_coll_init
@@ -115,8 +115,8 @@
 !  Copy a collocated variable
 !-------------------------------------------------------------------------_
    subroutine var_coll_copy(in, out)
-      type (coll), intent(in)  :: in
-      type (coll), intent(out) :: out
+      type (coll), intent(inout)  :: in
+      type (coll), intent(inout) :: out
       out%Re(:,0:var_H%pH1) = in%Re(:,0:var_H%pH1)
       out%Im(:,0:var_H%pH1) = in%Im(:,0:var_H%pH1)
    end subroutine var_coll_copy
@@ -126,7 +126,7 @@
 !     out := out + in
 !------------------------------------------------------------------------
    subroutine var_coll_add(ac, a)
-      type (coll), intent(in)    :: ac
+      type (coll), intent(inout)    :: ac
       type (coll), intent(inout) :: a
       a%Re(:,0:var_H%pH1) = a%Re(:,0:var_H%pH1) + ac%Re(:,0:var_H%pH1)
       a%Im(:,0:var_H%pH1) = a%Im(:,0:var_H%pH1) + ac%Im(:,0:var_H%pH1)
@@ -137,7 +137,7 @@
 !     out := out - in
 !------------------------------------------------------------------------
    subroutine var_coll_sub(ac, a)
-      type (coll), intent(in)    :: ac
+      type (coll), intent(inout)    :: ac
       type (coll), intent(inout) :: a
       a%Re(:,0:var_H%pH1) = a%Re(:,0:var_H%pH1) - ac%Re(:,0:var_H%pH1)
       a%Im(:,0:var_H%pH1) = a%Im(:,0:var_H%pH1) - ac%Im(:,0:var_H%pH1)
@@ -159,7 +159,7 @@
 !     out := - in
 !------------------------------------------------------------------------
    subroutine var_coll_neg(ac, a)
-      type (coll), intent(in)    :: ac
+      type (coll), intent(inout)    :: ac
       type (coll), intent(inout) :: a
       a%Re(:,0:var_H%pH1) = - ac%Re(:,0:var_H%pH1)
       a%Im(:,0:var_H%pH1) = - ac%Im(:,0:var_H%pH1)
@@ -170,10 +170,10 @@
 !  convert collocated -> spectral
 !-------------------------------------------------------------------------
    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
-      type (coll), intent(in)  :: c
-      type (spec), intent(out) :: s
-      type (coll), intent(in),  optional :: c2,c3
-      type (spec), intent(out), optional :: s2,s3
+      type (coll), intent(inout)  :: c
+      type (spec), intent(inout) :: s
+      type (coll), intent(inout),  optional :: c2,c3
+      type (spec), intent(inout), optional :: s2,s3
       ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
@@ -249,10 +249,10 @@
 !  convert spectral -> collocated
 !-------------------------------------------------------------------------
    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
-      type (spec), intent(in)  :: s
-      type (coll), intent(out) :: c
-      type (spec), intent(in),  optional :: s2,s3
-      type (coll), intent(out), optional :: c2,c3
+      type (spec), intent(inout)  :: s
+      type (coll), intent(inout) :: c
+      type (spec), intent(inout),  optional :: s2,s3
+      type (coll), intent(inout), optional :: c2,c3
       ! double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       ! double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
@@ -331,8 +331,8 @@
    subroutine var_coll_meshmult(S,A,in, out)
       integer,     intent(in)  :: S
       type (mesh), intent(in)  :: A
-      type (coll), intent(in)  :: in
-      type (coll), intent(out) :: out
+      type (coll), intent(inout)  :: in
+      type (coll), intent(inout) :: out
       double precision :: inRe(1-i_KL:i_N), inIm(1-i_KL:i_N)
       double precision :: re(i_N), im(i_N)
       integer :: n,j,l,r
@@ -368,8 +368,8 @@
 !  take the curl of a vector
 !------------------------------------------------------------------------
    subroutine var_coll_curl(r,t,z, or,ot,oz)
-      type (coll), intent(in)  :: r,t,z
-      type (coll), intent(out) :: or,ot,oz
+      type (coll), intent(inout)  :: r,t,z
+      type (coll), intent(inout) :: or,ot,oz
       _loop_km_vars
  
       _loop_km_begin
@@ -398,8 +398,8 @@
 !  take the gradient of a scalar
 !------------------------------------------------------------------------
    subroutine var_coll_grad(p, r,t,z)
-      type (coll), intent(in)  :: p
-      type (coll), intent(out) :: r,t,z
+      type (coll), intent(inout)  :: p
+      type (coll), intent(inout) :: r,t,z
       _loop_km_vars
 
       call var_coll_copy(p,c4) !!!!!!!!!!! Tratar de quitar
@@ -421,8 +421,8 @@
 !  find the divergence of a vector
 !------------------------------------------------------------------------
    subroutine var_coll_div(r,t,z, dv)
-      type (coll), intent(in)  :: r,t,z
-      type (coll), intent(out) :: dv
+      type (coll), intent(inout)  :: r,t,z
+      type (coll), intent(inout) :: dv
       _loop_km_vars
 
       call var_coll_meshmult(1,mes_D%dr(1),r, c4)
@@ -444,8 +444,8 @@
 !------------------------------------------------------------------------
    subroutine var_coll_shift(dt,dz,a, b)
       double precision, intent(in)  :: dt,dz
-      type (coll),      intent(in)  :: a
-      type (coll),      intent(out) :: b
+      type (coll),      intent(inout)  :: a
+      type (coll),      intent(inout) :: b
       double precision, save :: sink(-i_K1:i_K1), sinm(0:i_M1), dz_=1d8
       double precision, save :: cosk(-i_K1:i_K1), cosm(0:i_M1), dt_=1d8
       double precision :: dRe(i_N)

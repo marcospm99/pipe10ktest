@@ -28,7 +28,7 @@
       double precision :: scale_
    
 
-   double complex,     allocatable :: T1(:,:,:) !T1(0:i_3K-1, 0:_Ms-1, i_pN) ! Mem = 3*512*128/8*72*384/9*16/1024**3, Preocupante, 1.12 GB total
+   
   
 
  contains
@@ -45,7 +45,7 @@
          ! if(.not.allocated(s1%Re))  allocate(s1%Re(0:_Hs1, i_pN))
          ! if(.not.allocated(s1%Im))  allocate(s1%Im(0:_Hs1, i_pN))
 
-         if(.not.allocated(T1))  allocate(T1(0:i_3K-1, 0:_Ms-1, i_pN))
+         ! if(.not.allocated(T1))  allocate(T1(0:i_3K-1, 0:_Ms-1, i_pN))
 
       
       n = (/i_3K/)            
@@ -110,7 +110,7 @@
    subroutine tra_phys2coll(p,c, p2,c2, p3,c3)
    
       implicit none
-      type (phys), intent(in)  :: p,p2,p3
+      type (phys), intent(inout)  :: p,p2,p3
       type (coll), intent(inout) :: c,c2,c3
 
       call tra_phys2spec(p,s1)
@@ -142,7 +142,7 @@
    subroutine tra_spec2phys(s, p)
 
       implicit none
-      type (spec), intent(in)  :: s
+      type (spec), intent(inout)  :: s
       type (phys), intent(inout) :: p
 
       integer :: nh, n,m,m_

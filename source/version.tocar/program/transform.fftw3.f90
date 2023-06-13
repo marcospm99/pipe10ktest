@@ -85,9 +85,9 @@
 !  convert collocated -> physical space
 !-------------------------------------------------------------------------
    subroutine tra_phys2coll(p,c, p2,c2, p3,c3)
-      type (phys), intent(in)  :: p
+      type (phys), intent(inout)  :: p
       type (coll), intent(out) :: c
-      type (phys), intent(in),  optional :: p2,p3
+      type (phys), intent(inout),  optional :: p2,p3
       type (coll), intent(out), optional :: c2,c3
       integer :: nc
       nc = 1

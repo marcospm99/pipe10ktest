@@ -56,8 +56,8 @@
 !  convert 
 !------------------------------------------------------------------------
    subroutine vel_rt2pm(r,t, up,um)
-      type (coll), intent(in)  :: r,t
-      type (coll), intent(out) :: up,um
+      type (coll), intent(inout)  :: r,t
+      type (coll), intent(inout) :: up,um
       double precision :: rRe(i_N), rIm(i_N), tRe(i_N), tIm(i_N)
       _loop_km_vars
       _loop_km_begin
@@ -75,8 +75,8 @@
 
    subroutine vel_pm2rt(up,um, r,t)
       implicit none
-      type (coll), intent(in)  :: up,um
-      type (coll), intent(out) :: r,t
+      type (coll), intent(inout)  :: up,um
+      type (coll), intent(inout) :: r,t
       double precision :: pRe(i_N),mRe(i_N),pIm(i_N),mIm(i_N)
       _loop_km_vars
       _loop_km_begin

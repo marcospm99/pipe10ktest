@@ -133,9 +133,9 @@
 !------------------------------------------------------------------------
    subroutine tim_meshmult(S,A,b,c, d)
       integer,     intent(in)  :: S
-      type (coll), intent(in)  :: b,c
+      type (coll), intent(inout)  :: b,c
       type (mesh), intent(in)  :: A(0:i_pH1)
-      type (coll), intent(out) :: d
+      type (coll), intent(inout) :: d
       double precision :: bRe(1-i_KL:i_N), bIm(1-i_KL:i_N)
       double precision :: re(i_N), im(i_N)
       integer :: j,nl,nr,n
@@ -171,7 +171,7 @@
 !  set the RHS for the boundary condition = 0
 !-------------------------------------------------------------------------
    subroutine tim_zerobc(a)
-      type (coll), intent(out) :: a
+      type (coll), intent(inout) :: a
       integer :: n
       do n = 0, var_H%pH1
          a%Re(i_N, n ) = 0d0
@@ -183,7 +183,7 @@
 !  corrected "implicit" nonlinear terms
 !-------------------------------------------------------------------------
    subroutine tim_nlincorr(N_, N)
-      type (coll), intent(in)    :: N_
+      type (coll), intent(inout)    :: N_
       type (coll), intent(inout) :: N
       double precision :: d1,d2
       integer :: nhm
@@ -199,7 +199,7 @@
 !  measure the magnutude of the correction: max diff
 !-------------------------------------------------------------------------
    subroutine tim_measurecorr(c1,c2,c3)
-      type (coll), intent(in)    :: c1,c2,c3
+      type (coll), intent(inout)    :: c1,c2,c3
       double precision :: dterr, d
       integer :: nh
       dterr = 0d0

@@ -17,6 +17,8 @@
    real :: d_start, d_stop
    double precision :: steptimer = 0d0, retau
 
+   
+
    call h5open_f(h5err)
    call initialise()
 
@@ -129,7 +131,12 @@
    subroutine initialise()
       logical :: file_exist
 
+      call initmem()
+      
       call mpi_precompute()
+
+      
+
       if(mpi_rnk==0) then
          call system('touch PRECOMPUTING')
          call system('echo $HOSTNAME > HOST')
@@ -146,7 +153,9 @@
       call vel_precompute()
       call  io_precompute()
       call  initialiseSTD()
-   
+
+      
+      
       if(mpi_rnk==0)  print*, 'loading state...'
       tim_dt = 1d99
       call io_load_state()
@@ -194,7 +203,7 @@
          if(file_exist) open(99, file='RUNNING')
          if(file_exist) close(99, status='delete')
       end if      
-
+      call deallocmem()
 #ifdef _MPI
       call mpi_barrier(mpi_comm_world, mpi_er)
       call mpi_finalize(mpi_er)
