@@ -31,10 +31,13 @@
    type (spec)    :: s1
 
 
-   ! FFT
+   ! FFT y variables (allocatear el valor máximo de los tamaños)
 
-   double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
-   double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+   ! double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+   ! double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+
+   double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+   double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
    
    ! Hay que deallocatear T1 también!!!!!!!!!!!
 
