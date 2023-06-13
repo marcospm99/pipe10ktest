@@ -674,7 +674,7 @@
 !  norm   (1/2) \int a.a dV  for each l,m
 !------------------------------------------------------------------------
    subroutine var_coll_norm(a, E,Ek,Em)
-      type (coll),      intent(in)  :: a
+      type (coll),      intent(inout)  :: a
       double precision, intent(out) :: E, Ek(0:i_K1), Em(0:i_M1)
       double precision :: E_, Ek_(0:i_K1), Em_(0:i_M1)
       double precision :: w, b, f(i_N)

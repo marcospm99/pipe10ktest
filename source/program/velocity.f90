@@ -161,7 +161,7 @@
       double precision, save :: A(4,4,0:i_pH1), aR(4),aI(4)
       double precision, allocatable, save :: U(:,:,:) !i_N,0:i_pH1,6
       double precision  :: BRe(4,0:i_pH1),BIm(4,0:i_pH1)
-      type (coll), save :: cp
+      ! type (coll), save :: cp
       integer :: j
       _loop_km_vars
       
@@ -243,7 +243,7 @@
    end subroutine vel_adjPPE
 
    subroutine vel_evalBC(up,um,uz, BRe,BIm)
-      type (coll),      intent(in)  :: up,um,uz
+      type (coll),      intent(inout)  :: up,um,uz
       double precision, intent(out) :: BRe(4,0:i_pH1), BIm(4,0:i_pH1)
       double precision :: drRe,drIm, urRe,urIm, utRe,utIm, uzRe,uzIm
       double precision :: d, s, a_, b(0:i_M*i_Mp)
