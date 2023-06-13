@@ -2,14 +2,14 @@
  loading state...
  
  Done reading fields
- Time spend reading:     0.081 sc
+ Time spend reading:     0.814 sc
  initialising output files...
  /data/marcos/pipe10k/source/runs/re180dt.cf
  timestepping.....
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
   step=           0  dt=  9.9732196E-03
-Step    1  0.796898D+04  0.748553D+01  0.180678D+03
+Step    1  0.796898D+04  0.695276D+01  0.180678D+03
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
  dt antes  9.973219928416785E-003
@@ -20,9 +20,39 @@ Step    1  0.796898D+04  0.748553D+01  0.180678D+03
  dt despues  9.973219928416785E-003
  dt antes  9.973219928416785E-003
  dt despues  9.973219928416785E-003
-Step    6  0.796903D+04  0.567699D+01  0.180676D+03
+Step    6  0.796903D+04  0.587216D+01  0.180676D+03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180lr.7461.h5
+  step=           6  dt=  9.9732196E-03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+Step   11  0.796908D+04  0.587632D+01  0.180674D+03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ Writing the file .../data/marcos/pipe10k/source/runs/pipe180lr.7462.h5
+  step=          12  dt=  9.9732196E-03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+Step   16  0.796913D+04  0.501178D+01  0.180673D+03
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
+ dt antes  9.973219928416785E-003
+ dt despues  9.973219928416785E-003
  RUNNING deleted !
  cleanup...
-  sec/step  =    5.643662    
-  CPU time  =            0  mins.
+  sec/step  =    6.355974    
+  CPU time  =            1  mins.
  ...done!

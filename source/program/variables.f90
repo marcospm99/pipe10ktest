@@ -19,8 +19,9 @@
 #include "../parallel.h"
  module variables
 !*************************************************************************
-   use type
-   use wksp, only: bsend, brecv
+   ! use type
+   ! use wksp, only: bsend, brecv, c4,c1,c2,c3
+   use wksp
    use mpif
    use parameters
    use meshs
@@ -31,7 +32,6 @@
 
    type (harm)               :: var_H
    
-   type (coll),      private :: c1,c2,c3
 
    ! Components to calculate derivatives in k or m
    double precision :: ad_k1a1(-i_K1:i_K1)
@@ -371,28 +371,24 @@
       type (coll), intent(in)  :: r,t,z
       type (coll), intent(out) :: or,ot,oz
       _loop_km_vars
-
-      call var_coll_copy(r,c1)
-      call var_coll_copy(t,c2)
-      call var_coll_copy(z,c3)
  
       _loop_km_begin
-         or%Re(:,nh) = -c3%Im(:,nh)*ad_m1r1(:,m) + c2%Im(:,nh)*ad_k1a1(k)
-         or%Im(:,nh) =  c3%Re(:,nh)*ad_m1r1(:,m) - c2%Re(:,nh)*ad_k1a1(k)
+         or%Re(:,nh) = -z%Im(:,nh)*ad_m1r1(:,m) + t%Im(:,nh)*ad_k1a1(k)
+         or%Im(:,nh) =  z%Re(:,nh)*ad_m1r1(:,m) - t%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
 
-      call var_coll_meshmult(0,mes_D%dr(1),c3, ot)
+      call var_coll_meshmult(0,mes_D%dr(1),z, ot)
       _loop_km_begin
-         ot%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k) - ot%Re(:,nh)
-         ot%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k) - ot%Im(:,nh)
+         ot%Re(:,nh) = -r%Im(:,nh)*ad_k1a1(k) - ot%Re(:,nh)
+         ot%Im(:,nh) =  r%Re(:,nh)*ad_k1a1(k) - ot%Im(:,nh)
       _loop_km_end
 
-      call var_coll_meshmult(1,mes_D%dr(1),c2, oz)
+      call var_coll_meshmult(1,mes_D%dr(1),t, oz)
       _loop_km_begin
-         oz%Re(:,nh) =  c2%Re(:,nh)*mes_D%r(:,-1) + oz%Re(:,nh)  &
-                       +c1%Im(:,nh)*ad_m1r1(:,m)
-         oz%Im(:,nh) =  c2%Im(:,nh)*mes_D%r(:,-1) + oz%Im(:,nh)  &
-                       -c1%Re(:,nh)*ad_m1r1(:,m)
+         oz%Re(:,nh) =  t%Re(:,nh)*mes_D%r(:,-1) + oz%Re(:,nh)  &
+                       +r%Im(:,nh)*ad_m1r1(:,m)
+         oz%Im(:,nh) =  t%Im(:,nh)*mes_D%r(:,-1) + oz%Im(:,nh)  &
+                       -r%Re(:,nh)*ad_m1r1(:,m)
       _loop_km_end
 
    end subroutine var_coll_curl
@@ -406,16 +402,16 @@
       type (coll), intent(out) :: r,t,z
       _loop_km_vars
 
-      call var_coll_copy(p,c1)
+      call var_coll_copy(p,c4) !!!!!!!!!!! Tratar de quitar
 
-      call var_coll_meshmult(0,mes_D%dr(1),c1, r)
+      call var_coll_meshmult(0,mes_D%dr(1),c4, r)
       _loop_km_begin
-         t%Re(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)
-         t%Im(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)
+         t%Re(:,nh) = -c4%Im(:,nh)*ad_m1r1(:,m)
+         t%Im(:,nh) =  c4%Re(:,nh)*ad_m1r1(:,m)
       _loop_km_end
       _loop_km_begin
-         z%Re(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-         z%Im(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
+         z%Re(:,nh) = -c4%Im(:,nh)*ad_k1a1(k)
+         z%Im(:,nh) =  c4%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
 
    end subroutine var_coll_grad
@@ -429,16 +425,16 @@
       type (coll), intent(out) :: dv
       _loop_km_vars
 
-      call var_coll_meshmult(1,mes_D%dr(1),r, c1)
+      call var_coll_meshmult(1,mes_D%dr(1),r, c4)
       _loop_km_begin
-         c2%Re(:,nh) =  &
-	    r%Re(:,nh)*mes_D%r(:,-1) + c1%Re(:,nh)  &
+         dv%Re(:,nh) =  &
+	    r%Re(:,nh)*mes_D%r(:,-1) + c4%Re(:,nh)  &
 	  - t%Im(:,nh)*ad_m1r1(:,m) - z%Im(:,nh)*ad_k1a1(k)
-         c2%Im(:,nh) =  &
-	    r%Im(:,nh)*mes_D%r(:,-1) + c1%Im(:,nh)  &
+         dv%Im(:,nh) =  &
+	    r%Im(:,nh)*mes_D%r(:,-1) + c4%Im(:,nh)  &
 	  + t%Re(:,nh)*ad_m1r1(:,m) + z%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
-      call var_coll_copy(c2, dv)
+      ! call var_coll_copy(c2, dv)
       
    end subroutine var_coll_div
 
