@@ -55,49 +55,6 @@
       
    end subroutine tra_precompute
 
-
-!-------------------------------------------------------------------------
-!  convert collocated -> physical space
-!-------------------------------------------------------------------------
-   ! subroutine tra_coll2phys(c,p, c2,p2, c3,p3)
-   !    type (coll), intent(in)  :: c
-   !    type (phys), intent(out) :: p
-   !    type (coll), intent(in),  optional :: c2,c3
-   !    type (phys), intent(out), optional :: p2,p3
-   !    integer :: nc
-   !    nc = 1
-   !    if(present(c2)) nc = 2
-   !    if(present(c3)) nc = 3
-   !    if(nc==1)  call var_coll2spec(c, s1)
-   !    if(nc==2)  call var_coll2spec(c,s1, c2,s2)
-   !    if(nc==3)  call var_coll2spec(c,s1, c2,s2, c3,s3)
-   !    if(nc>=1)  call tra_spec2phys(s1, p)
-   !    if(nc>=2)  call tra_spec2phys(s2, p2)
-   !    if(nc>=3)  call tra_spec2phys(s3, p3)
-   ! end subroutine tra_coll2phys
-
-
-!-------------------------------------------------------------------------
-!  convert collocated -> physical space
-!-------------------------------------------------------------------------
-   ! subroutine tra_phys2coll(p,c, p2,c2, p3,c3)
-   !    type (phys), intent(in)  :: p
-   !    type (coll), intent(out) :: c
-   !    type (phys), intent(in),  optional :: p2,p3
-   !    type (coll), intent(out), optional :: c2,c3
-   !    integer :: nc
-   !    nc = 1
-   !    if(present(c2)) nc = 2
-   !    if(present(c3)) nc = 3
-   !    if(nc>=1)  call tra_phys2spec(p,  s1)
-   !    if(nc>=2)  call tra_phys2spec(p2, s2)
-   !    if(nc>=3)  call tra_phys2spec(p3, s3)
-   !    if(nc==1)  call var_spec2coll(s1, c)
-   !    if(nc==2)  call var_spec2coll(s1,c, s2,c2)
-   !    if(nc==3)  call var_spec2coll(s1,c, s2,c2, s3,c3)
-   ! end subroutine tra_phys2coll
-
-
 !------------------------------------------------------------------------
 !  Convert spectral to real space
 !------------------------------------------------------------------------
@@ -191,8 +148,8 @@
 !------------------------------------------------------------------------
 #if _Ns != 1
    subroutine tra_T2Ts()
-      double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
-      double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+      ! double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+      ! double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
 
@@ -249,8 +206,8 @@
 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
    subroutine tra_Ts2T()
-      double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
-      double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+      ! double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+      ! double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
 

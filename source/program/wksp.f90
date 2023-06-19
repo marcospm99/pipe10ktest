@@ -10,10 +10,7 @@
    type (phys) :: vel_r
    type (phys) :: vel_t
    type (phys) :: vel_z
-   type (phys) :: vel_p
-   ! type (phys) :: vel_curlr
-   ! type (phys) :: vel_curlt
-   ! type (phys) :: vel_curlz
+   
    type (coll) :: vel_ur
    type (coll) :: vel_ut
    type (coll) :: vel_uz
@@ -34,14 +31,22 @@
    type (coll) :: c1,c2,c3,c4
    type (coll) :: r,t,z
 
-   double complex :: Tbis(0:i_3K-1, 0:_Ms-1, i_pN)
-   double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
-   type (spec)    :: s1 !,s2,s3
+
+   type (spec)    :: s1
    type (phys)    :: p1,p2,p3,p4
-   
+
 
    ! misc
    double precision :: d(i_N)
+   double complex :: Tbis(0:i_3K-1, 0:_Ms-1, i_pN)
+   double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
+
+   
+   ! double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+   ! double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+
+   double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+   double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
    
 
 end module

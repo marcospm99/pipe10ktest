@@ -20,7 +20,7 @@
  module variables
 !*************************************************************************
    use type
-   use wksp, only: c4,c1,c2,c3
+   use wksp
    use mpif
    use parameters
    use meshs
@@ -189,8 +189,8 @@
    subroutine var_coll2spec1d(c,s)
       type (coll), intent(in)  :: c
       type (spec), intent(out) :: s
-      double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-      double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
 
       nc = 1
@@ -265,8 +265,8 @@
 subroutine var_spec2coll1d(s,c)
       type (spec), intent(in)  :: s
       type (coll), intent(out) :: c
-      double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
-      double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+      ! double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+      ! double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
 
       ns = 1
