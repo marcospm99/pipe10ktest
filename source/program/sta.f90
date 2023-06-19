@@ -2,8 +2,8 @@
 ! 1) Otf, max = 54.4
 ! 2) max =  52.1
 ! 3) max =  51.0
-! 4) max =  
-! 5) max =  
+! 4) max =  49
+! 5) max =  48.5
 ! 6) max =  
 ! 7) max =  
 ! 8) max =  
