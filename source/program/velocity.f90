@@ -156,15 +156,15 @@
       integer, intent(in) :: F
       double precision, save :: A(4,4,0:i_pH1), aR(4),aI(4)
       double precision, allocatable, save :: U(:,:,:) !i_N,0:i_pH1,6
-      double precision, allocatable, save :: P(:,:)   !i_N,0:i_pH1
+      ! double precision, allocatable, save :: P(:,:)   !i_N,0:i_pH1
       double precision  :: BRe(4,0:i_pH1),BIm(4,0:i_pH1)
-      type (coll), save :: cp
+      ! type (coll), save :: cp
       integer :: j
       _loop_km_vars
       
       if(F==0) then                             ! precompute, get U
          if(.not.allocated(U))  &
-            allocate( U(i_N,0:i_pH1,6), P(i_N,0:i_pH1) )
+            allocate( U(i_N,0:i_pH1,6))!, P(i_N,0:i_pH1) )
          do j = 1, 4
             call var_coll_init(c1)
             call var_coll_init(c2)
@@ -184,7 +184,7 @@
             else
                c1%Re(i_N,:) = -1d0
                call tim_lumesh_invert(1,LNp, c1)
-               P(:,:) = -c1%Re
+               ! P(:,:) = -c1%Re
                call var_coll_grad(c1, c1,c2,c3)
                call vel_rt2pm(c1,c2, c1,c2)
                call tim_zerobc(c1)
@@ -207,10 +207,10 @@
 
       else if(F==1) then			! get p, project RHS
          call vel_pm2rt(vel_ur,vel_ut, c1,c2)
-         call var_coll_div(c1,c2,vel_uz, cp)
-         call tim_zerobc(cp)
-         call tim_lumesh_invert(1,LNp, cp)
-         call var_coll_grad(cp, c1,c2,c3)
+         call var_coll_div(c1,c2,vel_uz, c4)
+         call tim_zerobc(c4)
+         call tim_lumesh_invert(1,LNp, c4)
+         call var_coll_grad(c4, c1,c2,c3)
          call vel_rt2pm(c1,c2, c1,c2)
          call var_coll_sub(c1, vel_ur)
          call var_coll_sub(c2, vel_ut)
@@ -237,16 +237,17 @@
          _loop_km_end
 			! To get pressure field, *after* first time step:
 			! call vel_adjPPE(3).  Result in type(phys)::vel_p.
-      else if(F==3) then
-         if(tim_step==0) stop 'vel_adjPPE err1' ! err: data not available'
-         _loop_km_begin
-            if(k==0 .and. m==0) cycle
-            cp%Re(:,nh) = cp%Re(:,nh) + aR(4)*P(:,nh)
-            cp%Im(:,nh) = cp%Im(:,nh) + aI(4)*P(:,nh)
-         _loop_km_end
-         call tra_coll2phys1d(cp, vel_p)
-         vel_p%Re = vel_p%Re - 0.5d0*  &
-            (vel_r%Re*vel_r%Re + vel_t%Re*vel_t%Re + vel_z%Re*vel_z%Re)
+
+      ! else if(F==3) then
+      !    if(tim_step==0) stop 'vel_adjPPE err1' ! err: data not available'
+      !    _loop_km_begin
+      !       if(k==0 .and. m==0) cycle
+      !       cp%Re(:,nh) = cp%Re(:,nh) + aR(4)*P(:,nh)
+      !       cp%Im(:,nh) = cp%Im(:,nh) + aI(4)*P(:,nh)
+      !    _loop_km_end
+      !    call tra_coll2phys1d(cp, vel_p)
+      !    vel_p%Re = vel_p%Re - 0.5d0*  &
+      !       (vel_r%Re*vel_r%Re + vel_t%Re*vel_t%Re + vel_z%Re*vel_z%Re)
       end if
 
    end subroutine vel_adjPPE
