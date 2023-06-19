@@ -174,8 +174,8 @@
       type (spec), intent(inout) :: s
       type (coll), intent(inout),  optional :: c2,c3
       type (spec), intent(inout), optional :: s2,s3
-      ! double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
-      ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+      double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
 
       nc = 1
@@ -253,8 +253,8 @@
       type (coll), intent(inout) :: c
       type (spec), intent(inout),  optional :: s2,s3
       type (coll), intent(inout), optional :: c2,c3
-      ! double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
-      ! double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+      double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+      double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
 
       ns = 1

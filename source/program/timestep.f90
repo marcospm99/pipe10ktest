@@ -67,7 +67,7 @@
    subroutine tim_lumesh_init(PM,BC,c1,c2, A)
       integer,          intent(in)  :: PM,BC
       double precision, intent(in)  :: c1,c2
-      type (lumesh),    intent(out) :: A(0:i_pH1)
+      type (lumesh),    intent(inout) :: A(0:i_pH1)
       double precision :: d(i_N)
       integer :: info, n,j, S
       _loop_km_vars
@@ -105,7 +105,7 @@
 !------------------------------------------------------------------------
    subroutine tim_lumesh_invert(BC,A, b)
       integer,       intent(in)    :: BC
-      type (lumesh), intent(in)    :: A(0:i_pH1)
+      type (lumesh), intent(inout)    :: A(0:i_pH1)
       type (coll),   intent(inout) :: b
       integer :: info
       _loop_km_vars
@@ -272,12 +272,12 @@
       integer, save :: i = 0
 
       dt = min(tim_dt*1.11d0, d_maxdt)
-         if(mpi_rnk==0) write(*,*) 'dt antes', tim_dt
+         ! if(mpi_rnk==0) write(*,*) 'dt antes', tim_dt
       if(tim_step==0d0 .and. tim_corr_dt==0d0)  &
                            dt = min(dt, tim_cfl_dt*0.1d0)
       if(tim_cfl_dt >0d0)  dt = min(dt, tim_cfl_dt*d_courant)
       if(tim_corr_dt>0d0)  dt = min(dt, tim_corr_dt*0.95d0)
-         if(mpi_rnk==0) write(*,*) 'dt despues', tim_dt
+         ! if(mpi_rnk==0) write(*,*) 'dt despues', tim_dt
       i = i - 1
       tim_new_dt = ( dt<tim_dt*0.95d0  &
               .or.  (dt>tim_dt*1.10d0 .and. i<0)  &

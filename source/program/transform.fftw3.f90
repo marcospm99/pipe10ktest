@@ -17,7 +17,10 @@
    
    implicit none
    save
-
+   
+   
+   integer, parameter, private          :: i_3K = 3*i_K
+   integer, parameter, private          :: i_3M = 3*i_M
    integer, parameter, private :: i_Ma = (3*i_M)/2
    double complex,     private :: X(0:i_3K-1, 0:_Ms-1)   ! Mem = 512*3*128/8*72*16/1024**3 no preocupante, 0.026 GB
    double complex,     private :: Y(0:i_3K-1, 0:_Ms-1)   ! Idem
@@ -27,7 +30,8 @@
       integer :: nh, n,m, m_
       double precision :: scale_
    
-
+   
+   
    
   
 
@@ -46,6 +50,8 @@
          ! if(.not.allocated(s1%Im))  allocate(s1%Im(0:_Hs1, i_pN))
 
          ! if(.not.allocated(T1))  allocate(T1(0:i_3K-1, 0:_Ms-1, i_pN))
+         ! allocate(T1(0:i_3K-1, 0:_Ms-1, i_pN))
+         
 
       
       n = (/i_3K/)            
@@ -274,6 +280,8 @@
 
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
+      double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+      double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
 
       ! allocate(bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1))
       ! allocate(brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1))
@@ -341,6 +349,8 @@
 
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
+      double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
+      double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
 
       ! allocate(bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1))
       ! allocate(brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1))

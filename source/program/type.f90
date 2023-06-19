@@ -24,15 +24,15 @@
 
 !   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
 
-   ! type coll
-   !    double precision     :: Re(i_N, 0:i_pH1)
-   !    double precision     :: Im(i_N, 0:i_pH1)
-   ! end type coll
-
    type coll
-      double precision, allocatable     :: Re(:,:)
-      double precision, allocatable     :: Im(:,:)
+      double precision     :: Re(i_N, 0:i_pH1)
+      double precision     :: Im(i_N, 0:i_pH1)
    end type coll
+
+   ! type coll
+   !    double precision, allocatable     :: Re(:,:)
+   !    double precision, allocatable     :: Im(:,:)
+   ! end type coll
 
 
    ! type phys
@@ -50,9 +50,14 @@
    end type mesh
                                 ! M(2*KL+1+n-j, j) = A(n,j)
                                 ! see lapack dgbtrf
+   ! type lumesh
+      ! integer          :: ipiv(i_N)
+      ! double precision :: M(3*i_KL+1, i_N)
+   ! end type lumesh
+
    type lumesh
-      integer          :: ipiv(i_N)
-      double precision :: M(3*i_KL+1, i_N)
+      integer,          allocatable, dimension(:)   :: ipiv
+      double precision, allocatable, dimension(:,:) :: M ! Mem = 8*72*3*4*384/1024**3 negligible
    end type lumesh
 
 

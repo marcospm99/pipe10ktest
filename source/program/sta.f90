@@ -99,14 +99,12 @@
     ! Compute vel_r
    !call vort()
 
-      call vel_sta()
 
+      ! Bloque bueno
+      ! call vel_sta()
+      ! call pressure(c1,c2,c3,p1,p2)
+      ! call var_coll_dissp(c1,c2,c3,c4)
 
-      call pressure(c1,c2,c3,p1,p2)
-
-      call var_coll_dissp(c1,c2,c3,c4)
-      !  call pressure(c1,c2,c3,p1,p2)
-      ! call vel_sta()  
 
 
          ! En físico
