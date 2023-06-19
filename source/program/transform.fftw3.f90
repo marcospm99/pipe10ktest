@@ -127,7 +127,7 @@
 ! #if _Ns == 1 
 !          Xs(:,0:i_M1) = Y
 ! #else
-         T(:,:,n) = Y
+         Tbis(:,:,n) = Y
       end do
       call tra_T2Ts()
       do n = 1, mes_D%pN
@@ -162,7 +162,7 @@
       end do
       call tra_Ts2T()
       do n = 1, mes_D%pN
-         Y = T(:,:,n)
+         Y = Tbis(:,:,n)
 ! #endif
          call dfftw_execute(plan_c2cb)
          if(mpi_rnk/_Nr==0) then
@@ -214,8 +214,8 @@
          do n = 1, mes_D%pN
             do m = 0, _Ms1
                do j = jz0, jz0+i_pZ-1
-                  bsend(l,  stp) =  dble(T(j,m,n))
-                  bsend(l+1,stp) = dimag(T(j,m,n))
+                  bsend(l,  stp) =  dble(Tbis(j,m,n))
+                  bsend(l+1,stp) = dimag(Tbis(j,m,n))
                   l = l + 2
                end do
             end do
@@ -292,7 +292,7 @@
          do n = 1, mes_D%pN
             do m = 0, _Ms1
                do j = jz0, jz0+i_pZ-1
-                  T(j,m,n) = dcmplx(brecv(l,stp),brecv(l+1,stp))
+                  Tbis(j,m,n) = dcmplx(brecv(l,stp),brecv(l+1,stp))
                   l = l + 2
                end do
             end do
@@ -305,6 +305,25 @@
 
    end subroutine tra_Ts2T
 #endif
+
+   subroutine tra_phys2coll1d(p,c)
+      type (coll), intent(inout)  :: C
+      type (phys), intent(in) :: p
+
+      call tra_phys2spec(p,  s1)
+      
+      call var_spec2coll(s1, c)
+
+   end subroutine tra_phys2coll1d
+
+   subroutine tra_coll2phys1d(c,p)
+   type (coll), intent(inout)  :: c
+   type (phys), intent(inout) :: p
+
+   call var_coll2spec(c,s1)
+   call tra_spec2phys(s1,p)
+
+   end subroutine tra_coll2phys1d
 
 !*************************************************************************
  end module transform

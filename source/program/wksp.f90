@@ -31,11 +31,15 @@
    type (mesh)   :: Ltz(0:i_pH1)
    type (coll)   :: Nr_,Nt_,Nz_,ur_,ut_,uz_
 
-   type (coll) :: c1,c2,c3
+   type (coll) :: c1,c2,c3,c4
+   type (coll) :: r,t,z
 
-   double complex :: T(0:i_3K-1, 0:_Ms-1, i_pN)
+   double complex :: Tbis(0:i_3K-1, 0:_Ms-1, i_pN)
    double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
    type (spec)    :: s1,s2,s3
+   type (phys)    :: p1,p2,p3
+
+   double precision :: d(i_N)
    
 
 end module
