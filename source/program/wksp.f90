@@ -36,9 +36,10 @@
 
    double complex :: Tbis(0:i_3K-1, 0:_Ms-1, i_pN)
    double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
-   type (spec)    :: s1,s2,s3
+   type (spec)    :: s1 !,s2,s3
    type (phys)    :: p1,p2,p3
 
+   ! misc
    double precision :: d(i_N)
    
 

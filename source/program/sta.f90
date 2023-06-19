@@ -1,13 +1,13 @@
-! Memory: initially: 7.55 GB
-! 1) Otf, max = 99.1
-! 2) max = 97.4
-! 3) max = 97.4
-! 4) max = 97.4
-! 5) max = 96.8
-! 6) max = 96.7
-! 7) max = 94.5
-! 8) max = 94.9
-! 9) max = 82.7
+
+! 1) Otf, max = 54.4
+! 2) max =  
+! 3) max =  
+! 4) max =  
+! 5) max =  
+! 6) max =  
+! 7) max =  
+! 8) max =  
+! 9) max =  
 ! 10) max = 81.9
 ! 11) max = 81.3
 ! 12) max = 80.6

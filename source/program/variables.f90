@@ -184,36 +184,109 @@
 !-------------------------------------------------------------------------
 !  convert collocated -> spectral
 !-------------------------------------------------------------------------
-#ifndef _MPI
-   subroutine var_coll2spec(c,s, c2,s2, c3,s3)
-      type (coll), intent(in)  :: c
-      type (spec), intent(out) :: s
-      type (coll), intent(in),  optional :: c2,c3
-      type (spec), intent(out), optional :: s2,s3
-      s%Re = transpose(c%Re)
-      s%Im = transpose(c%Im)
-      if(.not. present(c2)) return
-      s2%Re = transpose(c2%Re)
-      s2%Im = transpose(c2%Im)
-      if(.not. present(c3)) return
-      s3%Re = transpose(c3%Re)
-      s3%Im = transpose(c3%Im)
-   end subroutine var_coll2spec
+! #ifndef _MPI
+!    subroutine var_coll2spec(c,s, c2,s2, c3,s3)
+!       type (coll), intent(in)  :: c
+!       type (spec), intent(out) :: s
+!       type (coll), intent(in),  optional :: c2,c3
+!       type (spec), intent(out), optional :: s2,s3
+!       s%Re = transpose(c%Re)
+!       s%Im = transpose(c%Im)
+!       if(.not. present(c2)) return
+!       s2%Re = transpose(c2%Re)
+!       s2%Im = transpose(c2%Im)
+!       if(.not. present(c3)) return
+!       s3%Re = transpose(c3%Re)
+!       s3%Im = transpose(c3%Im)
+!    end subroutine var_coll2spec
 
-#else
-   subroutine var_coll2spec(c,s, c2,s2, c3,s3)
+! #else
+
+   ! subroutine var_coll2spec(c,s, c2,s2, c3,s3)
+   !    type (coll), intent(in)  :: c
+   !    type (spec), intent(out) :: s
+   !    type (coll), intent(in),  optional :: c2,c3
+   !    type (spec), intent(out), optional :: s2,s3
+   !    double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+   !    double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
+   !    integer :: stp, dst,src, n,nh,l, nc, rko,nho
+
+   !    nc = 1
+   !    if(present(c2)) nc = 2
+   !    if(present(c3)) nc = 3
+  
+   !    rko = (mpi_rnk/_Nr)*_Nr
+   !    nho = var_H%pH0_(rko)
+
+   !    do stp = 0, _Nr-1
+   !       src  = modulo(mpi_sze-stp+mpi_rnk, _Nr) + rko
+   !       mpi_tg = stp + rko
+   !       call mpi_irecv( brecv(1,stp), 2*mes_D%pN*(var_H%pH1_(src)+1)*nc,  &
+   !          mpi_double_precision, src, mpi_tg, mpi_comm_world,  &
+   !          mpi_rq(stp), mpi_er)
+   !    end do
+
+   !    do stp = 0, _Nr-1
+   !       dst  = modulo(stp+mpi_rnk, _Nr) + rko
+   !       l = 1
+   !       do n = mes_D%pNi_(dst), mes_D%pNi_(dst)+mes_D%pN_(dst)-1
+   !          do nh = 0, var_H%pH1
+   !             bsend(l,  stp) = c%Re(n,nh)
+   !             bsend(l+1,stp) = c%Im(n,nh)
+   !             l = l + 2
+   !             if(nc<2) cycle
+   !             bsend(l,  stp) = c2%Re(n,nh)
+   !             bsend(l+1,stp) = c2%Im(n,nh)
+   !             l = l + 2
+   !             if(nc<3) cycle
+   !             bsend(l,  stp) = c3%Re(n,nh)
+   !             bsend(l+1,stp) = c3%Im(n,nh)
+   !             l = l + 2
+   !          end do
+   !       end do
+   !       mpi_tg = stp + rko
+   !       call mpi_isend( bsend(1,stp), 2*mes_D%pN_(dst)*(var_H%pH1+1)*nc,  &
+   !          mpi_double_precision, dst, mpi_tg, mpi_comm_world,  &
+   !          mpi_rq(mpi_sze+stp), mpi_er)
+   !    end do
+      
+   !    do stp = 0, _Nr-1
+   !       src  = modulo(mpi_sze-stp+mpi_rnk, _Nr) + rko
+   !       call mpi_wait( mpi_rq(stp), mpi_st, mpi_er)
+   !       l = 1
+   !       do n = 1, mes_D%pN
+   !          do nh =  &
+   !                var_H%pH0_(src)-nho, var_H%pH0_(src)+var_H%pH1_(src)-nho
+   !             s%Re(nh,n) = brecv(l,  stp)
+   !             s%Im(nh,n) = brecv(l+1,stp)
+   !             l = l + 2
+   !             if(nc<2) cycle
+   !             s2%Re(nh,n) = brecv(l,  stp)
+   !             s2%Im(nh,n) = brecv(l+1,stp)
+   !             l = l + 2
+   !             if(nc<3) cycle
+   !             s3%Re(nh,n) = brecv(l,  stp)
+   !             s3%Im(nh,n) = brecv(l+1,stp)
+   !             l = l + 2
+   !          end do
+   !       end do
+   !    end do
+
+   !    do stp = 0, _Nr-1
+   !       call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
+   !    end do
+
+   ! end subroutine var_coll2spec
+! #endif
+
+   subroutine var_coll2spec1d(c,s)
       type (coll), intent(in)  :: c
       type (spec), intent(out) :: s
-      type (coll), intent(in),  optional :: c2,c3
-      type (spec), intent(out), optional :: s2,s3
       double precision :: bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
 
       nc = 1
-      if(present(c2)) nc = 2
-      if(present(c3)) nc = 3
-  
       rko = (mpi_rnk/_Nr)*_Nr
       nho = var_H%pH0_(rko)
 
@@ -233,14 +306,14 @@
                bsend(l,  stp) = c%Re(n,nh)
                bsend(l+1,stp) = c%Im(n,nh)
                l = l + 2
-               if(nc<2) cycle
-               bsend(l,  stp) = c2%Re(n,nh)
-               bsend(l+1,stp) = c2%Im(n,nh)
-               l = l + 2
-               if(nc<3) cycle
-               bsend(l,  stp) = c3%Re(n,nh)
-               bsend(l+1,stp) = c3%Im(n,nh)
-               l = l + 2
+               ! if(nc<2) cycle
+               ! bsend(l,  stp) = c2%Re(n,nh)
+               ! bsend(l+1,stp) = c2%Im(n,nh)
+               ! l = l + 2
+               ! if(nc<3) cycle
+               ! bsend(l,  stp) = c3%Re(n,nh)
+               ! bsend(l+1,stp) = c3%Im(n,nh)
+               ! l = l + 2
             end do
          end do
          mpi_tg = stp + rko
@@ -259,14 +332,14 @@
                s%Re(nh,n) = brecv(l,  stp)
                s%Im(nh,n) = brecv(l+1,stp)
                l = l + 2
-               if(nc<2) cycle
-               s2%Re(nh,n) = brecv(l,  stp)
-               s2%Im(nh,n) = brecv(l+1,stp)
-               l = l + 2
-               if(nc<3) cycle
-               s3%Re(nh,n) = brecv(l,  stp)
-               s3%Im(nh,n) = brecv(l+1,stp)
-               l = l + 2
+               ! if(nc<2) cycle
+               ! s2%Re(nh,n) = brecv(l,  stp)
+               ! s2%Im(nh,n) = brecv(l+1,stp)
+               ! l = l + 2
+               ! if(nc<3) cycle
+               ! s3%Re(nh,n) = brecv(l,  stp)
+               ! s3%Im(nh,n) = brecv(l+1,stp)
+               ! l = l + 2
             end do
          end do
       end do
@@ -275,41 +348,112 @@
          call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
       end do
 
-   end subroutine var_coll2spec
-#endif
+   end subroutine var_coll2spec1d
    
 !-------------------------------------------------------------------------
 !  convert spectral -> collocated
 !-------------------------------------------------------------------------
-#ifndef _MPI
-   subroutine var_spec2coll(s,c, s2,c2, s3,c3)
-      type (spec), intent(in)  :: s
-      type (coll), intent(out) :: c
-      type (spec), intent(in),  optional :: s2,s3
-      type (coll), intent(out), optional :: c2,c3
-      c%Re = transpose(s%Re)
-      c%Im = transpose(s%Im)
-      if(.not. present(s2)) return
-      c2%Re = transpose(s2%Re)
-      c2%Im = transpose(s2%Im)
-      if(.not. present(s3)) return
-      c3%Re = transpose(s3%Re)
-      c3%Im = transpose(s3%Im)
-   end subroutine var_spec2coll
+! #ifndef _MPI
+!    subroutine var_spec2coll(s,c, s2,c2, s3,c3)
+!       type (spec), intent(in)  :: s
+!       type (coll), intent(out) :: c
+!       type (spec), intent(in),  optional :: s2,s3
+!       type (coll), intent(out), optional :: c2,c3
+!       c%Re = transpose(s%Re)
+!       c%Im = transpose(s%Im)
+!       if(.not. present(s2)) return
+!       c2%Re = transpose(s2%Re)
+!       c2%Im = transpose(s2%Im)
+!       if(.not. present(s3)) return
+!       c3%Re = transpose(s3%Re)
+!       c3%Im = transpose(s3%Im)
+!    end subroutine var_spec2coll
 
-#else
-   subroutine var_spec2coll(s,c, s2,c2, s3,c3)
+! #else
+   ! subroutine var_spec2coll(s,c, s2,c2, s3,c3)
+   !    type (spec), intent(in)  :: s
+   !    type (coll), intent(out) :: c
+   !    type (spec), intent(in),  optional :: s2,s3
+   !    type (coll), intent(out), optional :: c2,c3
+   !    double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+   !    double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
+   !    integer :: stp, dst,src, n,nh,l, ns, rko,nho
+
+   !    ns = 1
+   !    if(present(s2)) ns = 2
+   !    if(present(s3)) ns = 3
+
+   !    rko = (mpi_rnk/_Nr)*_Nr
+   !    nho = var_H%pH0_(rko)
+
+   !    do stp = 0, _Nr-1
+   !       src  = modulo(mpi_sze-stp+mpi_rnk, _Nr) + rko
+   !       mpi_tg = stp + rko
+   !       call mpi_irecv( brecv(1,stp), 2*(var_H%pH1+1)*mes_D%pN_(src)*ns,  &
+   !          mpi_double_precision, src, mpi_tg, mpi_comm_world,  &
+   !          mpi_rq(stp), mpi_er)
+   !    end do
+
+   !    do stp = 0, _Nr-1
+   !       dst  = modulo(stp+mpi_rnk, _Nr) + rko
+   !       l = 1
+   !       do nh = var_H%pH0_(dst)-nho, var_H%pH0_(dst)+var_H%pH1_(dst)-nho
+   !          do n = 1, mes_D%pN
+   !             bsend(l,  stp) = s%Re(nh,n)
+   !             bsend(l+1,stp) = s%Im(nh,n)
+   !             l = l + 2
+   !             if(ns<2) cycle
+   !             bsend(l,  stp) = s2%Re(nh,n)
+   !             bsend(l+1,stp) = s2%Im(nh,n)
+   !             l = l + 2
+   !             if(ns<3) cycle
+   !             bsend(l,  stp) = s3%Re(nh,n)
+   !             bsend(l+1,stp) = s3%Im(nh,n)
+   !             l = l + 2
+   !          end do
+   !       end do
+   !       mpi_tg = stp + rko
+   !       call mpi_isend( bsend(1,stp), 2*(var_H%pH1_(dst)+1)*mes_D%pN*ns,  &
+   !          mpi_double_precision, dst, mpi_tg, mpi_comm_world,  &
+   !          mpi_rq(mpi_sze+stp), mpi_er)
+   !    end do
+      
+   !    do stp = 0, _Nr-1
+   !       src  = modulo(mpi_sze-stp+mpi_rnk, _Nr) + rko
+   !       call mpi_wait( mpi_rq(stp), mpi_st, mpi_er)
+   !       l = 1
+   !       do nh = 0, var_H%pH1
+   !          do n = mes_D%pNi_(src), mes_D%pNi_(src)+mes_D%pN_(src)-1
+   !             c%Re(n,nh) = brecv(l,  stp)
+   !             c%Im(n,nh) = brecv(l+1,stp)
+   !             l = l + 2
+   !             if(ns<2) cycle
+   !             c2%Re(n,nh) = brecv(l,  stp)
+   !             c2%Im(n,nh) = brecv(l+1,stp)
+   !             l = l + 2
+   !             if(ns<3) cycle
+   !             c3%Re(n,nh) = brecv(l,  stp)
+   !             c3%Im(n,nh) = brecv(l+1,stp)
+   !             l = l + 2
+   !          end do
+   !       end do
+   !    end do
+
+   !    do stp = 0, _Nr-1
+   !       call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
+   !    end do
+
+   ! end subroutine var_spec2coll
+! #endif
+
+subroutine var_spec2coll1d(s,c)
       type (spec), intent(in)  :: s
       type (coll), intent(out) :: c
-      type (spec), intent(in),  optional :: s2,s3
-      type (coll), intent(out), optional :: c2,c3
       double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
 
       ns = 1
-      if(present(s2)) ns = 2
-      if(present(s3)) ns = 3
 
       rko = (mpi_rnk/_Nr)*_Nr
       nho = var_H%pH0_(rko)
@@ -330,14 +474,14 @@
                bsend(l,  stp) = s%Re(nh,n)
                bsend(l+1,stp) = s%Im(nh,n)
                l = l + 2
-               if(ns<2) cycle
-               bsend(l,  stp) = s2%Re(nh,n)
-               bsend(l+1,stp) = s2%Im(nh,n)
-               l = l + 2
-               if(ns<3) cycle
-               bsend(l,  stp) = s3%Re(nh,n)
-               bsend(l+1,stp) = s3%Im(nh,n)
-               l = l + 2
+               ! if(ns<2) cycle
+               ! bsend(l,  stp) = s2%Re(nh,n)
+               ! bsend(l+1,stp) = s2%Im(nh,n)
+               ! l = l + 2
+               ! if(ns<3) cycle
+               ! bsend(l,  stp) = s3%Re(nh,n)
+               ! bsend(l+1,stp) = s3%Im(nh,n)
+               ! l = l + 2
             end do
          end do
          mpi_tg = stp + rko
@@ -355,14 +499,14 @@
                c%Re(n,nh) = brecv(l,  stp)
                c%Im(n,nh) = brecv(l+1,stp)
                l = l + 2
-               if(ns<2) cycle
-               c2%Re(n,nh) = brecv(l,  stp)
-               c2%Im(n,nh) = brecv(l+1,stp)
-               l = l + 2
-               if(ns<3) cycle
-               c3%Re(n,nh) = brecv(l,  stp)
-               c3%Im(n,nh) = brecv(l+1,stp)
-               l = l + 2
+               ! if(ns<2) cycle
+               ! c2%Re(n,nh) = brecv(l,  stp)
+               ! c2%Im(n,nh) = brecv(l+1,stp)
+               ! l = l + 2
+               ! if(ns<3) cycle
+               ! c3%Re(n,nh) = brecv(l,  stp)
+               ! c3%Im(n,nh) = brecv(l+1,stp)
+               ! l = l + 2
             end do
          end do
       end do
@@ -371,9 +515,7 @@
          call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
       end do
 
-   end subroutine var_spec2coll
-#endif
-
+   end subroutine var_spec2coll1d
 
 !------------------------------------------------------------------------
 !  Multiply a collocated variable by a mesh-type

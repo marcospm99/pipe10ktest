@@ -244,7 +244,7 @@
             cp%Re(:,nh) = cp%Re(:,nh) + aR(4)*P(:,nh)
             cp%Im(:,nh) = cp%Im(:,nh) + aI(4)*P(:,nh)
          _loop_km_end
-         call tra_coll2phys(cp, vel_p)
+         call tra_coll2phys1d(cp, vel_p)
          vel_p%Re = vel_p%Re - 0.5d0*  &
             (vel_r%Re*vel_r%Re + vel_t%Re*vel_t%Re + vel_z%Re*vel_z%Re)
       end if
@@ -415,7 +415,10 @@
 !------------------------------------------------------------------------
    subroutine vel_sta()
       
-      call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
+      ! call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
+      call tra_coll2phys1d(vel_ur,vel_r)
+      call tra_coll2phys1d(vel_ut,vel_t)
+      call tra_coll2phys1d(vel_uz,vel_z)
    end subroutine
 
 
@@ -426,10 +429,17 @@
    subroutine vel_transform()
       
       
-      call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
-
+      ! call tra_coll2phys(vel_ur,vel_r, vel_ut,vel_t, vel_uz,vel_z)
+      call tra_coll2phys1d(vel_ur,vel_r)
+      call tra_coll2phys1d(vel_ut,vel_t)
+      call tra_coll2phys1d(vel_uz,vel_z)
+      
       call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
-      call tra_coll2phys(c1,vel_curlr, c2,vel_curlt, c3,vel_curlz)
+      ! call tra_coll2phys(c1,vel_curlr, c2,vel_curlt, c3,vel_curlz)
+      
+      call tra_coll2phys1d(c1,vel_curlr)
+      call tra_coll2phys1d(c2,vel_curlt)
+      call tra_coll2phys1d(c3,vel_curlz)
 
    end subroutine vel_transform
 
@@ -443,7 +453,11 @@
       p1%Re = vel_t%Re*vel_curlz%Re - vel_z%Re*vel_curlt%Re
       p2%Re = vel_z%Re*vel_curlr%Re - vel_r%Re*vel_curlz%Re
       p3%Re = vel_r%Re*vel_curlt%Re - vel_t%Re*vel_curlr%Re
-      call tra_phys2coll(p1,vel_Nr, p2,vel_Nt, p3,vel_Nz)
+      ! call tra_phys2coll(p1,vel_Nr, p2,vel_Nt, p3,vel_Nz)
+
+      call tra_phys2coll1d(p1,vel_Nr)
+      call tra_phys2coll1d(p2,vel_Nt)
+      call tra_phys2coll1d(p3,vel_Nz)
       
       call vel_addHPF()
 
