@@ -1,6 +1,6 @@
 
 ! 1) Otf, max = 54.4
-! 2) max =  
+! 2) max =  52.1
 ! 3) max =  
 ! 4) max =  
 ! 5) max =  
