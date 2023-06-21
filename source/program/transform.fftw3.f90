@@ -59,8 +59,8 @@
 !  Convert spectral to real space
 !------------------------------------------------------------------------
    subroutine tra_spec2phys(s, p)
-      type (spec), intent(in)  :: s
-      type (phys), intent(out) :: p
+      type (spec), intent(inout)  :: s
+      type (phys), intent(inout) :: p
       integer :: nh, n,m,m_
       				! for each r_n ...      
       do n = 1, mes_D%pN
@@ -102,8 +102,8 @@
 !  Convert real to spectral space
 !------------------------------------------------------------------------
    subroutine tra_phys2spec(p, s)
-      type (phys), intent (in)  :: p
-      type (spec), intent (out) :: s
+      type (phys), intent (inout)  :: p
+      type (spec), intent (inout) :: s
       integer :: nh, n,m, m_
       double precision :: scale_
          			! scale, FFTW 4.7.2
@@ -265,7 +265,7 @@
 
    subroutine tra_phys2coll1d(p,c)
       type (coll), intent(inout)  :: C
-      type (phys), intent(in) :: p
+      type (phys), intent(inout) :: p
 
       call tra_phys2spec(p,  s1)
       

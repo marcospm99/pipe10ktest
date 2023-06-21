@@ -137,6 +137,7 @@
 
       if(mpi_rnk==0)  print*, 'precomputing function requisites...'
 
+      call initwksp()
 
       call par_precompute()
       call mes_precompute()
@@ -188,6 +189,8 @@
       
       !!!!call io_save_state()
       !!!!call io_closefiles()
+      
+      call cleanwksp()
 
       if(mpi_rnk==0) then
          inquire(file='RUNNING', exist=file_exist)
