@@ -55,7 +55,7 @@
          call vel_transform()
          call vel_nonlinear()
          call var_null(2)
-         call vel_corrector()
+         call vel_corrector(r,t,z)
          call tim_check_cgce()
       end do
 

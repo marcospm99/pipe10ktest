@@ -42,9 +42,10 @@
 
    ! misc
    double precision :: d(i_N)
-   double complex :: Tbis(0:i_3K-1, 0:_Ms-1, i_pN)
-   double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
-
+   ! double complex :: Tbis(0:i_3K-1, 0:_Ms-1, i_pN)
+   ! double complex :: Ts(0:i_pZ-1, 0:i_M1, i_pN)
+   double complex, allocatable, dimension(:,:,:) :: Tbis
+   double complex, allocatable, dimension(:,:,:) :: Ts
    
    double precision, allocatable, dimension(:,:) :: bsend
    double precision, allocatable, dimension(:,:) :: brecv
@@ -103,6 +104,7 @@
       if (.not.allocated(c4%Re)) allocate(c4%Re(i_N, 0:i_pH1))
       if (.not.allocated(c4%Im)) allocate(c4%Im(i_N, 0:i_pH1))
 
+
       if (.not.allocated(vel_ur%Re)) allocate(vel_ur%Re(i_N, 0:i_pH1))
       if (.not.allocated(vel_ur%Im)) allocate(vel_ur%Im(i_N, 0:i_pH1))
       if (.not.allocated(vel_ut%Re)) allocate(vel_ut%Re(i_N, 0:i_pH1))
@@ -145,6 +147,9 @@
       if(.not.allocated(bsend)) allocate(bsend(max(2*i_pN*(i_pH1+1)*3,2*i_pN*_Ms*i_pZ),0:max(_Nr-1,_Ns-1)))
       if(.not.allocated(brecv)) allocate(brecv(max(2*i_pN*(i_pH1+1)*3,2*i_pN*_Ms*i_pZ),0:max(_Nr-1,_Ns-1)))
 
+      if(.not.allocated(Tbis)) allocate(Tbis(0:i_3K-1,0:_Ms-1, i_pN))
+      if(.not.allocated(Ts)) allocate(Ts(0:i_pZ-1, 0:i_M1, i_pN))
+
    end subroutine
 
    subroutine cleanwksp()
@@ -180,6 +185,7 @@
       deallocate(c3%Im)
       deallocate(c4%Re)
       deallocate(c4%Im)
+
 
       deallocate(vel_ur%Re)
       deallocate(vel_ur%Im)
@@ -222,6 +228,7 @@
       ! Misc
 
          deallocate(bsend,brecv)
+         deallocate(Tbis,Ts)
 
    end subroutine
    

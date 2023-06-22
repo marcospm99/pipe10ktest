@@ -314,10 +314,6 @@
       call tra_coll2phys1d(vel_uz,vel_z)
       
       call var_coll_curl(vel_ur,vel_ut,vel_uz, c1,c2,c3)
-      
-      ! call tra_coll2phys1d(c1,vel_curlr)
-      ! call tra_coll2phys1d(c2,vel_curlt)
-      ! call tra_coll2phys1d(c3,vel_curlz)
 
       call tra_coll2phys1d(c1,p4)
       call tra_coll2phys1d(c2,p3)
@@ -332,13 +328,9 @@
    subroutine vel_nonlinear()
       ! type (phys) :: p1,p2,p3
          			! advection  u x curlu
-      ! p1%Re = vel_t%Re*vel_curlz%Re - vel_z%Re*vel_curlt%Re
-      ! p2%Re = vel_z%Re*vel_curlr%Re - vel_r%Re*vel_curlz%Re
-      ! p3%Re = vel_r%Re*vel_curlt%Re - vel_t%Re*vel_curlr%Re
       p1%Re = vel_t%Re*p2%Re - vel_z%Re*p3%Re
       p2%Re = vel_z%Re*p4%Re - vel_r%Re*p2%Re
       p3%Re = vel_r%Re*p3%Re - vel_t%Re*p4%Re
-      ! call tra_phys2coll(p1,vel_Nr, p2,vel_Nt, p3,vel_Nz)
 
       call tra_phys2coll1d(p1,vel_Nr)
       call tra_phys2coll1d(p2,vel_Nt)
@@ -427,8 +419,8 @@
 !------------------------------------------------------------------------
 !  corrector iteration with Crank-Nicolson non-lin term
 !------------------------------------------------------------------------
-   subroutine vel_corrector()
-      ! type (coll) :: r,t,z
+   subroutine vel_corrector(r,t,z)
+      type (coll), intent(inout) :: r,t,z
       ! Resulta que r,t,z no s epueden quitar a la ligera
 
       call var_coll_copy(vel_ur, r)
@@ -444,22 +436,6 @@
       call var_coll_sub(vel_uz, z)
       call tim_measurecorr(r,t,z)
 
-      ! call var_coll_init(c1)
-      ! call var_coll_init(c2)
-      ! call var_coll_init(c3)
-
-      ! call var_coll_copy(vel_ur, c3)
-      ! call var_coll_copy(vel_ut, c4)
-      ! call var_coll_copy(vel_uz, c5)
-      ! call tim_nlincorr(Nr_, vel_Nr)
-      ! call tim_nlincorr(Nt_, vel_Nt)
-      ! call tim_nlincorr(Nz_, vel_Nz)
-      ! call vel_step()
-
-      ! call var_coll_sub(vel_ur, c3)
-      ! call var_coll_sub(vel_ut, c4)
-      ! call var_coll_sub(vel_uz, c5)
-      ! call tim_measurecorr(c3,c4,c5)
 
 
    end subroutine vel_corrector

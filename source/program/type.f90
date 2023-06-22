@@ -2,9 +2,7 @@
 #include "../parallel.h"
  module type
 !*************************************************************************
-!    use mpif
    use parameters
-!    use meshs
    implicit none
    save
 
@@ -12,48 +10,27 @@
       integer              :: pH0,pH1, pH0_(0:_Np-1),pH1_(0:_Np-1)
    end type harm
 
-   ! type spec
-   !    double precision     :: Re(0:_Hs1, i_pN)
-   !    double precision     :: Im(0:_Hs1, i_pN)
-   ! end type spec
-
    type spec
       double precision, allocatable, dimension(:,:) :: Re
       double precision, allocatable, dimension(:,:) :: Im
    end type spec
 
-!!!!!!!!   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
-
-   ! type coll
-   !    double precision     :: Re(i_N, 0:i_pH1)
-   !    double precision     :: Im(i_N, 0:i_pH1)
-   ! end type coll
    type coll
       double precision, allocatable, dimension(:,:)     :: Re
       double precision, allocatable, dimension(:,:)     :: Im
    end type coll
 
-   ! type phys
-   !    double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
-   ! end type phys
-
    type phys
       double precision, allocatable, dimension(:,:,:)     :: Re
    end type phys
 
-                             ! M(KL+1+n-j, j) = A(n,j)
    type mesh
       double precision :: M(2*i_KL+1, 1-i_KL:i_N)
    end type mesh
-                                ! M(2*KL+1+n-j, j) = A(n,j)
-                                ! see lapack dgbtrf
-   ! type lumesh
-   !    integer          :: ipiv(i_N)
-   !    double precision :: M(3*i_KL+1, i_N)
-   ! end type lumesh
+
    type lumesh
       integer,          allocatable, dimension(:)   :: ipiv
-      double precision, allocatable, dimension(:,:) :: M ! Mem = 8*72*3*4*384/1024**3 negligible
+      double precision, allocatable, dimension(:,:) :: M
    end type lumesh
 
 
@@ -68,5 +45,24 @@
 
 
    type (rdom) :: mes_D
+
+   ! type lumesh
+   !    integer          :: ipiv(i_N)
+   !    double precision :: M(3*i_KL+1, i_N)
+   ! end type lumesh
+
+   ! type phys
+   !    double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
+   ! end type phys
+
+   ! type coll
+   !    double precision     :: Re(i_N, 0:i_pH1)
+   !    double precision     :: Im(i_N, 0:i_pH1)
+   ! end type coll
+
+   ! type spec
+   !    double precision     :: Re(0:_Hs1, i_pN)
+   !    double precision     :: Im(0:_Hs1, i_pN)
+   ! end type spec
 
    end module

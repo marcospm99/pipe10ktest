@@ -4,8 +4,8 @@
 ! 3) max =  51.0
 ! 4) max =  49
 ! 5) max =  48.5
-! 6) max =  46.4
-! 7) max =  46
+! 6) max =  48.4
+! 7) max =  
 ! 8) max =  
 ! 9) max =  
 
@@ -378,7 +378,7 @@ end subroutine pressure
   
 
 
-!       ! Lo mismo para theta
+       ! Lo mismo para theta
 
 
       call var_coll_meshmult(1,mes_D%dr(1),vel_ut, c2) 
@@ -424,22 +424,25 @@ end subroutine pressure
 
    _loop_km_end
 
+                        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        !!!!!!!!!   Derivatives  !!!!!!!! 
+                        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!    !dzduzsq
-
-!    call var_coll_copy(vel_uz,c1)
+     !dzduzsq
 
 !    _loop_km_begin
-!    tmpr1 = (c1%Re(:,nh)**2 + c1%Im(:,nh)**2) *ad_k1a1(k)
-!    tmpr2 = (2*c1%Re(:,nh)*c1%Im(:,nh)) *ad_k1a1(k)
+!    tmpr1 = (vel_uz%Re(:,nh)**2 + vel_uz%Im(:,nh)**2) *ad_k1a1(k)
+!    tmpr2 = (2*vel_uz%Re(:,nh)*vel_uz%Im(:,nh)) *ad_k1a1(k)
 
+         !! Operate
 !          factor = 2d0
 !       if (m==0) factor = 1d0
-
 !       dzduzsq(:) = dzduzsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
 
 
 !    _loop_km_end
+   
+
    
 !      !dzduzcub
 
@@ -460,59 +463,6 @@ end subroutine pressure
 
  end subroutine var_coll_dissp
 
-
-!------------------------------------------------------------------------
-!  Velocities using fourier, % optimization pending
-!------------------------------------------------------------------------
-!  subroutine staFFT()
-!     implicit none
-!     double precision :: urf(i_N), utf(i_N), uzf(i_N)
-!     double precision :: factor
-!     integer :: n, comp, n_
-!     _loop_km_vars
-
-!     !call var_coll_copy(vel_ur,c1)
-
-!     _loop_km_begin
-
-!      factor = 2d0
-!      if (m==0) then;
-!         factor = 1d0
-!      end if
-
-!      urf(:) = urf(:) + factor*(vel_ur%Re(:,nh)**2+vel_ur%Im(:,nh)**2)
-!      utf(:) = utf(:) + factor*(vel_ut%Re(:,nh)**2+vel_ut%Im(:,nh)**2)
-!      uzf(:) = uzf(:) + factor*(vel_uz%Re(:,nh)**2+vel_uz%Im(:,nh)**2)
-
-!      _loop_km_end
-
-!      end subroutine staFFT
-
-   !!!!!!!!!!!!!
-   ! Vorticity !
-   !!!!!!!!!!!!!
-
-   !   subroutine vort()
-
-   !    implicit none
-
-   !    double precision :: or(i_N), ot(i_N), oz(i_N)
-   !     _loop_km_vars
- 
-   !    call var_coll_curl(vel_ur,vel_ut,vel_uz,c1,c2,c3)
-
-   !    _loop_km_begin
-
-   !   factor = 2d0
-   !   if (m==0) factor = 1d0
-
-   !   or(:) = or(:) + sqrt(factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2))
-   !   ot(:) = ot(:) + sqrt(factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2))
-   !   oz(:) = oz(:) + sqrt(factor*(c3%Re(:,nh)**2+c3%Im(:,nh)**2))
-
-   !    _loop_km_end
-
-   !   end subroutine vort
 
 
 

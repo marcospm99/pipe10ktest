@@ -27,28 +27,7 @@
    implicit none
    save
 
-!    type harm
-!       integer              :: pH0,pH1, pH0_(0:_Np-1),pH1_(0:_Np-1)
-!    end type harm
-
-!    type spec
-!       double precision     :: Re(0:_Hs1, i_pN)
-!       double precision     :: Im(0:_Hs1, i_pN)
-!    end type spec
-
-! !   integer,          parameter :: i_pH1 = (_Nr+_Hs1)/_Nr-1
-!    type coll
-!       double precision     :: Re(i_N, 0:i_pH1)
-!       double precision     :: Im(i_N, 0:i_pH1)
-!    end type coll
-
-!    type phys
-!       double precision     :: Re(0:i_pZ-1, 0:i_Th-1, i_pN)
-!    end type phys
-   
-
    type (harm)               :: var_H
-   ! type (coll),      private :: c1,c2,c3
    double precision :: ad_k1a1(-i_K1:i_K1)
    double precision :: ad_m1r1(i_N,0:i_M1)
    double precision, private :: ad_m2r2(i_N,0:i_M1)
@@ -193,6 +172,10 @@
       ! double precision :: brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, nc, rko,nho
 
+      ! allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      ! allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+
+
       nc = 1
       rko = (mpi_rnk/_Nr)*_Nr
       nho = var_H%pH0_(rko)
@@ -255,6 +238,9 @@
          call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
       end do
 
+      ! deallocate(bsend)
+      ! deallocate(brecv)
+
    end subroutine var_coll2spec1d
    
 !-------------------------------------------------------------------------
@@ -268,6 +254,10 @@ subroutine var_spec2coll1d(s,c)
       ! double precision :: bsend(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       ! double precision :: brecv(2*(i_pH1+1)*i_pN*3,0:_Nr-1)
       integer :: stp, dst,src, n,nh,l, ns, rko,nho
+
+      ! allocate(bsend(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+      ! allocate(brecv(2*i_pN*(i_pH1+1)*3,0:_Nr-1))
+
 
       ns = 1
 
@@ -290,14 +280,6 @@ subroutine var_spec2coll1d(s,c)
                bsend(l,  stp) = s%Re(nh,n)
                bsend(l+1,stp) = s%Im(nh,n)
                l = l + 2
-               ! if(ns<2) cycle
-               ! bsend(l,  stp) = s2%Re(nh,n)
-               ! bsend(l+1,stp) = s2%Im(nh,n)
-               ! l = l + 2
-               ! if(ns<3) cycle
-               ! bsend(l,  stp) = s3%Re(nh,n)
-               ! bsend(l+1,stp) = s3%Im(nh,n)
-               ! l = l + 2
             end do
          end do
          mpi_tg = stp + rko
@@ -323,6 +305,10 @@ subroutine var_spec2coll1d(s,c)
       do stp = 0, _Nr-1
          call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
       end do
+
+      ! deallocate(bsend)
+      ! deallocate(brecv)
+
 
    end subroutine var_spec2coll1d
 
@@ -373,10 +359,6 @@ subroutine var_spec2coll1d(s,c)
       type (coll), intent(inout)  :: r,t,z
       type (coll), intent(inout) :: or,ot,oz
       _loop_km_vars
-
-      ! call var_coll_copy(r,c1)
-      ! call var_coll_copy(t,c2)
-      ! call var_coll_copy(z,c3)
  
       _loop_km_begin
          or%Re(:,nh) = -z%Im(:,nh)*ad_m1r1(:,m) + t%Im(:,nh)*ad_k1a1(k)
@@ -440,7 +422,6 @@ subroutine var_spec2coll1d(s,c)
 	    r%Im(:,nh)*mes_D%r(:,-1) + c4%Im(:,nh)  &
 	  + t%Re(:,nh)*ad_m1r1(:,m) + z%Re(:,nh)*ad_k1a1(k)
       _loop_km_end
-      ! call var_coll_copy(c2, dv)
       
    end subroutine var_coll_div
 
@@ -528,7 +509,7 @@ subroutine var_spec2coll1d(s,c)
                bsend(:,5) =  z%Re(:,nh) * a
                bsend(:,6) =  z%Im(:,nh) * a * b
             end if
-#ifdef _MPI
+! #ifdef _MPI
             if(p1/=p2) then
                mpi_tg = m*(2*i_K1+1) + k
                if(mpi_rnk==p1)  &
@@ -538,7 +519,7 @@ subroutine var_spec2coll1d(s,c)
                   call mpi_recv( bsend, i_N*6, mpi_double_precision,  &
                      p1, mpi_tg, mpi_comm_world, mpi_st, mpi_er)
             end if
-#endif         
+! #endif         
             if(mpi_rnk==p2) then
                c1%Re(:,nh_) = bsend(:,1)
                c1%Im(:,nh_) = bsend(:,2)
@@ -682,9 +663,9 @@ subroutine var_spec2coll1d(s,c)
    subroutine var_coll_norm(a, E,Ek,Em)
       type (coll),      intent(inout)  :: a
       double precision, intent(out) :: E, Ek(0:i_K1), Em(0:i_M1)
-#ifdef _MPI
+! #ifdef _MPI
       double precision :: E_, Ek_(0:i_K1), Em_(0:i_M1)
-#endif
+! #endif
       double precision :: w, b, f(i_N)
       _loop_km_vars
       
@@ -701,14 +682,14 @@ subroutine var_spec2coll1d(s,c)
          Ek(abs(k)) = Ek(abs(k)) + b
       _loop_km_end
 
-#ifdef _MPI
+! #ifdef _MPI
       call mpi_allreduce( Ek, Ek_, 1+i_K1, mpi_double_precision,  &
          mpi_sum, mpi_comm_world, mpi_er)
       Ek = Ek_
       call mpi_allreduce( Em, Em_, 1+i_M1, mpi_double_precision,  &
          mpi_sum, mpi_comm_world, mpi_er)
       Em = Em_
-#endif
+! #endif
       
       E = sum(Em)
    

@@ -146,12 +146,15 @@
 !------------------------------------------------------------------------
 ! transposes
 !------------------------------------------------------------------------
-#if _Ns != 1
+! #if _Ns != 1
    subroutine tra_T2Ts()
       ! double precision :: bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1)
       ! double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
+
+      ! allocate(bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1))
+      ! allocate(brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1))
 
       rnk = mpi_rnk/_Nr
       rko = modulo(mpi_rnk,_Nr)
@@ -202,6 +205,9 @@
          call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
       end do
 
+      ! deallocate(bsend)
+      ! deallocate(brecv)
+
    end subroutine tra_T2Ts
 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -210,6 +216,9 @@
       ! double precision :: brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1)
       integer :: stp, dst,src, l,j, rnk,rko
       integer :: n,m, pm0,jz0
+
+      ! allocate(bsend(2*i_pN*_Ms*i_pZ,0:_Ns-1))
+      ! allocate(brecv(2*i_pN*_Ms*i_pZ,0:_Ns-1))
 
       rnk = mpi_rnk/_Nr
       rko = modulo(mpi_rnk,_Nr)
@@ -260,8 +269,11 @@
          call mpi_wait( mpi_rq(mpi_sze+stp), mpi_st, mpi_er)
       end do
 
+      ! deallocate(bsend)
+      ! deallocate(brecv)
+
    end subroutine tra_Ts2T
-#endif
+! #endif
 
    subroutine tra_phys2coll1d(p,c)
       type (coll), intent(inout)  :: C
