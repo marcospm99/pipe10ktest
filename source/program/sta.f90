@@ -46,8 +46,8 @@
 
 
    
-
-   double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3), dzduzsq(i_N), dzduzcub(i_N)
+   double precision :: piz(i_N), pit(i_N), pir(i_N), duzdz(i_N), dutdt(i_N), durdr(i_N)
+   double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3) !, dzduzsq(i_N), dzduzcub(i_N)
    double precision :: factor
 
    !double precision :: d(i_N) !,dd(i_n,10) ! auxiliary mem
@@ -337,7 +337,7 @@ end subroutine pressure
    type(coll), intent(inout)  :: c1,c2,c3,c4
 
        double precision :: factor
-       integer :: n
+       integer :: n, n_
        _loop_km_vars
 
 
@@ -428,20 +428,130 @@ end subroutine pressure
                         !!!!!!!!!   Derivatives  !!!!!!!! 
                         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-     !dzduzsq
+! Pressure strain correlation term
 
-!    _loop_km_begin
-!    tmpr1 = (vel_uz%Re(:,nh)**2 + vel_uz%Im(:,nh)**2) *ad_k1a1(k)
-!    tmpr2 = (2*vel_uz%Re(:,nh)*vel_uz%Im(:,nh)) *ad_k1a1(k)
+   call var_coll_meshmult(1,mes_D%dr(1),vel_ur, c1) ! r simple derivative
 
-         !! Operate
-!          factor = 2d0
-!       if (m==0) factor = 1d0
-!       dzduzsq(:) = dzduzsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+   _loop_km_begin
+            c2%Im(:,nh) = -vel_uz%Im(:,nh)*ad_k1a1(k) ! zeta deriv
+            c2%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)
+
+            c3%Im(:,nh) = -vel_ut%Im(:,nh)*ad_m1r1(:,m) ! theta deriv
+            c3%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)
+
+      
+      factor = 2d0
+      if (m==0) factor = 1d0
+
+         duzdz(:) = duzdz(:) + factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2)
+         dutdt(:) = dutdt(:) + factor*(c3%Re(:,nh)**2+c3%Im(:,nh)**2)
+         durdr(:) = durdr(:) + factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2)
 
 
-!    _loop_km_end
+   _loop_km_end
+
+      do n = 1, mes_D%pN
+         n_ = mes_D%pNi + n - 1
+      
+      piz(n_) = piz(n_) + 2 * sqrt(stdv_p(n_)) *  sqrt(duzdz(n_))
+      pit(n_) = pit(n_) + 2 * mes_D%r(n_,-1) * sqrt(stdv_p(n_)) *  sqrt(dutdt(n_))
+      pir(n_) = pir(n_) + 2 * sqrt(stdv_p(n_)) *  sqrt(durdr(n_))
+      enddo
+
+
+
+! ! Z derivatives of squared velocity
+
+!          !dzduzsq
+
+!          _loop_km_begin
+!                tmpr1 = (vel_uz%Re(:,nh)**2 - vel_uz%Im(:,nh)**2) *ad_k1a1(k)
+!                tmpr2 = (2*vel_uz%Re(:,nh)*vel_uz%Im(:,nh)) *ad_k1a1(k)
+
+!                ! Operate
+!                factor = 2d0
+!                if (m==0) factor = 1d0
+!                dzduzsq(:) = dzduzsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+!          _loop_km_end
+
+!          !dzdutsq
+
+!          _loop_km_begin
+!                tmpr1 = (vel_ut%Re(:,nh)**2 - vel_ut%Im(:,nh)**2) *ad_k1a1(k)
+!                tmpr2 = (2*vel_ut%Re(:,nh)*vel_ut%Im(:,nh)) *ad_k1a1(k)
+
+!                ! Operate
+!                factor = 2d0
+!                if (m==0) factor = 1d0
+!                dzdutsq(:) = dzdutsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+!          _loop_km_end
+
+
+!          !dzdursq
+
+!          _loop_km_begin
+!                tmpr1 = (vel_ur%Re(:,nh)**2 - vel_ur%Im(:,nh)**2) *ad_k1a1(k)
+!                tmpr2 = (2*vel_ur%Re(:,nh)*vel_ur%Im(:,nh)) *ad_k1a1(k)
+
+!                ! Operate
+!                factor = 2d0
+!                if (m==0) factor = 1d0
+!                dzdursq(:) = dzdursq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+!          _loop_km_end
+
+
+! ! Theta derivatives of squared velocity
+
+
+!          !dtduzsq
+
+!          _loop_km_begin
+!                tmpr1 = (vel_uz%Re(:,nh)**2 - vel_uz%Im(:,nh)**2) *ad_m1r1(k)
+!                tmpr2 = (2*vel_uz%Re(:,nh)*vel_uz%Im(:,nh)) *ad_m1r1(k)
+
+!                ! Operate
+!                factor = 2d0
+!                if (m==0) factor = 1d0
+!                dtduzsq(:) = dtduzsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+!          _loop_km_end
+
+!          !dtdutsq
+
+!          _loop_km_begin
+!                tmpr1 = (vel_ut%Re(:,nh)**2 - vel_ut%Im(:,nh)**2) *ad_m1r1(k)
+!                tmpr2 = (2*vel_ut%Re(:,nh)*vel_ut%Im(:,nh)) *ad_m1r1(k)
+
+!                ! Operate
+!                factor = 2d0
+!                if (m==0) factor = 1d0
+!                dtdutsq(:) = dtdutsq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+!          _loop_km_end
+
+
+!          !dtdursq
+
+!          _loop_km_begin
+!                tmpr1 = (vel_ur%Re(:,nh)**2 - vel_ur%Im(:,nh)**2) *ad_m1r1(k)
+!                tmpr2 = (2*vel_ur%Re(:,nh)*vel_ur%Im(:,nh)) *ad_m1r1(k)
+
+!                ! Operate
+!                factor = 2d0
+!                if (m==0) factor = 1d0
+!                dtdursq(:) = dtdursq(:) + factor*(tmpr1(:)**2+tmpr2(:)**2)
+
+!          _loop_km_end
    
+! r derivatives of squared velocity -> Matlab
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
 
    
 !      !dzduzcub
@@ -498,9 +608,17 @@ implicit none
    mean_p = 0d0
    stdv_p = 0d0
 
-   diss = 0d0
-   dzduzsq = 0d0
-   dzduzcub = 0d0
+   diss   = 0d0
+
+   duzdz  = 0d0
+   dutdt  = 0d0
+   durdr  = 0d0
+
+   piz    = 0d0
+   pit    = 0d0
+   pir    = 0d0
+   ! dzduzsq = 0d0
+   ! dzduzcub = 0d0
 
 end subroutine initialiseSTD
 
@@ -564,6 +682,16 @@ implicit none
     mpi_sum, 0, mpi_comm_world, mpi_er)
  diss(:,3) = d
 
+     call mpi_reduce(piz, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    piz = d
+      call mpi_reduce(pit, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    pit = d
+      call mpi_reduce(pir, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    pir = d
+
    ! call mpi_reduce(urf, d, i_N, mpi_double_precision,  &
    !     mpi_sum, 0, mpi_comm_world, mpi_er)
    !  urf = d
@@ -579,12 +707,12 @@ implicit none
    !     mpi_sum, 0, mpi_comm_world, mpi_er)
    !  oz = d
 
-   call mpi_reduce(dzduzsq, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    dzduzsq = d
-       call mpi_reduce(dzduzcub, d, i_N, mpi_double_precision,  &
-       mpi_sum, 0, mpi_comm_world, mpi_er)
-    dzduzcub = d
+   ! call mpi_reduce(dzduzsq, d, i_N, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  dzduzsq = d
+   !     call mpi_reduce(dzduzcub, d, i_N, mpi_double_precision,  &
+   !     mpi_sum, 0, mpi_comm_world, mpi_er)
+   !  dzduzcub = d
 
    !  call mpi_reduce(mom_ur, dd, i_N*10, mpi_double_precision,  &
    !     mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -638,14 +766,18 @@ implicit none
        
        call h5ltmake_dataset_double_f(sta_id,"disstt",1,hdims,diss(:,2),h5err)
        call h5ltmake_dataset_double_f(sta_id,"dissrr",1,hdims,diss(:,1),h5err)
-       call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,diss(:,3),h5err)       
+       call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,diss(:,3),h5err) 
+
+       call h5ltmake_dataset_double_f(sta_id,"piz",1,hdims,piz,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"pit",1,hdims,pit,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"pir",1,hdims,pir,h5err)      
        
       !  call h5ltmake_dataset_double_f(sta_id,"vortr",1,hdims,or,h5err)
       !  call h5ltmake_dataset_double_f(sta_id,"vortt",1,hdims,ot,h5err)
       !  call h5ltmake_dataset_double_f(sta_id,"vortz",1,hdims,oz,h5err)  
 
-       call h5ltmake_dataset_double_f(sta_id,"dzduzsq",1,hdims,dzduzsq,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"dzduzcub",1,hdims,dzduzcub,h5err)
+      !  call h5ltmake_dataset_double_f(sta_id,"dzduzsq",1,hdims,dzduzsq,h5err)
+      !  call h5ltmake_dataset_double_f(sta_id,"dzduzcub",1,hdims,dzduzcub,h5err)
          
 
        hdims2 = (/i_N,10/)
