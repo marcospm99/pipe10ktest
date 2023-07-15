@@ -45,8 +45,10 @@
 
 
 
+
+
    
-   double precision :: piz(i_N), pit(i_N), pir(i_N), duzdz(i_N), dutdt(i_N), durdr(i_N)
+   double precision :: piz(i_N), pit(i_N), pir(i_N), duzdz(i_N), dutdt(i_N), durdr(i_N), pur(i_N), duzsqdz2(i_N), dutsqdz2(i_N), dursqdz2(i_N)
    double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3) !, dzduzsq(i_N), dzduzcub(i_N)
    double precision :: factor
 
@@ -341,20 +343,6 @@ end subroutine pressure
        _loop_km_vars
 
 
-       !!! Empezamos para uz !!!
-
-
-      !  call var_coll_copy(vel_uz,c1)
-      !  call var_coll_meshmult(0,mes_D%dr(1),c1, c2) 
-
-      !  _loop_km_begin
-
-      !  c3%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)
-      !  c3%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)
-
-      !  c1%Im(:,nh) = -c1%Im(:,nh)*ad_m1r1(:,m)
-      !  c1%Re(:,nh) =  c1%Re(:,nh)*ad_m1r1(:,m)
-
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        call var_coll_meshmult(0,mes_D%dr(1),vel_uz, c2) 
 
@@ -377,9 +365,7 @@ end subroutine pressure
        _loop_km_end
   
 
-
        ! Lo mismo para theta
-
 
       call var_coll_meshmult(1,mes_D%dr(1),vel_ut, c2) 
 
@@ -403,7 +389,6 @@ end subroutine pressure
       
       ! Lo mismo para r
 
-
       call var_coll_meshmult(1,mes_D%dr(1),vel_ur, c2)
 
       _loop_km_begin
@@ -425,38 +410,153 @@ end subroutine pressure
    _loop_km_end
 
                         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        !!!!!!!!!   Derivatives  !!!!!!!! 
+                        !!   Rest of Turbulent budgets !! 
                         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! Pressure strain correlation term
 
    call var_coll_meshmult(1,mes_D%dr(1),vel_ur, c1) ! r simple derivative
+   call tra_phys2coll1d(p2,c4)
+
+         _loop_km_begin
+            c3%Re(:,nh) = -vel_uz%Im(:,nh)*d_alpha*k
+            c3%Im(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
+
+            c2%Re(:,nh) = -vel_ut%Im(:,nh)*m*i_Mp
+            c2%Im(:,nh) =  vel_ut%Re(:,nh)*m*i_Mp
+
+        _loop_km_end
+
+      call tra_coll2phys1d(c3,p3) !z
+      call tra_coll2phys1d(c2,p1) !t
+
+      p3%Re = p3%Re * p2%Re !z
+      p1%Re = p1%Re * p2%Re !t
+
+      call tra_phys2coll1d(p3,c2) !z
+      call tra_phys2coll1d(p1,c3) !t
+
 
    _loop_km_begin
-            c2%Im(:,nh) = -vel_uz%Im(:,nh)*ad_k1a1(k) ! zeta deriv
-            c2%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)
-
-            c3%Im(:,nh) = -vel_ut%Im(:,nh)*ad_m1r1(:,m) ! theta deriv
-            c3%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)
+            ! z component  
+            ! c2%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k) + vel_uz%Im(:,nh)*ad_k1a1(k)
+            ! theta component
+            ! c3%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)*c4%Re(:,nh) + vel_ut%Im(:,nh)*ad_m1r1(:,m)*c4%Im(:,nh)
+            ! r component
+            c1%Re(:,nh) =  c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
 
       
       factor = 2d0
       if (m==0) factor = 1d0
 
-         duzdz(:) = duzdz(:) + factor*(c2%Re(:,nh)**2+c2%Im(:,nh)**2)
-         dutdt(:) = dutdt(:) + factor*(c3%Re(:,nh)**2+c3%Im(:,nh)**2)
-         durdr(:) = durdr(:) + factor*(c1%Re(:,nh)**2+c1%Im(:,nh)**2)
+         duzdz(:) = duzdz(:) + factor*(c2%Re(:,nh))!+c2%Im(:,nh)**2)
+         dutdt(:) = dutdt(:) + factor*(c3%Re(:,nh))!+c3%Im(:,nh)**2)
+         durdr(:) = durdr(:) + factor*(c1%Re(:,nh))!+c1%Im(:,nh)**2)
 
 
    _loop_km_end
 
+
+
+
+
+! Pressure diffusion term
+   
+      p1%Re = p2%Re*vel_r%Re 
+
       do n = 1, mes_D%pN
-         n_ = mes_D%pNi + n - 1
+      n_ = mes_D%pNi + n - 1
+      p1%Re(:,:,n)  = p1%Re(:,:,n) * mes_D%r(n_,1) ! multiplico por r
+      end do
+
+      call tra_phys2coll1d(p1,c1) ! paso a fourier para derivar
+      call var_coll_meshmult(1,mes_D%dr(1),c1, c2) ! r simple derivative
+      call tra_coll2phys1d(c2,p1) !paso a fisico
+
+      do n = 1, mes_D%pN
+      n_ = mes_D%pNi + n - 1
+      p1%Re(:,:,n) = -2d0 * mes_D%r(n_,-1) * p1%Re(:,:,n) ! multiplico por 2 y divido entre r
+      pur(n_)  = pur(n_)  + sum(p1%Re(:,:,n)) ! saco la distribucion radial
+      end do
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Convection term
+   
+      ! p1%Re = vel_r%Re*vel_r%Re
+
+
+
+      ! do n = 1, mes_D%pN
+      ! n_ = mes_D%pNi + n - 1
+      ! p1%Re(:,:,n)  = p1%Re(:,:,n) * mes_D%r(n_,1)
+      ! end do
+
+      ! call tra_phys2coll1d(p1,c1)
+      ! call var_coll_meshmult(1,mes_D%dr(1),c1, c1) ! r simple derivative
+      ! call tra_coll2phys1d(c1,p1)
+
+      ! do n = 1, mes_D%pN
+      ! n_ = mes_D%pNi + n - 1
+      ! p1%Re(:,:,n) = -2d0 * mes_D%r(n_,-1) * p1%Re(:,:,n)
+      ! pur(n_)  = pur(n_)  + sum(p1%Re(:,:,n))
+      ! end do
+
+
+! Viscous diffusion term
+
+   p1%Re = vel_z%Re * vel_z%Re
+   p3%Re = vel_r%Re * vel_r%Re
+   p4%Re = vel_t%Re * vel_t%Re
+
+   call tra_phys2coll1d(p1,c1) !z
+   call tra_phys2coll1d(p3,c2) !r
+   call tra_phys2coll1d(p4,c3) !t
+
+
+      _loop_km_begin
+
+      c1%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !z
+      c1%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
+
+      c2%Im(:,nh) = -c2%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !r
+      c2%Re(:,nh) =  c2%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
+
+      c3%Im(:,nh) = -c3%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !t
+      c3%Re(:,nh) =  c3%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
+
+      _loop_km_end
+
+      call tra_coll2phys1d(c1,p1) !z
+      call tra_coll2phys1d(c2,p3) !r
+      call tra_coll2phys1d(c3,p4) !t
+
+   do n = 1, mes_D%pN
+      n_ = mes_D%pNi + n - 1
+      duzsqdz2(n_)  = duzsqdz2(n_)  + sum(p1%Re(:,:,n))
+      dutsqdz2(n_)  = dutsqdz2(n_)  + sum(p4%Re(:,:,n))
+      dursqdz2(n_)  = dursqdz2(n_)  + sum(p3%Re(:,:,n))
+       
+   end do
+
+      ! _loop_km_begin
+
+      !    factor = 2d0
+      !    if (m==0) factor = 1d0
+
+      !       pur(:) = pur(:) + factor*(c1%Re(:,nh))
+
+      ! _loop_km_end
+
+
+
+      ! do n = 1, mes_D%pN
+      !    n_ = mes_D%pNi + n - 1
       
-      piz(n_) = piz(n_) + 2 * sqrt(stdv_p(n_)) *  sqrt(duzdz(n_))
-      pit(n_) = pit(n_) + 2 * mes_D%r(n_,-1) * sqrt(stdv_p(n_)) *  sqrt(dutdt(n_))
-      pir(n_) = pir(n_) + 2 * sqrt(stdv_p(n_)) *  sqrt(durdr(n_))
-      enddo
+      ! piz(n_) = piz(n_) + 2 * sqrt(stdv_p(n_)) *  sqrt(duzdz(n_))
+      ! pit(n_) = pit(n_) + 2 * mes_D%r(n_,-1) * sqrt(stdv_p(n_)) *  sqrt(dutdt(n_))
+      ! pir(n_) = pir(n_) + 2 * sqrt(stdv_p(n_)) *  sqrt(durdr(n_))
+      ! enddo
 
 
 
@@ -614,11 +714,16 @@ implicit none
    dutdt  = 0d0
    durdr  = 0d0
 
-   piz    = 0d0
-   pit    = 0d0
-   pir    = 0d0
+   pur = 0d0
+   ! piz    = 0d0
+   ! pit    = 0d0
+   ! pir    = 0d0
    ! dzduzsq = 0d0
    ! dzduzcub = 0d0
+
+   duzsqdz2 = 0d0
+   dutsqdz2 = 0d0
+   dursqdz2 = 0d0
 
 end subroutine initialiseSTD
 
@@ -682,15 +787,19 @@ implicit none
     mpi_sum, 0, mpi_comm_world, mpi_er)
  diss(:,3) = d
 
-     call mpi_reduce(piz, d, i_N, mpi_double_precision,  &
+     call mpi_reduce(duzdz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    piz = d
-      call mpi_reduce(pit, d, i_N, mpi_double_precision,  &
+    duzdz = d
+      call mpi_reduce(dutdt, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    pit = d
-      call mpi_reduce(pir, d, i_N, mpi_double_precision,  &
+    dutdt = d
+      call mpi_reduce(durdr, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    pir = d
+    durdr = d
+
+          call mpi_reduce(durdr, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+    pur = d
 
    ! call mpi_reduce(urf, d, i_N, mpi_double_precision,  &
    !     mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -768,9 +877,11 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"dissrr",1,hdims,diss(:,1),h5err)
        call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,diss(:,3),h5err) 
 
-       call h5ltmake_dataset_double_f(sta_id,"piz",1,hdims,piz,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"pit",1,hdims,pit,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"pir",1,hdims,pir,h5err)      
+       call h5ltmake_dataset_double_f(sta_id,"durdr",1,hdims,durdr,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"duzdz",1,hdims,duzdz,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"dutdt",1,hdims,dutdt,h5err) 
+
+       call h5ltmake_dataset_double_f(sta_id,"pur",1,hdims,pur,h5err)      
        
       !  call h5ltmake_dataset_double_f(sta_id,"vortr",1,hdims,or,h5err)
       !  call h5ltmake_dataset_double_f(sta_id,"vortt",1,hdims,ot,h5err)
