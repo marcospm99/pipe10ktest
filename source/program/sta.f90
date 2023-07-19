@@ -48,7 +48,7 @@
 
 
    
-   double precision :: piz(i_N), pit(i_N), pir(i_N), duzdz(i_N), dutdt(i_N), durdr(i_N), pur(i_N), duzsqdz2(i_N), dutsqdz2(i_N), dursqdz2(i_N)
+   double precision :: piz(i_N), pit(i_N), pir(i_N), duzdz(i_N), dutdt(i_N), durdr(i_N), pur(i_N), duzsqdz2(i_N), dutsqdz2(i_N), dursqdz2(i_N),uzsqur(i_N), utsqur(i_N), urcub(i_N)
    double precision :: dissr(i_N,3),disst(i_N,3),dissz(i_N,3), diss(i_N,3) !, dzduzsq(i_N), dzduzcub(i_N)
    double precision :: factor
 
@@ -419,42 +419,70 @@ end subroutine pressure
    call tra_phys2coll1d(p2,c4)
 
          _loop_km_begin
-            c3%Re(:,nh) = -vel_uz%Im(:,nh)*d_alpha*k
-            c3%Im(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
 
-            c2%Re(:,nh) = -vel_ut%Im(:,nh)*m*i_Mp
-            c2%Im(:,nh) =  vel_ut%Re(:,nh)*m*i_Mp
+                  c2%Im(:,nh) =  -vel_ut%Im(:,nh)*ad_m1r1(:,m)    
+                  c2%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)    
+
+                  c3%Im(:,nh) =  -vel_uz%Im(:,nh)*ad_k1a1(k)
+                  c3%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)
+
+            c1%Re(:,nh) = c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
 
         _loop_km_end
 
+      _loop_km_begin
+         factor = 2d0
+         if (m==0) factor = 1d0
+            pir(:) = pir(:) + factor*(c1%Re(:,nh))
+      _loop_km_end
+
+
+
       call tra_coll2phys1d(c3,p3) !z
       call tra_coll2phys1d(c2,p1) !t
+      ! call tra_coll2phys1d(c1,p4) !r
 
       p3%Re = p3%Re * p2%Re !z
       p1%Re = p1%Re * p2%Re !t
-
-      call tra_phys2coll1d(p3,c2) !z
-      call tra_phys2coll1d(p1,c3) !t
+      ! p4%Re = p4%Re * p2%Re !r
 
 
-   _loop_km_begin
+      do n = 1, mes_D%pN
+      n_ = mes_D%pNi + n - 1
+      p1%Re(:,:,n) = 2d0* p1%Re(:,:,n) ! multiplico por 2 y divido entre r
+      p3%Re(:,:,n) = 2d0* p3%Re(:,:,n)
+      ! pir(n_)  = pir(n_)  + sum(p4%Re(:,:,n)) ! saco la distribucion radial
+      pit(n_)  = pit(n_)  + sum(p1%Re(:,:,n))
+      piz(n_)  = piz(n_)  + sum(p3%Re(:,:,n))
+      end do
+
+
+
+
+
+      ! call tra_phys2coll1d(p3,c2) !z
+      ! call tra_phys2coll1d(p1,c3) !t
+      ! call tra_phys2coll1d(p4,c1) !r
+
+
+   ! _loop_km_begin
             ! z component  
             ! c2%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k) + vel_uz%Im(:,nh)*ad_k1a1(k)
             ! theta component
             ! c3%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)*c4%Re(:,nh) + vel_ut%Im(:,nh)*ad_m1r1(:,m)*c4%Im(:,nh)
             ! r component
-            c1%Re(:,nh) =  c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
+            ! c1%Re(:,nh) =  c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
 
       
-      factor = 2d0
-      if (m==0) factor = 1d0
+   !    factor = 2d0
+   !    if (m==0) factor = 1d0
 
-         duzdz(:) = duzdz(:) + factor*(c2%Re(:,nh))!+c2%Im(:,nh)**2)
-         dutdt(:) = dutdt(:) + factor*(c3%Re(:,nh))!+c3%Im(:,nh)**2)
-         durdr(:) = durdr(:) + factor*(c1%Re(:,nh))!+c1%Im(:,nh)**2)
+   !       piz(:) = piz(:) + factor*(c2%Re(:,nh))!+c2%Im(:,nh)**2)
+   !       pit(:) = pit(:) + factor*(c3%Re(:,nh))!+c3%Im(:,nh)**2)
+   !       pir(:) = pir(:) + factor*(c1%Re(:,nh))!+c1%Im(:,nh)**2)
 
 
-   _loop_km_end
+   ! _loop_km_end
 
 
 
@@ -480,6 +508,34 @@ end subroutine pressure
       end do
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         !!!!!!!!!!!!!!!!!!!     DERIVATIVES       !!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! UZSQUR
+      p1%re = vel_z%Re * vel_z%Re * vel_r%Re
+! UTSQUR
+      p3%re = vel_t%Re * vel_t%Re * vel_r%Re
+! URCUB
+      p4%re = vel_r%Re * vel_r%Re * vel_r%Re
+
+      do n = 1, mes_D%pN
+            n_ = mes_D%pNi + n - 1
+               
+               uzsqur(n_)  = uzsqur(n_)  + sum(p1%Re(:,:,n)) ! saco la distribucion radial
+               utsqur(n_)  = utsqur(n_)  + sum(p3%Re(:,:,n)) ! saco la distribucion radial
+               urcub(n_)   = urcub(n_)   + sum(p4%Re(:,:,n)) ! saco la distribucion radial
+      end do
+
+
+
+
+
+
+
+
+
+
+
 
 ! Convection term
    
@@ -505,39 +561,39 @@ end subroutine pressure
 
 ! Viscous diffusion term
 
-   p1%Re = vel_z%Re * vel_z%Re
-   p3%Re = vel_r%Re * vel_r%Re
-   p4%Re = vel_t%Re * vel_t%Re
+   ! p1%Re = vel_z%Re * vel_z%Re
+   ! p3%Re = vel_r%Re * vel_r%Re
+   ! p4%Re = vel_t%Re * vel_t%Re
 
-   call tra_phys2coll1d(p1,c1) !z
-   call tra_phys2coll1d(p3,c2) !r
-   call tra_phys2coll1d(p4,c3) !t
+   ! call tra_phys2coll1d(p1,c1) !z
+   ! call tra_phys2coll1d(p3,c2) !r
+   ! call tra_phys2coll1d(p4,c3) !t
 
 
-      _loop_km_begin
+   !    _loop_km_begin
 
-      c1%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !z
-      c1%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
+   !    c1%Im(:,nh) = -c1%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !z
+   !    c1%Re(:,nh) =  c1%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
 
-      c2%Im(:,nh) = -c2%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !r
-      c2%Re(:,nh) =  c2%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
+   !    c2%Im(:,nh) = -c2%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !r
+   !    c2%Re(:,nh) =  c2%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
 
-      c3%Im(:,nh) = -c3%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !t
-      c3%Re(:,nh) =  c3%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
+   !    c3%Im(:,nh) = -c3%Im(:,nh)*ad_k1a1(k)*ad_k1a1(k) !t
+   !    c3%Re(:,nh) =  c3%Re(:,nh)*ad_k1a1(k)*ad_k1a1(k)
 
-      _loop_km_end
+   !    _loop_km_end
 
-      call tra_coll2phys1d(c1,p1) !z
-      call tra_coll2phys1d(c2,p3) !r
-      call tra_coll2phys1d(c3,p4) !t
+   !    call tra_coll2phys1d(c1,p1) !z
+   !    call tra_coll2phys1d(c2,p3) !r
+   !    call tra_coll2phys1d(c3,p4) !t
 
-   do n = 1, mes_D%pN
-      n_ = mes_D%pNi + n - 1
-      duzsqdz2(n_)  = duzsqdz2(n_)  + sum(p1%Re(:,:,n))
-      dutsqdz2(n_)  = dutsqdz2(n_)  + sum(p4%Re(:,:,n))
-      dursqdz2(n_)  = dursqdz2(n_)  + sum(p3%Re(:,:,n))
+   ! do n = 1, mes_D%pN
+   !    n_ = mes_D%pNi + n - 1
+   !    duzsqdz2(n_)  = duzsqdz2(n_)  + sum(p1%Re(:,:,n))
+   !    dutsqdz2(n_)  = dutsqdz2(n_)  + sum(p4%Re(:,:,n))
+   !    dursqdz2(n_)  = dursqdz2(n_)  + sum(p3%Re(:,:,n))
        
-   end do
+   ! end do
 
       ! _loop_km_begin
 
@@ -710,20 +766,20 @@ implicit none
 
    diss   = 0d0
 
-   duzdz  = 0d0
-   dutdt  = 0d0
-   durdr  = 0d0
+   ! duzdz  = 0d0
+   ! dutdt  = 0d0
+   ! durdr  = 0d0
+
+   pir  = 0d0
+   pit  = 0d0
+   piz  = 0d0
 
    pur = 0d0
-   ! piz    = 0d0
-   ! pit    = 0d0
-   ! pir    = 0d0
-   ! dzduzsq = 0d0
-   ! dzduzcub = 0d0
 
-   duzsqdz2 = 0d0
-   dutsqdz2 = 0d0
-   dursqdz2 = 0d0
+   uzsqur    = 0d0
+   utsqur    = 0d0
+   urcub     = 0d0
+
 
 end subroutine initialiseSTD
 
@@ -782,24 +838,40 @@ implicit none
 
     call mpi_reduce(diss(1,2), d, i_N, mpi_double_precision,  &
     mpi_sum, 0, mpi_comm_world, mpi_er)
- diss(:,2) = d
+    diss(:,2) = d
     call mpi_reduce(diss(1,3), d, i_N, mpi_double_precision,  &
     mpi_sum, 0, mpi_comm_world, mpi_er)
- diss(:,3) = d
+    diss(:,3) = d
 
-     call mpi_reduce(duzdz, d, i_N, mpi_double_precision,  &
+     call mpi_reduce(piz, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    duzdz = d
-      call mpi_reduce(dutdt, d, i_N, mpi_double_precision,  &
+    piz = d
+      call mpi_reduce(pit, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    dutdt = d
-      call mpi_reduce(durdr, d, i_N, mpi_double_precision,  &
+    pit = d
+      call mpi_reduce(pir, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    durdr = d
+    pir = d
 
-          call mpi_reduce(durdr, d, i_N, mpi_double_precision,  &
+      call mpi_reduce(pur, d, i_N, mpi_double_precision,  &
        mpi_sum, 0, mpi_comm_world, mpi_er)
-    pur = d
+      pur = d
+
+
+      call mpi_reduce(uzsqur, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+      uzsqur = d
+      call mpi_reduce(utsqur, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+      utsqur = d
+      call mpi_reduce(urcub, d, i_N, mpi_double_precision,  &
+       mpi_sum, 0, mpi_comm_world, mpi_er)
+      urcub = d
+
+
+
+
+
 
    ! call mpi_reduce(urf, d, i_N, mpi_double_precision,  &
    !     mpi_sum, 0, mpi_comm_world, mpi_er)
@@ -868,7 +940,6 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"stdv_rt",1,hdims,stdv_rt,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_tz",1,hdims,stdv_tz,h5err)
 
-       !call h5ltmake_dataset_double_f(sta_id,"urf",1,hdims,urf,h5err)
        call h5ltmake_dataset_double_f(sta_id,"stdv_p",1,hdims,stdv_p,h5err)
        call h5ltmake_dataset_double_f(sta_id,"mean_p",1,hdims,mean_p,h5err)
 
@@ -877,18 +948,16 @@ implicit none
        call h5ltmake_dataset_double_f(sta_id,"dissrr",1,hdims,diss(:,1),h5err)
        call h5ltmake_dataset_double_f(sta_id,"disszz",1,hdims,diss(:,3),h5err) 
 
-       call h5ltmake_dataset_double_f(sta_id,"durdr",1,hdims,durdr,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"duzdz",1,hdims,duzdz,h5err)
-       call h5ltmake_dataset_double_f(sta_id,"dutdt",1,hdims,dutdt,h5err) 
+       call h5ltmake_dataset_double_f(sta_id,"pir",1,hdims,pir,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"piz",1,hdims,piz,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"pit",1,hdims,pit,h5err) 
 
-       call h5ltmake_dataset_double_f(sta_id,"pur",1,hdims,pur,h5err)      
+       call h5ltmake_dataset_double_f(sta_id,"pur",1,hdims,pur,h5err)
+
+       call h5ltmake_dataset_double_f(sta_id,"uzsqur",1,hdims,uzsqur,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"utsqur",1,hdims,utsqur,h5err)
+       call h5ltmake_dataset_double_f(sta_id,"urcub",1,hdims,urcub,h5err)      
        
-      !  call h5ltmake_dataset_double_f(sta_id,"vortr",1,hdims,or,h5err)
-      !  call h5ltmake_dataset_double_f(sta_id,"vortt",1,hdims,ot,h5err)
-      !  call h5ltmake_dataset_double_f(sta_id,"vortz",1,hdims,oz,h5err)  
-
-      !  call h5ltmake_dataset_double_f(sta_id,"dzduzsq",1,hdims,dzduzsq,h5err)
-      !  call h5ltmake_dataset_double_f(sta_id,"dzduzcub",1,hdims,dzduzcub,h5err)
          
 
        hdims2 = (/i_N,10/)
