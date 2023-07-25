@@ -420,37 +420,34 @@ end subroutine pressure
 
          _loop_km_begin
 
-                  c2%Im(:,nh) =  -vel_ut%Im(:,nh)*ad_m1r1(:,m)    
-                  c2%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)    
+                  c2%Im(:,nh) =  -vel_ut%Im(:,nh)*m*i_Mp    
+                  c2%Re(:,nh) =  vel_ut%Re(:,nh)*m*i_Mp    
 
-                  c3%Im(:,nh) =  -vel_uz%Im(:,nh)*ad_k1a1(k)
-                  c3%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)
+                  c3%Im(:,nh) =  -vel_uz%Im(:,nh)*d_alpha*k
+                  c3%Re(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
 
-            c1%Re(:,nh) = c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
+                  c1%Re(:,nh) = c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
 
-        _loop_km_end
-
-      _loop_km_begin
-         factor = 2d0
-         if (m==0) factor = 1d0
-            pir(:) = pir(:) + factor*(c1%Re(:,nh))
+             factor = 2d0
+            if (m==0) factor = 1d0
+               pir(:) = pir(:) + factor*(c1%Re(:,nh))
       _loop_km_end
 
 
 
       call tra_coll2phys1d(c3,p3) !z
       call tra_coll2phys1d(c2,p1) !t
-      ! call tra_coll2phys1d(c1,p4) !r
+      ! ! call tra_coll2phys1d(c1,p4) !r
 
       p3%Re = p3%Re * p2%Re !z
       p1%Re = p1%Re * p2%Re !t
-      ! p4%Re = p4%Re * p2%Re !r
+      ! ! p4%Re = p4%Re * p2%Re !r
 
 
       do n = 1, mes_D%pN
       n_ = mes_D%pNi + n - 1
-      p1%Re(:,:,n) = 2d0* p1%Re(:,:,n) ! multiplico por 2 y divido entre r
-      p3%Re(:,:,n) = 2d0* p3%Re(:,:,n)
+      p1%Re(:,:,n) =  2 * p1%Re(:,:,n) * mes_D%r(n_,-1) ! multiplico por 2 y divido entre r
+      p3%Re(:,:,n) =  2 * p3%Re(:,:,n)
       ! pir(n_)  = pir(n_)  + sum(p4%Re(:,:,n)) ! saco la distribucion radial
       pit(n_)  = pit(n_)  + sum(p1%Re(:,:,n))
       piz(n_)  = piz(n_)  + sum(p3%Re(:,:,n))
@@ -466,22 +463,22 @@ end subroutine pressure
 
 
    ! _loop_km_begin
-            ! z component  
-            ! c2%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k) + vel_uz%Im(:,nh)*ad_k1a1(k)
-            ! theta component
-            ! c3%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)*c4%Re(:,nh) + vel_ut%Im(:,nh)*ad_m1r1(:,m)*c4%Im(:,nh)
-            ! r component
-            ! c1%Re(:,nh) =  c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
+   !          ! z component  
+   !          c2%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)*c4%Re(:,nh) + vel_uz%Im(:,nh)*ad_k1a1(k)*c4%Im(:,nh)
+   !          ! theta component
+   !          c3%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)*c4%Re(:,nh) + vel_ut%Im(:,nh)*ad_m1r1(:,m)*c4%Im(:,nh)
+   !          ! r component
+   !          ! c1%Re(:,nh) =  c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
 
-      
+   !    _loop_km_end
+
+   ! _loop_km_begin
    !    factor = 2d0
    !    if (m==0) factor = 1d0
 
    !       piz(:) = piz(:) + factor*(c2%Re(:,nh))!+c2%Im(:,nh)**2)
    !       pit(:) = pit(:) + factor*(c3%Re(:,nh))!+c3%Im(:,nh)**2)
-   !       pir(:) = pir(:) + factor*(c1%Re(:,nh))!+c1%Im(:,nh)**2)
-
-
+   !       ! pir(:) = pir(:) + factor*(c1%Re(:,nh))!+c1%Im(:,nh)**2)
    ! _loop_km_end
 
 

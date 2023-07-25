@@ -490,7 +490,7 @@
       retau = D_Re*Ufr
       
       if(mpi_rnk/=0) return
-324   format(3(i5),7(d14.6))
+324   format(3(i7),7(d14.6)) ! Antes estaba i5, pero superaba el lim de its en ocasiones
       write(io_cf,324) st, _Nr, _Ns, t0, timr, Ub, Uc, Ufr, retau, tim_dt
       call flush(io_cf)
       
