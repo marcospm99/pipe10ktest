@@ -91,13 +91,6 @@
    endif
 
 
-
-
-   !call staFFT() ! Compute stdv_[u,t,z]
-! Compute dissipation
-    ! Compute vel_r
-   !call vort()
-
       call vel_sta()
       ! call vel_adjPPE(3)
 
@@ -290,6 +283,7 @@ type (phys), intent(inout)    :: p1,p2
             c3%Re(:,nh) = -vel_uz%Im(:,nh)*d_alpha*k
             c3%Im(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
         _loop_km_end
+        
          call tra_coll2phys1d(c3,p1)
          p2%Re=p2%Re+vel_z%Re*p1%Re
          do n = 1, mes_D%pN
@@ -417,41 +411,46 @@ end subroutine pressure
 
    call var_coll_meshmult(1,mes_D%dr(1),vel_ur, c1) ! r simple derivative
    call tra_phys2coll1d(p2,c4)
+   call tra_phys2coll1d(vel_t,vel_ut)
+   call tra_phys2coll1d(vel_z,vel_uz)
 
          _loop_km_begin
 
-                  c2%Im(:,nh) =  -vel_ut%Im(:,nh)*m*i_Mp    
-                  c2%Re(:,nh) =  vel_ut%Re(:,nh)*m*i_Mp    
+                  c2%Im(:,nh) =  vel_ut%Im(:,nh) *ad_m1r1(:,m)*c4%Im(:,nh) +  vel_ut%Re(:,nh)  *ad_m1r1(:,m)*c4%Re(:,nh)
+                  ! c2%Re(:,nh) =  vel_ut%Re(:,nh)  *ad_m1r1(:,m)    
 
-                  c3%Im(:,nh) =  -vel_uz%Im(:,nh)*d_alpha*k
-                  c3%Re(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
+                  c3%Im(:,nh) =  vel_uz%Im(:,nh)*ad_k1a1(k)*c4%Im(:,nh)  +  vel_uz%Re(:,nh)*ad_k1a1(k)*c4%Re(:,nh)
+                  ! c3%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)
 
                   c1%Re(:,nh) = c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
 
              factor = 2d0
             if (m==0) factor = 1d0
                pir(:) = pir(:) + factor*(c1%Re(:,nh))
-      _loop_km_end
+               piz(:) = piz(:) + factor*(c2%Im(:,nh))
+               pit(:) = pit(:) + factor*(c3%Im(:,nh))
+          _loop_km_end
 
 
 
-      call tra_coll2phys1d(c3,p3) !z
-      call tra_coll2phys1d(c2,p1) !t
-      ! ! call tra_coll2phys1d(c1,p4) !r
+      ! call tra_coll2phys1d(c3,p3) !z
+      ! call tra_coll2phys1d(c2,p1) !t
+      ! ! ! call tra_coll2phys1d(c1,p4) !r
 
-      p3%Re = p3%Re * p2%Re !z
-      p1%Re = p1%Re * p2%Re !t
+      ! p3%Re = p3%Re * p2%Re !z
+      ! p1%Re = p1%Re * p2%Re !t
       ! ! p4%Re = p4%Re * p2%Re !r
 
 
-      do n = 1, mes_D%pN
-      n_ = mes_D%pNi + n - 1
-      p1%Re(:,:,n) =  2 * p1%Re(:,:,n) * mes_D%r(n_,-1) ! multiplico por 2 y divido entre r
-      p3%Re(:,:,n) =  2 * p3%Re(:,:,n)
-      ! pir(n_)  = pir(n_)  + sum(p4%Re(:,:,n)) ! saco la distribucion radial
-      pit(n_)  = pit(n_)  + sum(p1%Re(:,:,n))
-      piz(n_)  = piz(n_)  + sum(p3%Re(:,:,n))
-      end do
+      ! do n = 1, mes_D%pN
+      ! n_ = mes_D%pNi + n - 1
+      
+      ! ! p1%Re(:,:,n) =  2d0 * p1%Re(:,:,n)  ! multiplico por 2 y divido entre r
+      ! ! p3%Re(:,:,n) =  2d0 * p3%Re(:,:,n)
+      ! ! pir(n_)  = pir(n_)  + sum(p4%Re(:,:,n)) ! saco la distribucion radial
+      ! pit(n_)  = pit(n_)  + sum(p1%Re(:,:,n))
+      ! piz(n_)  = piz(n_)  + sum(p3%Re(:,:,n))
+      ! end do
 
 
 
@@ -476,12 +475,81 @@ end subroutine pressure
    !    factor = 2d0
    !    if (m==0) factor = 1d0
 
-   !       piz(:) = piz(:) + factor*(c2%Re(:,nh))!+c2%Im(:,nh)**2)
-   !       pit(:) = pit(:) + factor*(c3%Re(:,nh))!+c3%Im(:,nh)**2)
+   !       piz(:) = piz(:) + factor*(c2%Re(:,nh) + c2%Im(:,nh))!+c2%Im(:,nh)**2)
+   !       pit(:) = pit(:) + factor*(c3%Re(:,nh) + c3%Im(:,nh))!+c3%Im(:,nh)**2)
    !       ! pir(:) = pir(:) + factor*(c1%Re(:,nh))!+c1%Im(:,nh)**2)
    ! _loop_km_end
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!           SEMI FUNCIONA
+! Pressure strain correlation term
 
+   ! call var_coll_meshmult(1,mes_D%dr(1),vel_ur, c1) ! r simple derivative
+   ! call tra_phys2coll1d(p2,c4)
+
+   !       _loop_km_begin
+
+   !                c2%Im(:,nh) =  -vel_ut%Im(:,nh)*m*i_Mp    
+   !                c2%Re(:,nh) =  vel_ut%Re(:,nh)*m*i_Mp    
+
+   !                c3%Im(:,nh) =  -vel_uz%Im(:,nh)*d_alpha*k
+   !                c3%Re(:,nh) =  vel_uz%Re(:,nh)*d_alpha*k
+
+   !                c1%Re(:,nh) = c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
+
+   !           factor = 2d0
+   !          if (m==0) factor = 1d0
+   !             pir(:) = pir(:) + factor*(c1%Re(:,nh))
+   !    _loop_km_end
+
+
+
+   !    call tra_coll2phys1d(c3,p3) !z
+   !    call tra_coll2phys1d(c2,p1) !t
+   !    ! ! call tra_coll2phys1d(c1,p4) !r
+
+   !    p3%Re = p3%Re * p2%Re !z
+   !    p1%Re = p1%Re * p2%Re !t
+   !    ! ! p4%Re = p4%Re * p2%Re !r
+
+
+   !    ! do n = 1, mes_D%pN
+   !    ! n_ = mes_D%pNi + n - 1
+   !    ! p1%Re(:,:,n) =  2d0 * p1%Re(:,:,n) * mes_D%r(n_,-1) ! multiplico por 2 y divido entre r
+   !    ! p3%Re(:,:,n) =  2d0 * p3%Re(:,:,n)
+   !    ! ! pir(n_)  = pir(n_)  + sum(p4%Re(:,:,n)) ! saco la distribucion radial
+   !    ! pit(n_)  = pit(n_)  + sum(p1%Re(:,:,n))
+   !    ! piz(n_)  = piz(n_)  + sum(p3%Re(:,:,n))
+   !    ! end do
+
+
+
+
+
+   !    call tra_phys2coll1d(p3,c2) !z
+   !    call tra_phys2coll1d(p1,c3) !t
+   !    ! call tra_phys2coll1d(p4,c1) !r
+
+
+   ! ! _loop_km_begin
+   ! !          ! z component  
+   ! !          c2%Re(:,nh) =  vel_uz%Re(:,nh)*ad_k1a1(k)*c4%Re(:,nh) + vel_uz%Im(:,nh)*ad_k1a1(k)*c4%Im(:,nh)
+   ! !          ! theta component
+   ! !          c3%Re(:,nh) =  vel_ut%Re(:,nh)*ad_m1r1(:,m)*c4%Re(:,nh) + vel_ut%Im(:,nh)*ad_m1r1(:,m)*c4%Im(:,nh)
+   ! !          ! r component
+   ! !          ! c1%Re(:,nh) =  c1%Re(:,nh)*c4%Re(:,nh) + c1%Im(:,nh)*c4%Im(:,nh)
+
+   ! !    _loop_km_end
+
+   ! _loop_km_begin
+   !    factor = 2d0
+   !    if (m==0) factor = 1d0
+
+   !       piz(:) = piz(:) + factor*(c2%Re(:,nh) + c2%Im(:,nh))!+c2%Im(:,nh)**2)
+   !       pit(:) = pit(:) + factor*(c3%Re(:,nh) + c3%Im(:,nh))!+c3%Im(:,nh)**2)
+   !       ! pir(:) = pir(:) + factor*(c1%Re(:,nh))!+c1%Im(:,nh)**2)
+   ! _loop_km_end
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 
@@ -509,7 +577,15 @@ end subroutine pressure
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! UZSQUR
-      p1%re = vel_z%Re * vel_z%Re * vel_r%Re
+      p1%Re = vel_z%Re * vel_z%Re * vel_z%Re
+      ! do n = 1, mes_D%pN
+      ! n_ = mes_D%pNi + n - 1
+      ! ! p1%Re(:,:,n) = -2d0 * mes_D%r(n_,-1) * p1%Re(:,:,n) ! multiplico por 2 y divido entre r
+      ! ! pur(n_)  = pur(n_)  + sum(p1%Re(:,:,n)) ! saco la distribucion radial
+      ! p1%Re(:,:,n) = ( vel_z%Re(:,:,n) - vel_U(n_)) ** 3
+      ! end do
+
+      
 ! UTSQUR
       p3%re = vel_t%Re * vel_t%Re * vel_r%Re
 ! URCUB
